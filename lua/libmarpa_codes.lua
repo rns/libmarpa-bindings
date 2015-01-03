@@ -1,6 +1,6 @@
 --[[
-	This file is based on marpa_codes.c, which is generated as part of libmarpa builds
-	Here is the copyright notice from that file.
+  This file is based on marpa_codes.c, which is generated as part of libmarpa builds
+  Here is the copyright notice from that file.
 
 /*
  * Copyright 2014 Jeffrey Kegler
@@ -24,7 +24,7 @@
 libmarpa_codes = {}
 
 local _errors = {
-	{ 0, "MARPA_ERR_NONE", "No error" },
+  { 0, "MARPA_ERR_NONE", "No error" },
   { 1, "MARPA_ERR_AHFA_IX_NEGATIVE", "MARPA_ERR_AHFA_IX_NEGATIVE" },
   { 2, "MARPA_ERR_AHFA_IX_OOB", "MARPA_ERR_AHFA_IX_OOB" },
   { 3, "MARPA_ERR_ANDID_NEGATIVE", "MARPA_ERR_ANDID_NEGATIVE" },
@@ -151,26 +151,26 @@ local _steps = {
 
 libmarpa_codes.errors = {}
 for index, value in ipairs(_errors) do
-	local num		= value[1]
-	local const = value[2]
-	local desc 	= value[3]
-	table.insert( libmarpa_codes.errors, { const, desc } )
+  local num   = value[1]
+  local const = value[2]
+  local desc  = value[3]
+  table.insert( libmarpa_codes.errors, { const, desc } )
 end
 
 libmarpa_codes.events = {}
 for index, value in ipairs(_events) do
-	local num		= value[1]
-	local const = value[2]
-	local desc 	= value[3]
-	table.insert( libmarpa_codes.events, { const, desc } )
+  local num   = value[1]
+  local const = value[2]
+  local desc  = value[3]
+  table.insert( libmarpa_codes.events, { const, desc } )
 end
 
 libmarpa_codes.steps = {}
 for index, value in ipairs(_steps) do
-	local num		= value[1]
-	local const = value[2]
-	local desc 	= value[3]
-	table.insert( libmarpa_codes.steps, { const, desc } )
+  local num   = value[1]
+  local const = value[2]
+  local desc  = value[3]
+  table.insert( libmarpa_codes.steps, { const, desc } )
 end
 
 return libmarpa_codes

@@ -1,29 +1,29 @@
 --[[
-	Lua ffi binding to libmarpa
-	Prerequisites:
-		libmarpa -- https://github.com/jeffreykegler/libmarpa -- built as a shared library
-		LuaJIT 2.0.3 -- http://luajit.org/download.html
+  Lua ffi binding to libmarpa
+  Prerequisites:
+    libmarpa -- https://github.com/jeffreykegler/libmarpa -- built as a shared library
+    LuaJIT 2.0.3 -- http://luajit.org/download.html
 
-	This file is based on marpa_cffi.py by koo5
-	-- https://github.com/koo5/new_shit/tree/master/marpa_cffi.
-	Here is the copyright notice from that file.
+  This file is based on marpa_cffi.py by koo5
+  -- https://github.com/koo5/new_shit/tree/master/marpa_cffi.
+  Here is the copyright notice from that file.
 
  /*
-	* This file is based on Libmarpa, Copyright 2014 Jeffrey Kegler.
-	* Libmarpa is free software: you can
-	* redistribute it and/or modify it under the terms of the GNU Lesser
-	* General Public License as published by the Free Software Foundation,
-	* either version 3 of the License, or (at your option) any later version.
-	*
-	* Libmarpa is distributed in the hope that it will be useful,
-	* but WITHOUT ANY WARRANTY; without even the implied warranty of
-	* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	* Lesser General Public License for more details.
-	*
-	* You should have received a copy of the GNU Lesser
-	* General Public License along with Libmarpa.  If not, see
-	* http://www.gnu.org/licenses/.
-	*/
+  * This file is based on Libmarpa, Copyright 2014 Jeffrey Kegler.
+  * Libmarpa is free software: you can
+  * redistribute it and/or modify it under the terms of the GNU Lesser
+  * General Public License as published by the Free Software Foundation,
+  * either version 3 of the License, or (at your option) any later version.
+  *
+  * Libmarpa is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser
+  * General Public License along with Libmarpa.  If not, see
+  * http://www.gnu.org/licenses/.
+  */
 ]]--
 libmarpa = {}
 
@@ -551,11 +551,11 @@ assert( libmarpa.lib.MARPA_MINOR_VERSION == libmarpa.lib.marpa_minor_version )
 assert( libmarpa.lib.MARPA_MICRO_VERSION == libmarpa.lib.marpa_micro_version )
 
 assert(
-	libmarpa.lib.marpa_check_version (
-		libmarpa.lib.MARPA_MAJOR_VERSION,
-		libmarpa.lib.MARPA_MINOR_VERSION,
-		libmarpa.lib.MARPA_MICRO_VERSION
-	) == libmarpa.lib.MARPA_ERR_NONE
+  libmarpa.lib.marpa_check_version (
+    libmarpa.lib.MARPA_MAJOR_VERSION,
+    libmarpa.lib.MARPA_MINOR_VERSION,
+    libmarpa.lib.MARPA_MICRO_VERSION
+  ) == libmarpa.lib.MARPA_ERR_NONE
 )
 
 return libmarpa

@@ -1,30 +1,30 @@
 ﻿"""
-	Python cffi binding to libmarpa
-	Prerequisites:
-		libmarpa -- https://github.com/jeffreykegler/libmarpa -- built as a shared library
-		Python 2.7.8 or later --
-		cffi (pip install cffi)
-		
-	This file is based on marpa_cffi.py by koo5
-	-- https://github.com/koo5/new_shit/tree/master/marpa_cffi.
-	Here is the copyright notice from that file.
+  Python cffi binding to libmarpa
+  Prerequisites:
+    libmarpa -- https://github.com/jeffreykegler/libmarpa -- built as a shared library
+    Python 2.7.8 or later --
+    cffi (pip install cffi)
+    
+  This file is based on marpa_cffi.py by koo5
+  -- https://github.com/koo5/new_shit/tree/master/marpa_cffi.
+  Here is the copyright notice from that file.
 
  /* 
-	* This file is based on Libmarpa, Copyright 2014 Jeffrey Kegler.
-	* Libmarpa is free software: you can
-	* redistribute it and/or modify it under the terms of the GNU Lesser
-	* General Public License as published by the Free Software Foundation,
-	* either version 3 of the License, or (at your option) any later version.
-	*
-	* Libmarpa is distributed in the hope that it will be useful,
-	* but WITHOUT ANY WARRANTY; without even the implied warranty of
-	* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-	* Lesser General Public License for more details.
-	*
-	* You should have received a copy of the GNU Lesser
-	* General Public License along with Libmarpa.  If not, see
-	* http://www.gnu.org/licenses/.
-	*/
+  * This file is based on Libmarpa, Copyright 2014 Jeffrey Kegler.
+  * Libmarpa is free software: you can
+  * redistribute it and/or modify it under the terms of the GNU Lesser
+  * General Public License as published by the Free Software Foundation,
+  * either version 3 of the License, or (at your option) any later version.
+  *
+  * Libmarpa is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  * Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser
+  * General Public License along with Libmarpa.  If not, see
+  * http://www.gnu.org/licenses/.
+  */
 """
 from __future__ import absolute_import
 

@@ -1,6 +1,6 @@
 """
-	This file is based on marpa_codes.c, which is generated as part of libmarpa builds
-	Here is the copyright notice from that file.
+  This file is based on marpa_codes.c, which is generated as part of libmarpa builds
+  Here is the copyright notice from that file.
 
 /*
  * Copyright 2014 Jeffrey Kegler
@@ -148,15 +148,15 @@ _steps = [
 
 errors = []
 for (num, const, desc) in _errors:
-	assert num == len(errors)
-	errors.append((const, desc))
+  assert num == len(errors)
+  errors.append((const, desc))
 
 events = []
 for (num, const, desc) in _events:
-	assert num == len(events)
-	events.append((const, desc))
+  assert num == len(events)
+  events.append((const, desc))
 
 steps = []
 for (num, const) in _steps:
-	assert num == len(steps)
-	steps.append(const)
+  assert num == len(steps)
+  steps.append(const)
