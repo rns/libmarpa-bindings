@@ -268,7 +268,6 @@ if tree == ffi.NULL:
   print(codes.errors[e])
   sys.exit (1)
 
-value = ffi.NULL
 tree_status = lib.marpa_t_next (tree)
 if tree_status <= -1:
   e = lib.marpa_g_error (g, ffi.new("char**"))

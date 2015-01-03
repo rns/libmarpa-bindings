@@ -20,59 +20,59 @@ print(string.format("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
 print("LuaJIT version:", jit.version )
 
 -- utility funcs
-function fail(s, g)
+local function fail(s, g)
   local e = lib.marpa_g_error(g, ffi.new("const char**"))
   assert( e == lib.MARPA_ERR_NONE, s .. ': ' .. table.concat( codes.errors[e + 1], ': ' ) )
 end
 
 -- init Marpa
-config = ffi.new("Marpa_Config")
+local config = ffi.new("Marpa_Config")
 lib.marpa_c_init(config)
 
-g = ffi.gc(lib.marpa_g_new(config), lib.marpa_g_unref)
-msg = ffi.new("const char **")
+local g = ffi.gc(lib.marpa_g_new(config), lib.marpa_g_unref)
+local msg = ffi.new("const char **")
 assert( lib.marpa_c_error(config, msg) == lib.MARPA_ERR_NONE, msg )
 
 -- grammar symbols from RFC 7159
-S_begin_array = lib.marpa_g_symbol_new (g)
+local S_begin_array = lib.marpa_g_symbol_new (g)
 assert( S_begin_array >= 0, fail ("marpa_g_symbol_new", g) )
-S_begin_object = lib.marpa_g_symbol_new (g)
+local S_begin_object = lib.marpa_g_symbol_new (g)
 assert( S_begin_object >= 0, fail ("marpa_g_symbol_new", g) )
-S_end_array = lib.marpa_g_symbol_new (g)
+local S_end_array = lib.marpa_g_symbol_new (g)
 assert( S_end_array >= 0, fail ("marpa_g_symbol_new", g) )
-S_end_object = lib.marpa_g_symbol_new (g)
+local S_end_object = lib.marpa_g_symbol_new (g)
 assert( S_end_object >= 0, fail ("marpa_g_symbol_new", g) )
-S_name_separator = lib.marpa_g_symbol_new (g)
+local S_name_separator = lib.marpa_g_symbol_new (g)
 assert( S_name_separator >= 0, fail ("marpa_g_symbol_new", g) )
-S_value_separator = lib.marpa_g_symbol_new (g)
+local S_value_separator = lib.marpa_g_symbol_new (g)
 assert( S_value_separator >= 0, fail ("marpa_g_symbol_new", g) )
-S_member = lib.marpa_g_symbol_new (g)
+local S_member = lib.marpa_g_symbol_new (g)
 assert( S_member >= 0, fail ("marpa_g_symbol_new", g) )
-S_value = lib.marpa_g_symbol_new (g)
+local S_value = lib.marpa_g_symbol_new (g)
 assert( S_value >= 0, fail ("marpa_g_symbol_new", g) )
-S_false = lib.marpa_g_symbol_new (g)
+local S_false = lib.marpa_g_symbol_new (g)
 assert( S_false >= 0, fail ("marpa_g_symbol_new", g) )
-S_null = lib.marpa_g_symbol_new (g)
+local S_null = lib.marpa_g_symbol_new (g)
 assert( S_null >= 0, fail ("marpa_g_symbol_new", g) )
-S_true = lib.marpa_g_symbol_new (g)
+local S_true = lib.marpa_g_symbol_new (g)
 assert( S_true >= 0, fail ("marpa_g_symbol_new", g) )
-S_object = lib.marpa_g_symbol_new (g)
+local S_object = lib.marpa_g_symbol_new (g)
 assert( S_object >= 0, fail ("marpa_g_symbol_new", g) )
-S_array = lib.marpa_g_symbol_new (g)
+local S_array = lib.marpa_g_symbol_new (g)
 assert( S_array >= 0, fail ("marpa_g_symbol_new", g) )
-S_number = lib.marpa_g_symbol_new (g)
+local S_number = lib.marpa_g_symbol_new (g)
 assert( S_number >= 0, fail ("marpa_g_symbol_new", g) )
-S_string = lib.marpa_g_symbol_new (g)
+local S_string = lib.marpa_g_symbol_new (g)
 assert( S_string >= 0, fail ("marpa_g_symbol_new", g) )
 
 -- additional symbols
-S_object_contents = lib.marpa_g_symbol_new (g)
+local S_object_contents = lib.marpa_g_symbol_new (g)
 assert( S_object_contents >= 0, fail ("marpa_g_symbol_new", g) )
-S_array_contents = lib.marpa_g_symbol_new (g)
+local S_array_contents = lib.marpa_g_symbol_new (g)
 assert( S_array_contents >= 0, fail ("marpa_g_symbol_new", g) )
 
 -- rules
-rhs = ffi.new("int[4]")
+local rhs = ffi.new("int[4]")
 rhs[0] = S_false;
 assert( lib.marpa_g_rule_new (g, S_value, rhs, 1) >= 0, fail ("marpa_g_rule_new", g) )
 rhs[0] = S_null;
@@ -121,7 +121,7 @@ if lib.marpa_g_precompute (g) < 0 then
   os.exit (1)
 end
 
-r = lib.marpa_r_new (g)
+local r = lib.marpa_r_new (g)
 
 if r == ffi.NULL then
   fail ("marpa_g_precompute", g)
@@ -174,6 +174,7 @@ local line = 1
 local column = 1
 
 local token_values = {}
+local token_value
 local token_start = 1
 local token_length
 
@@ -181,10 +182,11 @@ while true do
 
   local pattern
   local token_symbol
-  local token_id
+  local token_symbol_id
   local match
+  local status
 
-  for i, triple in ipairs(token_spec) do
+  for _, triple in ipairs(token_spec) do
 
     pattern         = triple[1]
     token_symbol    = triple[2]
@@ -211,14 +213,15 @@ while true do
     break
   else
 --    print (token_symbol, token_symbol_id, match, '@', token_start, ';', line, ':', column)
-    column = column + string.len(match)
-    token_start = token_start + string.len(match)
+    token_length = string.len(match)
+    column = column + token_length
+    token_start = token_start + token_length
     token_value = match
 
     status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
     if status ~= lib.MARPA_ERR_NONE then
-      expected = ffi.new("Marpa_Symbol_ID*")
-      count_of_expected = lib.marpa_r_terminals_expected (r, expected)
+      local expected = ffi.new("Marpa_Symbol_ID*")
+      local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
       -- todo: list expected terminals
       print( 'marpa_r_alternative: ' + table.concat( codes.errors[status], ', ') )
       os.exit (1)
@@ -226,7 +229,7 @@ while true do
 
     status = lib.marpa_r_earleme_complete (r)
     if status < 0 then
-      e = lib.marpa_g_error (g, ffi.new("const char**"))
+      local e = lib.marpa_g_error (g, ffi.new("const char**"))
       print ('marpa_r_earleme_complete:' + e)
       os.exit (1)
     end
@@ -240,7 +243,7 @@ end
 
 local bocage = lib.marpa_b_new (r, -1)
 if bocage == ffi.NULL then
-  e = lib.marpa_g_error (g, ffi.new("const char**"))
+  local e = lib.marpa_g_error (g, ffi.new("const char**"))
   print("bocage:", table.concat( codes.errors[e + 1], ': ' ))
   os.exit (1)
 end
@@ -259,7 +262,6 @@ if tree == ffi.NULL then
   os.exit (1)
 end
 
-local value = ffi.NULL
 local tree_status = lib.marpa_t_next (tree)
 if tree_status <= -1 then
   local e = lib.marpa_g_error (g, ffi.new("const char**"))
@@ -277,16 +279,16 @@ end
 column = 0
 
 while true do
-  step_type = lib.marpa_v_step (value)
+  local step_type = lib.marpa_v_step (value)
   if step_type < 0 then
-    e = lib.marpa_g_error (g, ffi.new("const char**"))
+    local e = lib.marpa_g_error (g, ffi.new("const char**"))
     print("marpa_v_event returned:", e, table.concat( codes.errors[e + 1], ': ' ))
     os.exit (1)
   elseif step_type == lib.MARPA_STEP_INACTIVE then
     if false then print ("No more events\n") end
     break
   elseif step_type == lib.MARPA_STEP_TOKEN then
-    token = value.t_token_id
+    local token = value.t_token_id
     if column > 60 then
       io.write ("\n")
       column = 0
@@ -318,11 +320,11 @@ while true do
       io.write ('false')
       column = column + 1
     elseif token == S_number then
-      start_of_number = value.t_token_value
+      local start_of_number = value.t_token_value
       io.write( token_values[start_of_number] )
       column = column + 1
     elseif token == S_string then
-      start_of_string = value.t_token_value
+      local start_of_string = value.t_token_value
       io.write( token_values[start_of_string] )
     end
   end
