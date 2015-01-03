@@ -4,7 +4,7 @@ import cffi
 import mmap
 import re
 
-from libmarpa import *
+from libmarpa import ffi, lib
 import libmarpa_codes as codes
 
 ver = ffi.new("int [3]")
