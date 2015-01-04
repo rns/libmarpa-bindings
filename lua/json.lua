@@ -241,25 +241,25 @@ end
 
 -- valuation
 local bocage = ffi.gc( lib.marpa_b_new (r, -1), lib.marpa_b_unref )
-assert( bocage ~= ffi.NULL, error_msg("marpa_b_new", g) )
+assert_result( bocage, "marpa_b_new", g )
 
 local order  = ffi.gc( lib.marpa_o_new (bocage), lib.marpa_o_unref )
-assert( order ~= ffi.NULL, error_msg("marpa_o_new", g) )
+assert_result( order, "marpa_o_new", g )
 
 local tree   = ffi.gc( lib.marpa_t_new (order), lib.marpa_t_unref )
-assert( tree ~= ffi.NULL, error_msg("marpa_t_new", g) )
+assert_result( tree, "marpa_t_new", g )
 
 local tree_status = lib.marpa_t_next (tree)
-assert( tree_status >= 0, error_msg("marpa_t_next:", g) )
+assert_result( tree_status, "marpa_t_next", g )
 
 local value = ffi.gc( lib.marpa_v_new (tree), marpa_v_unref )
-assert( value ~= ffi.NULL, error_msg("marpa_v_new:", g) )
+assert_result( value, "marpa_v_new", g )
 
 -- steps
 column = 0
 while true do
   local step_type = lib.marpa_v_step (value)
-  assert( step_type >= 0, error_msg("marpa_v_step:", g) )
+  assert_result( step_type, "marpa_v_step", g )
   if step_type == lib.MARPA_STEP_INACTIVE then
     if false then print ("No more events\n") end
     break
