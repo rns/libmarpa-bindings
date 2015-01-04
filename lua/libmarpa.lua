@@ -27,6 +27,9 @@
 ]]--
 libmarpa = {}
 
+local jit = require("jit")
+assert(jit.version_num == 20003, jit.version .. " found, 2.0.3 required.")
+
 libmarpa.ffi = require("ffi")
 
 libmarpa.ffi.cdef[[
@@ -546,9 +549,11 @@ libmarpa.lib = libmarpa.ffi.load( libmarpa.ffi.abi("win") and "libmarpa.dll" or 
 local ver = libmarpa.ffi.new("int [3]")
 libmarpa.lib.marpa_version(ver)
 
-assert( libmarpa.lib.MARPA_MAJOR_VERSION == libmarpa.lib.marpa_major_version )
-assert( libmarpa.lib.MARPA_MINOR_VERSION == libmarpa.lib.marpa_minor_version )
-assert( libmarpa.lib.MARPA_MICRO_VERSION == libmarpa.lib.marpa_micro_version )
+if libmarpa.ffi.os ~= "Windows" then
+  assert( libmarpa.lib.MARPA_MAJOR_VERSION == libmarpa.lib.marpa_major_version )
+  assert( libmarpa.lib.MARPA_MINOR_VERSION == libmarpa.lib.marpa_minor_version )
+  assert( libmarpa.lib.MARPA_MICRO_VERSION == libmarpa.lib.marpa_micro_version )
+end
 
 assert(
   libmarpa.lib.marpa_check_version (

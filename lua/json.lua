@@ -45,7 +45,9 @@ local g = ffi.gc(lib.marpa_g_new(config), lib.marpa_g_unref)
 local msg = ffi.new("const char **")
 assert( lib.marpa_c_error(config, msg) == lib.MARPA_ERR_NONE, msg )
 
--- unless efficiency is to be gained by not-caring value of some symbols
+--[[ this is arguably not for "racing car" programs as efficiency can
+  potentially be gained by not-caring about values of some symbols
+  e.g. array/objects' begin's/end's, separators, etc. ]]--
 assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
 
 -- grammar symbols from RFC 7159
