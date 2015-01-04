@@ -138,7 +138,7 @@ if lib.marpa_g_precompute (g) < 0:
 
 r = lib.marpa_r_new (g)
 
-if r == ffi.NULL: # todo: test if this really works
+if r == ffi.NULL:
   e = lib.marpa_g_error (g, ffi.new("char**"))
   print(codes.errors[e])
   sys.exit (1)
@@ -229,7 +229,7 @@ for mo in re.finditer(token_regex, input):
       token_symbol_id = token_id[token_symbol]
       token_start     = mo.start()
       token_length    = len(token_value)
-# todo handle multiple matches
+# todo: handle multiple matches
 #     print token_symbol, token_symbol_id, "'%s'" % token_value, "%s:%s" % (token_start, token_length), '@%s:%s' % (line_num, column)
       
       status = lib.marpa_r_alternative (r, token_symbol_id, token_start + 1, 1)

@@ -260,6 +260,10 @@ assert_result( tree_status, "marpa_t_next", g )
 local value = ffi.gc( lib.marpa_v_new (tree), marpa_v_unref )
 assert_result( value, "marpa_v_new", g )
 
+-- todo:
+--  build the json tree
+--  handle ambuguity
+
 -- steps
 column = 0
 while true do
