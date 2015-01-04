@@ -221,15 +221,14 @@ while true do
 
     local status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
     if status ~= lib.MARPA_ERR_NONE then
-      local errm = error_msg( 'marpa_r_alternative', g )
       local expected = ffi.new("Marpa_Symbol_ID*")
       local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
       -- todo: list expected terminals
-      assert( 0, errm )
+      assert_result( status, 'marpa_r_alternative', g )
     end
 
     status = lib.marpa_r_earleme_complete (r)
-    assert( status >= 0, error_msg('marpa_r_earleme_complete', g) )
+    assert_result( status, 'marpa_r_earleme_complete', g )
 
     -- save token value for evaluation
     -- todo: move tokenizing to start:len via string.find
