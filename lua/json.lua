@@ -45,6 +45,9 @@ local g = ffi.gc(lib.marpa_g_new(config), lib.marpa_g_unref)
 local msg = ffi.new("const char **")
 assert( lib.marpa_c_error(config, msg) == lib.MARPA_ERR_NONE, msg )
 
+-- unless efficiency is to be gained by not-caring value of some symbols
+assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
+
 -- grammar symbols from RFC 7159
 local S_begin_array = lib.marpa_g_symbol_new (g)
 assert_result(S_begin_array, "marpa_g_symbol_new", g)
