@@ -131,7 +131,7 @@ local function symbol_new(s, g)
 end
 
 for lhs, rhs in pairs(jg) do
-  d.pt(d.sf("%s := %s", d.inspect(lhs), d.inspect(rhs)))
+  d.pt(d.sf("%s := %s", d.s(lhs), d.s(rhs)))
   -- add lhs symbol to the grammar
   local S_lhs = symbol_new(lhs, g)
   -- add rhs symbol to grammar
@@ -144,7 +144,7 @@ for lhs, rhs in pairs(jg) do
       if type(rhs_alternative[#rhs_alternative]) == "table" then
         adverbs = table.remove(rhs_alternative)
       end
-      d.pt(lhs, '::=', d.inspect(rhs_alternative))
+      d.pt(lhs, '::=', d.s(rhs_alternative))
       -- add rule's rhs symbols to the grammar
       local S_rhs_symbol = {}
       for ix, rhs_symbol in pairs(rhs_alternative) do
@@ -156,7 +156,7 @@ for lhs, rhs in pairs(jg) do
         if adverbs["quantifier"] == "+" then
         elseif adverbs["quantifier"] == "*" then
         end
-        d.pt("adverbs: ", d.inspect(adverbs))
+        d.pt("adverbs: ", d.s(adverbs))
       end
     end
   elseif rhs_type == "string" then
