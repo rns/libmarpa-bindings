@@ -1,13 +1,11 @@
-printf_debugging = {}
-
 -- debug "with print statements" helpers
 local inspect = require 'inspect'
-function printf_debugging.sf(...) return string.format(...) end
-function printf_debugging.t(l)
+function sf(...) return string.format(...) end
+function t(l)
   local info = debug.getinfo(l, "Sl")
-  return printf_debugging.sf("%s:%d", info.short_src, info.currentline)
+  return sf("%s:%d", info.short_src, info.currentline)
 end
-function printf_debugging.i(...)
+function i(...)
   local inspected = {}
   for ix, value in ipairs({...}) do
     -- based on http://stackoverflow.com/questions/10458306/get-name-of-argument-of-function-in-lua
@@ -25,10 +23,16 @@ function printf_debugging.i(...)
   end
   return table.concat(inspected, '; ')
 end
-function printf_debugging.s(...) return inspect(...) end
-function printf_debugging.p(...) print(...) end
-function printf_debugging.pi(...) printf_debugging.p(printf_debugging.i(...)) end
-function printf_debugging.pt(...) printf_debugging.p(... .. " at " .. printf_debugging.t(3)) end
-function printf_debugging.pti(...) printf_debugging.p(printf_debugging.i(...) .. " at " .. printf_debugging.t(3)) end
+function s(...)
+  local s = ""
+  for i,v in ipairs({...}) do
+    s = s .. ( type(v) == "table" and inspect(v) or tostring(v) ) .. "\t"
+  end
+  return s
+end
+function p(...) print(s(...)) end
+function pi(...) p(i(...)) end
+function pt(...) p(s(...), " at " .. t(3)) end
+function pti(...) p(i(...) .. " at " .. t(3)) end
 
-return printf_debugging
+return { sf = sf, s = s, i = i, p = p, pi = pi, pt = pt, pti = pti }

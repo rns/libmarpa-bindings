@@ -64,6 +64,7 @@ assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
   }
 ]]--
 local jg = {
+  _start_symbol = 'json',
   json = {
     { 'object' },
     { 'array' }
@@ -92,7 +93,7 @@ local jg = {
     { 'lsquare', 'elements', 'rsquare' },
   },
   elements = {
-    { 'value', { proper = true, quantifier = '+', separator = comma } },
+    { 'value', { proper = true, quantifier = '+', separator = 'comma' } },
   },
 
   -- lexer rules
@@ -131,133 +132,80 @@ local function symbol_new(s, g)
 end
 
 for lhs, rhs in pairs(jg) do
-  d.pt(d.sf("%s := %s", d.s(lhs), d.s(rhs)))
-  -- add lhs symbol to the grammar
-  local S_lhs = symbol_new(lhs, g)
-  -- add rhs symbol to grammar
-  rhs_type = type(rhs)
-  if rhs_type == "table" then
-    -- parser rule
-    for _, rhs_alternative in ipairs(rhs) do
-      -- extract rule's adverbs, if any
-      local adverbs = {}
-      if type(rhs_alternative[#rhs_alternative]) == "table" then
-        adverbs = table.remove(rhs_alternative)
-      end
-      d.pt(lhs, '::=', d.s(rhs_alternative))
-      -- add rule's rhs symbols to the grammar
-      local S_rhs_symbol = {}
-      for ix, rhs_symbol in pairs(rhs_alternative) do
-        S_rhs_symbol[ix] = symbol_new(rhs_symbol, g)
-      end
-      -- add rule to the grammar
-      if next(adverbs) ~= nil then
-        -- based on adverbs
-        if adverbs["quantifier"] == "+" then
-        elseif adverbs["quantifier"] == "*" then
+  d.pt(lhs, ':=', d.s(rhs))
+  -- handle start symbol
+  if lhs == '_start_symbol' then
+    local S_start = symbol_new(rhs, g)
+    assert_result( lib.marpa_g_start_symbol_set(g, S_start), "marpa_g_start_symbol_set", g )
+  else
+    -- add lhs symbol to the grammar
+    local S_lhs = symbol_new(lhs, g)
+    -- add rhs symbol to grammar
+    local rhs_type = type(rhs)
+    if rhs_type == "table" then
+      -- parser rule
+      for _, rhs_alternative in ipairs(rhs) do
+        -- extract rule's adverbs, if any
+        local adverbs = {}
+        if type(rhs_alternative[#rhs_alternative]) == "table" then
+          adverbs = table.remove(rhs_alternative)
         end
-        d.pt("adverbs: ", d.s(adverbs))
+        -- add rule's rhs symbols to the grammar
+        local S_rhs_symbol = {}
+        for ix, rhs_symbol in pairs(rhs_alternative) do
+          S_rhs_symbol[ix] = symbol_new(rhs_symbol, g)
+        end
+        -- add rule to the grammar
+        d.pt(lhs, ':=', d.s(rhs_alternative))
+        if next(adverbs) ~= nil then
+          -- based on adverbs
+          if adverbs["quantifier"] == "+" or adverbs["quantifier"] == "*" then
+            d.pt("# sequence rule")
+            d.pt(d.i(adverbs))
+            -- todo implement keep (separator) adverb, off by default
+            -- add separator symbol
+            local S_separator = symbol_new(adverbs["separator"], g)
+            -- add item symbol
+            assert( #rhs_alternative == 1, "sequence rule must have only 1 symbol on its RHS" )
+            local S_item = S_rhs_symbol[1]
+            d.pt(d.i(S_separator, S_item))
+            assert_result(
+              lib.marpa_g_sequence_new (
+                g, S_lhs, S_item, S_separator,
+                adverbs["quantifier"] == "+" and 1 or 0,
+                lib.MARPA_PROPER_SEPARATION
+              ), "marpa_g_sequence_new", g
+            )
+          else
+            -- other rule types based on adverbs
+            -- ...
+          end
+        else -- normal rule
+          d.pt("# normal rule")
+          local rhs = ffi.new("int[" .. #rhs_alternative .. "]")
+          for ix = 1, #rhs_alternative do
+            rhs[ix-1] = S_rhs_symbol[ix]
+          end
+          assert_result( lib.marpa_g_rule_new (g, S_lhs, rhs, #rhs_alternative), "marpa_g_rule_new", g )
+        end
       end
+    elseif rhs_type == "string" then
+      -- lexer rule
+      d.pt("# lexer rule")
+      -- add to token_spec
     end
-  elseif rhs_type == "string" then
-    -- lexer rule
-    d.pt(lhs, '::=', rhs)
   end
-  d.p()
 end
-d.pti(symbols)
-os.exit()
-
-local S_begin_array = lib.marpa_g_symbol_new (g)
-assert_result(S_begin_array, "marpa_g_symbol_new", g)
-local S_begin_object = lib.marpa_g_symbol_new (g)
-assert_result( S_begin_object, "marpa_g_symbol_new", g )
-local S_end_array = lib.marpa_g_symbol_new (g)
-assert_result( S_end_array, "marpa_g_symbol_new", g )
-local S_end_object = lib.marpa_g_symbol_new (g)
-assert_result( S_end_object, "marpa_g_symbol_new", g )
-local S_name_separator = lib.marpa_g_symbol_new (g)
-assert_result( S_name_separator, "marpa_g_symbol_new", g )
-local S_value_separator = lib.marpa_g_symbol_new (g)
-assert_result( S_value_separator, "marpa_g_symbol_new", g )
-local S_member = lib.marpa_g_symbol_new (g)
-assert_result( S_member, "marpa_g_symbol_new", g )
-local S_value = lib.marpa_g_symbol_new (g)
-assert_result( S_value, "marpa_g_symbol_new", g )
-local S_false = lib.marpa_g_symbol_new (g)
-assert_result( S_false, "marpa_g_symbol_new", g )
-local S_null = lib.marpa_g_symbol_new (g)
-assert_result( S_null, "marpa_g_symbol_new", g )
-local S_true = lib.marpa_g_symbol_new (g)
-assert_result( S_true, "marpa_g_symbol_new", g )
-local S_object = lib.marpa_g_symbol_new (g)
-assert_result( S_object, "marpa_g_symbol_new", g )
-local S_array = lib.marpa_g_symbol_new (g)
-assert_result( S_array, "marpa_g_symbol_new", g )
-local S_number = lib.marpa_g_symbol_new (g)
-assert_result( S_number, "marpa_g_symbol_new", g )
-local S_string = lib.marpa_g_symbol_new (g)
-assert_result( S_string, "marpa_g_symbol_new", g )
-
--- additional symbols
-local S_object_contents = lib.marpa_g_symbol_new (g)
-assert_result( S_object_contents, "marpa_g_symbol_new", g )
-local S_array_contents = lib.marpa_g_symbol_new (g)
-assert_result( S_array_contents, "marpa_g_symbol_new", g )
-
--- rules
-local rhs = ffi.new("int[4]")
-
-rhs[0] = S_false;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
-rhs[0] = S_null;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
-rhs[0] = S_true;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
-rhs[0] = S_object;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
-rhs[0] = S_array;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
-rhs[0] = S_number;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
-rhs[0] = S_string;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
-
-rhs[0] = S_begin_array
-rhs[1] = S_array_contents
-rhs[2] = S_end_array
-assert_result( lib.marpa_g_rule_new (g, S_array, rhs, 3), "marpa_g_rule_new", g )
-
-rhs[0] = S_begin_object
-rhs[1] = S_object_contents
-rhs[2] = S_end_object
-assert_result( lib.marpa_g_rule_new (g, S_object, rhs, 3), "marpa_g_rule_new", g )
-
-assert_result(
-  lib.marpa_g_sequence_new (
-    g, S_array_contents, S_value, S_value_separator, 0, lib.MARPA_PROPER_SEPARATION
-  ), "marpa_g_sequence_new", g
-)
-
-assert_result(
-  lib.marpa_g_sequence_new (
-    g, S_object_contents, S_member, S_value_separator, 0, lib.MARPA_PROPER_SEPARATION
-  ), "marpa_g_sequence_new", g
-)
-
-rhs[0] = S_string;
-rhs[1] = S_name_separator;
-rhs[2] = S_value;
-assert_result( lib.marpa_g_rule_new (g, S_member, rhs, 3), "marpa_g_rule_new", g )
-
-assert_result( lib.marpa_g_start_symbol_set(g, S_value), "marpa_g_start_symbol_set", g )
+d.pt(d.i(symbols))
 
 assert_result( lib.marpa_g_precompute(g), "marpa_g_precompute", g )
 
 local r = ffi.gc( lib.marpa_r_new(g), lib.marpa_r_unref )
-assert_result( r, "marpa_g_precompute", g )
+assert_result( r, "marpa_r_new", g )
 
 assert_result( lib.marpa_r_start_input(r), "marpa_r_start_input", g )
+
+os.exit()
 
 -- read input from file, if specified on the command line, or set to default value
 local input = ''
