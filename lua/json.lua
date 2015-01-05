@@ -264,52 +264,66 @@ assert_result( value, "marpa_v_new", g )
 --  build the json tree
 --  handle ambuguity
 
+local stack = {}
 -- steps
 column = 0
 while true do
   local step_type = lib.marpa_v_step (value)
   assert_result( step_type, "marpa_v_step", g )
   if step_type == lib.MARPA_STEP_INACTIVE then
-    if false then print ("No more events\n") end
+    -- "The valuator has gone through all of its steps"
     break
+  elseif step_type == lib.MARPA_STEP_RULE then
+    local arg_0 = value.t_arg_0
+    local arg_n = value.t_arg_n
+    local rule_id = value.t_rule_id
+    local arg_to = value.t_result
+--    io.stderr:write( string.format( "R %2d, stack[%2d:%2d] -> [%d]", rule_id, arg_0, arg_n, arg_to ), "\n" )
   elseif step_type == lib.MARPA_STEP_TOKEN then
-    local token = value.t_token_id
+
+    local token_id = value.t_token_id
+    -- we called _alternative with token_start as the value,
+    -- hence the value is the start position of the token
+    local token_value = value.t_token_value
+    local arg_to = value.t_result
+--    io.stderr:write( string.format( "T %2d, %d -> stack[%d]", token_id, token_value, arg_to), "\n")
+
     if column > 60 then
       io.write ("\n")
       column = 0
-    elseif token == S_begin_array then
+    elseif token_id == S_begin_array then
       io.write ('[')
       column = column + 1
-    elseif token == S_end_array then
+    elseif token_id == S_end_array then
       io.write (']')
       column = column + 1
-    elseif token == S_begin_object then
+    elseif token_id == S_begin_object then
       io.write ('{')
       column = column + 1
-    elseif token == S_end_object then
+    elseif token_id == S_end_object then
       io.write ('}')
       column = column + 1
-    elseif token == S_name_separator then
+    elseif token_id == S_name_separator then
       io.write (':')
       column = column + 1
-    elseif token == S_value_separator then
+    elseif token_id == S_value_separator then
       io.write (',')
       column = column + 1
-    elseif token == S_null then
+    elseif token_id == S_null then
       io.write( "null" )
       column = column + 4
-    elseif token == S_true then
+    elseif token_id == S_true then
       io.write ('true')
       column = column + 1
-    elseif token == S_false then
+    elseif token_id == S_false then
       io.write ('false')
       column = column + 1
-    elseif token == S_number then
-      local start_of_number = value.t_token_value
+    elseif token_id == S_number then
+      local start_of_number = token_value
       io.write( token_values[start_of_number] )
       column = column + 1
-    elseif token == S_string then
-      local start_of_string = value.t_token_value
+    elseif token_id == S_string then
+      local start_of_string = token_value
       io.write( token_values[start_of_string] )
     end
   end
