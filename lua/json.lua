@@ -1,5 +1,19 @@
 require 'os'
 
+-- debug "with print statements" helpers
+local inspect = require 'inspect'
+local function sf(...) return string.format(...) end
+local function t(l)
+  local info = debug.getinfo(l, "Sl")
+  return sf("%s:%d", info.short_src, info.currentline)
+end
+local function i(...) return inspect(...) end
+local function p(...) print(...) end
+local function pi(...) p(i(...)) end
+local function pt(...) p(... .. " at " .. t(1)) end
+local function pti(...) p(i(...) .. " at " .. t(1)) end
+
+-- libmarpa binding
 require 'libmarpa'
 require 'libmarpa_codes'
 
@@ -7,24 +21,24 @@ local lib = libmarpa.lib
 local ffi = libmarpa.ffi
 local codes = libmarpa_codes
 
--- print version info
-print(
+-- print platform versions
+p(
   "os:",
   table.concat( { ffi.os, ffi.arch, ffi.abi('win') and "Windows variant" or "" }, '/' )
 )
 
 local ver = ffi.new("int [3]")
 lib.marpa_version(ver)
-print(string.format("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
+p(sf("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
 
-print("LuaJIT version:", jit.version )
-print(string.rep('-', 28))
+p("LuaJIT version:", jit.version )
+p(string.rep('-', 28))
 
 -- error handling
 local function error_msg(func, g)
   local error_string = ffi.new("const char**")
   local error_code = lib.marpa_g_error(g, error_string)
-  return string.format("%s returned %d: %s", func, error_code, error_string )
+  return sf("%s returned %d: %s", func, error_code, error_string )
 end
 
 local function assert_result(result, func, g)
@@ -103,32 +117,47 @@ local jg = {
   string  = '"[^"]+"',
   number  = '-?[%d]+[.%d+]*',
 
-  ["true"]  = 'true',   -- true is a keyword in Lua
+  ["true"]  = 'true',  -- true is a keyword in Lua
   ["false"] = 'false', -- and so is false
   null      = 'null',
 
 }
-local inspect = require 'inspect'
+
+local symbols = {} -- symbol table
 for lhs, rhs in pairs(jg) do
---  print(string.format("%s := %s", inspect(lhs), inspect(rhs)))
+  p(sf("%s := %s", i(lhs), i(rhs)))
+  -- add lhs symbol to grammar
+  local S_lhs = lib.marpa_g_symbol_new (g)
+  assert_result(S_lhs, "marpa_g_symbol_new", g)
+  symbols["S_lhs"] = lhs
+  symbols["lhs"] = S_lhs
+  -- add rhs symbol to grammar
   rhs_type = type(rhs)
   if rhs_type == "table" then
     -- parser rule
-    for i, rhs_alternative in ipairs(rhs) do
+    for ix, rhs_alternative in ipairs(rhs) do
       -- extract parser rule adverbs, if any
-      local adverbs
+      local adverbs = {}
       if type(rhs_alternative[#rhs_alternative]) == "table" then
         adverbs = table.remove(rhs_alternative)
       end
-      print(lhs, '::=', inspect(rhs_alternative))
-      if adverbs ~= nil then print("adverbs: ", inspect(adverbs)) end
+      p(lhs, '::=', i(rhs_alternative))
+      if adverbs ~= nil then p("adverbs: ", i(adverbs)) end
+      -- add rule's symbols to grammar
+
+      -- add rule to grammar
+      -- infer rule type
+      if adverbs["quantifier"] == "+" then
+      elseif adverbs["quantifier"] == "*" then
+      end
     end
   elseif rhs_type == "string" then
     -- lexer rule
-    print(lhs, '::=', rhs)
+    p(lhs, '::=', rhs)
   end
-  print()
+  p()
 end
+pti(symbols)
 os.exit()
 
 local S_begin_array = lib.marpa_g_symbol_new (g)
@@ -288,7 +317,7 @@ while true do
 
   end
 
-  assert( token_symbol ~= 'MISMATCH', string.format("Invalid token: <%s>", match ) )
+  assert( token_symbol ~= 'MISMATCH', sf("Invalid token: <%s>", match ) )
 
   if token_symbol == 'NEWLINE' then
     column = 1
@@ -358,7 +387,7 @@ while true do
     local arg_n = value.t_arg_n
     local rule_id = value.t_rule_id
     local arg_to = value.t_result
---    io.stderr:write( string.format( "R %2d, stack[%2d:%2d] -> [%d]", rule_id, arg_0, arg_n, arg_to ), "\n" )
+--    io.stderr:write( sf( "R %2d, stack[%2d:%2d] -> [%d]", rule_id, arg_0, arg_n, arg_to ), "\n" )
   elseif step_type == lib.MARPA_STEP_TOKEN then
 
     local token_id = value.t_token_id
@@ -366,7 +395,7 @@ while true do
     -- hence the value is the start position of the token
     local token_value = value.t_token_value
     local arg_to = value.t_result
---    io.stderr:write( string.format( "T %2d, %d -> stack[%d]", token_id, token_value, arg_to), "\n")
+--    io.stderr:write( sf( "T %2d, %d -> stack[%d]", token_id, token_value, arg_to), "\n")
 
     if column > 60 then
       io.write ("\n")
