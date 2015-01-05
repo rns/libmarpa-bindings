@@ -63,6 +63,29 @@ assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
     { 'rhs2', ... { adverb = value, ... } }
   }
 ]]--
+--[[
+  JSON LUIF grammar for Kollos,
+  https://github.com/jeffreykegler/kollos/blob/master/working/json.luif
+
+    json         ::= object
+                   | array
+    object       ::= [lcurly rcurly]
+                   | [lcurly] members [rcurly]
+    members      ::= pair+ % comma
+    pair         ::= string [colon] value
+    value        ::= string
+                   | object
+                   | number
+                   | array
+                   | json_true
+                   | json_false
+                   | null
+    array        ::= [lsquare rsquare]
+                   | [lsquare] elements [rsquare]
+    elements     ::= value+ % comma
+    string       ::= lstring
+]]--
+
 local jg = {
   _start_symbol = 'json',
   json = {
@@ -97,19 +120,21 @@ local jg = {
   },
 
   -- lexer rules
-  lcurly  = '{',
-  rcurly  = '}',
-  lsquare = '[',
-  rsquare = ']',
-  comma   = ',',
-  colon   = ':',
+  -- todo: handle escaping
+  -- todo: handle order
+  [1] = { 'lcurly', '{' },
+  [2] = { 'rcurly',  '}' },
+  [3] = { 'lsquare', '%[' },
+  [4] = { 'rsquare', '%]' },
+  [5] = { 'comma', ',' },
+  [6] = { 'colon', ':' },
 
-  string  = '"[^"]+"',
-  number  = '-?[%d]+[.%d+]*',
+  [7] = { 'string', '"[^"]+"' },
+  [8] = { 'number', '-?[%d]+[.%d+]*' },
 
-  ["true"]  = 'true',  -- true is a keyword in Lua
-  ["false"] = 'false', -- and so is false
-  null      = 'null',
+  [9] = { 'true', 'true' },   -- true is a keyword in Lua
+  [10] = { 'false', 'false' }, -- and so is false
+  [11]= { 'null', 'null' },
 
 }
 
@@ -131,13 +156,25 @@ local function symbol_new(s, g)
   return s_id
 end
 
+local token_spec = {}
+
 for lhs, rhs in pairs(jg) do
-  d.pt(lhs, ':=', d.s(rhs))
+  -- handle lexer rules
+  if type(lhs) == "number" then
+    -- d.pt("# lexer rule")
+    local token_symbol  = rhs[1]
+    local token_pattern = rhs[2]
+    -- add token symbol
+    local S_token = symbol_new(token_symbol, g)
+    -- add to token_spec
+    table.insert( token_spec, { token_pattern, token_symbol, S_token } )
   -- handle start symbol
-  if lhs == '_start_symbol' then
+  elseif lhs == '_start_symbol' then
     local S_start = symbol_new(rhs, g)
     assert_result( lib.marpa_g_start_symbol_set(g, S_start), "marpa_g_start_symbol_set", g )
+  -- handle parser rules
   else
+    -- d.pt(lhs, ':=', d.s(rhs))
     -- add lhs symbol to the grammar
     local S_lhs = symbol_new(lhs, g)
     -- add rhs symbol to grammar
@@ -156,19 +193,21 @@ for lhs, rhs in pairs(jg) do
           S_rhs_symbol[ix] = symbol_new(rhs_symbol, g)
         end
         -- add rule to the grammar
-        d.pt(lhs, ':=', d.s(rhs_alternative))
+        -- d.pt(lhs, ':=', d.s(rhs_alternative))
         if next(adverbs) ~= nil then
           -- based on adverbs
           if adverbs["quantifier"] == "+" or adverbs["quantifier"] == "*" then
-            d.pt("# sequence rule")
-            d.pt(d.i(adverbs))
+
+            -- d.pt("# sequence rule")
+            -- d.pt(d.i(adverbs))
+
             -- todo implement keep (separator) adverb, off by default
             -- add separator symbol
             local S_separator = symbol_new(adverbs["separator"], g)
             -- add item symbol
             assert( #rhs_alternative == 1, "sequence rule must have only 1 symbol on its RHS" )
             local S_item = S_rhs_symbol[1]
-            d.pt(d.i(S_separator, S_item))
+            -- d.pt(d.i(S_separator, S_item))
             assert_result(
               lib.marpa_g_sequence_new (
                 g, S_lhs, S_item, S_separator,
@@ -181,7 +220,7 @@ for lhs, rhs in pairs(jg) do
             -- ...
           end
         else -- normal rule
-          d.pt("# normal rule")
+          -- d.pt("# normal rule")
           local rhs = ffi.new("int[" .. #rhs_alternative .. "]")
           for ix = 1, #rhs_alternative do
             rhs[ix-1] = S_rhs_symbol[ix]
@@ -189,14 +228,22 @@ for lhs, rhs in pairs(jg) do
           assert_result( lib.marpa_g_rule_new (g, S_lhs, rhs, #rhs_alternative), "marpa_g_rule_new", g )
         end
       end
-    elseif rhs_type == "string" then
-      -- lexer rule
-      d.pt("# lexer rule")
-      -- add to token_spec
     end
   end
 end
-d.pt(d.i(symbols))
+-- d.pt(d.i(token_spec))
+
+-- add auxiliary tokens representing none of the symbols
+local S_none = -1
+local aux_tokens = {
+  [1] = {'[ \t]+',  'SKIP',     S_none},  -- Skip over spaces and tabs
+  [2] = {"\n",      'NEWLINE',  S_none},  -- Line endings
+  [3] = {'.',       'MISMATCH', S_none}   -- Any other character
+}
+for i, v in ipairs(aux_tokens) do
+  table.insert( token_spec, v )
+end
+-- d.pt(d.i(token_spec))
 
 assert_result( lib.marpa_g_precompute(g), "marpa_g_precompute", g )
 
@@ -204,8 +251,6 @@ local r = ffi.gc( lib.marpa_r_new(g), lib.marpa_r_unref )
 assert_result( r, "marpa_r_new", g )
 
 assert_result( lib.marpa_r_start_input(r), "marpa_r_start_input", g )
-
-os.exit()
 
 -- read input from file, if specified on the command line, or set to default value
 local input = ''
@@ -220,29 +265,9 @@ if input == '' then
   input = '[ 1, "abc\ndef", -2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
 end
 
-print( input )
+d.pt(d.i(input))
 
 -- lexing
-local S_none = -1
-local token_spec = {
-  {'{',   'S_begin_object',     S_begin_object},
-  {'}',   'S_end_object',       S_end_object},
-  {'%[',  'S_begin_array',      S_begin_array}, -- % is escape char
-  {'%]',  'S_end_array',        S_end_array},
-  {',',   'S_value_separator',  S_value_separator},
-  {':',   'S_name_separator',   S_name_separator},
-
-  {'"[^"]+"',         'S_string', S_string},  -- todo: stricter string and number
-  {'-?[%d]+[.%d+]*',  'S_number', S_number},  -- regexes
-
-  {'true',  'S_true',   S_true},
-  {'false', 'S_false',  S_false},
-  {'null',  'S_null',   S_null},
-
-  {'[ \t]+',  'SKIP',     S_none},  -- Skip over spaces and tabs
-  {"\n",      'NEWLINE',  S_none},  -- Line endings
-  {'.',       'MISMATCH', S_none},  -- Any other character
-}
 
 local line   = 1
 local column = 1
@@ -283,7 +308,7 @@ while true do
     column = column + string.len(match)
     token_start = token_start + string.len(match)
   else
---    print (token_symbol, token_symbol_id, match, '@', token_start, ';', line, ':', column)
+    -- d.p(token_symbol, token_symbol_id, match, '@', token_start, ';', line, ':', column)
     token_length = string.len(match)
     column = column + token_length
     token_start = token_start + token_length
@@ -325,18 +350,23 @@ assert_result( tree_status, "marpa_t_next", g )
 local value = ffi.gc( lib.marpa_v_new (tree), marpa_v_unref )
 assert_result( value, "marpa_v_new", g )
 
--- todo:
---  build the json tree
---  handle ambuguity
+--[[
+  todo:
+    regexp-based lexing
+    build the json tree
+    handle ambuguity
+    preserving whitespaces (to test against inpout cleanly)
+    preserving and comments
+]]--
 
 local stack = {}
--- steps
+-- stepping
 column = 0
 while true do
   local step_type = lib.marpa_v_step (value)
   assert_result( step_type, "marpa_v_step", g )
   if step_type == lib.MARPA_STEP_INACTIVE then
-    -- "The valuator has gone through all of its steps"
+    -- d.pt( "The valuator has gone through all of its steps" )
     break
   elseif step_type == lib.MARPA_STEP_RULE then
     local arg_0 = value.t_arg_0
@@ -356,38 +386,38 @@ while true do
     if column > 60 then
       io.write ("\n")
       column = 0
-    elseif token_id == S_begin_array then
+    elseif token_id == symbols["lsquare"] then
       io.write ('[')
       column = column + 1
-    elseif token_id == S_end_array then
+    elseif token_id == symbols["rsquare"] then
       io.write (']')
       column = column + 1
-    elseif token_id == S_begin_object then
+    elseif token_id == symbols["lcurly"] then
       io.write ('{')
       column = column + 1
-    elseif token_id == S_end_object then
+    elseif token_id == symbols["rcurly"] then
       io.write ('}')
       column = column + 1
-    elseif token_id == S_name_separator then
+    elseif token_id == symbols["colon"] then
       io.write (':')
       column = column + 1
-    elseif token_id == S_value_separator then
+    elseif token_id == symbols["comma"] then
       io.write (',')
       column = column + 1
-    elseif token_id == S_null then
+    elseif token_id == symbols["null"] then
       io.write( "null" )
       column = column + 4
-    elseif token_id == S_true then
+    elseif token_id == symbols["true"] then
       io.write ('true')
       column = column + 1
-    elseif token_id == S_false then
+    elseif token_id == symbols["false"] then
       io.write ('false')
       column = column + 1
-    elseif token_id == S_number then
+    elseif token_id == symbols["number"] then
       local start_of_number = token_value
       io.write( token_values[start_of_number] )
       column = column + 1
-    elseif token_id == S_string then
+    elseif token_id == symbols["string"] then
       local start_of_string = token_value
       io.write( token_values[start_of_string] )
     end
