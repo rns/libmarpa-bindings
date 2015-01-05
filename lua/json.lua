@@ -18,6 +18,7 @@ lib.marpa_version(ver)
 print(string.format("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
 
 print("LuaJIT version:", jit.version )
+print(string.rep('-', 28))
 
 -- error handling
 local function error_msg(func, g)
@@ -50,7 +51,86 @@ assert( lib.marpa_c_error(config, msg) == lib.MARPA_ERR_NONE, msg )
   e.g. array/objects' begin's/end's, separators, etc. ]]--
 assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
 
--- grammar symbols from RFC 7159
+-- JSON grammar specification
+-- only symbols in quotes: no literals or regexes
+--[[
+  lhs = 'rhs' -- lexical rules, rhs can be a string or a Lua pattern or (in future) a regex
+  lhs = {
+    { 'rhs1', ... }
+    { 'rhs2', ... { adverb = value, ... } }
+  }
+]]--
+local jg = {
+  json = {
+    { 'object' },
+    { 'array' }
+  },
+  object = {
+    { 'lcurly', 'rcurly' },
+    { 'lcurly', 'members', 'rcurly' },
+  },
+  members = {
+    { 'pair', { proper = true, quantifier = '+', separator = 'comma' } }
+  },
+  pair = {
+    { 'string', 'colon', 'value' }
+  },
+  value = {
+    { 'string' },
+    { 'object' },
+    { 'number' },
+    { 'array' },
+    { 'true' },
+    { 'false' },
+    { 'null' },
+  },
+  array = {
+    { 'lsquare', 'rsquare' },
+    { 'lsquare', 'elements', 'rsquare' },
+  },
+  elements = {
+    { 'value', { proper = true, quantifier = '+', separator = comma } },
+  },
+
+  -- lexer rules
+  lcurly  = '{',
+  rcurly  = '}',
+  lsquare = '[',
+  rsquare = ']',
+  comma   = ',',
+  colon   = ':',
+
+  string  = '"[^"]+"',
+  number  = '-?[%d]+[.%d+]*',
+
+  ["true"]  = 'true',   -- true is a keyword in Lua
+  ["false"] = 'false', -- and so is false
+  null      = 'null',
+
+}
+local inspect = require 'inspect'
+for lhs, rhs in pairs(jg) do
+--  print(string.format("%s := %s", inspect(lhs), inspect(rhs)))
+  rhs_type = type(rhs)
+  if rhs_type == "table" then
+    -- parser rule
+    for i, rhs_alternative in ipairs(rhs) do
+      -- extract parser rule adverbs, if any
+      local adverbs
+      if type(rhs_alternative[#rhs_alternative]) == "table" then
+        adverbs = table.remove(rhs_alternative)
+      end
+      print(lhs, '::=', inspect(rhs_alternative))
+      if adverbs ~= nil then print("adverbs: ", inspect(adverbs)) end
+    end
+  elseif rhs_type == "string" then
+    -- lexer rule
+    print(lhs, '::=', rhs)
+  end
+  print()
+end
+os.exit()
+
 local S_begin_array = lib.marpa_g_symbol_new (g)
 assert_result(S_begin_array, "marpa_g_symbol_new", g)
 local S_begin_object = lib.marpa_g_symbol_new (g)
