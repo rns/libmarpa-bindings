@@ -121,7 +121,6 @@ local jg = {
 
   -- lexer rules
   -- todo: handle escaping
-  -- todo: handle order
   [1] = { 'lcurly', '{' },
   [2] = { 'rcurly',  '}' },
   [3] = { 'lsquare', '%[' },
