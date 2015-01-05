@@ -1,17 +1,6 @@
 require 'os'
 
--- debug "with print statements" helpers
-local inspect = require 'inspect'
-local function sf(...) return string.format(...) end
-local function t(l)
-  local info = debug.getinfo(l, "Sl")
-  return sf("%s:%d", info.short_src, info.currentline)
-end
-local function i(...) return inspect(...) end
-local function p(...) print(...) end
-local function pi(...) p(i(...)) end
-local function pt(...) p(... .. " at " .. t(1)) end
-local function pti(...) p(i(...) .. " at " .. t(1)) end
+local d = require 'printf_debugging'
 
 -- libmarpa binding
 require 'libmarpa'
@@ -22,23 +11,23 @@ local ffi = libmarpa.ffi
 local codes = libmarpa_codes
 
 -- print platform versions
-p(
+d.p(
   "os:",
   table.concat( { ffi.os, ffi.arch, ffi.abi('win') and "Windows variant" or "" }, '/' )
 )
 
 local ver = ffi.new("int [3]")
 lib.marpa_version(ver)
-p(sf("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
+d.p(d.sf("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
 
-p("LuaJIT version:", jit.version )
-p(string.rep('-', 28))
+d.p("LuaJIT version:", jit.version )
+d.p(string.rep('-', 28))
 
 -- error handling
 local function error_msg(func, g)
   local error_string = ffi.new("const char**")
   local error_code = lib.marpa_g_error(g, error_string)
-  return sf("%s returned %d: %s", func, error_code, error_string )
+  return d.sf("%s returned %d: %s", func, error_code, error_string )
 end
 
 local function assert_result(result, func, g)
@@ -124,40 +113,59 @@ local jg = {
 }
 
 local symbols = {} -- symbol table
+-- add symbol s to grammar g avoiding duplication via symbols table
+-- if symbol exists, return its id
+local function symbol_new(s, g)
+  assert(type(s) == "string", "symbol must be a string")
+  assert(type(g) == "cdata", "grammar must be cdata")
+  local s_id = symbols[s]
+  if s_id == nil then
+    s_id = lib.marpa_g_symbol_new (g)
+    assert_result(s_id, "marpa_g_symbol_new", g)
+    symbols[tostring(s_id)] = s
+    symbols[s]    = s_id
+  else
+    s_id = symbols[s]
+  end
+  return s_id
+end
+
 for lhs, rhs in pairs(jg) do
-  p(sf("%s := %s", i(lhs), i(rhs)))
-  -- add lhs symbol to grammar
-  local S_lhs = lib.marpa_g_symbol_new (g)
-  assert_result(S_lhs, "marpa_g_symbol_new", g)
-  symbols["S_lhs"] = lhs
-  symbols["lhs"] = S_lhs
+  d.pt(d.sf("%s := %s", d.inspect(lhs), d.inspect(rhs)))
+  -- add lhs symbol to the grammar
+  local S_lhs = symbol_new(lhs, g)
   -- add rhs symbol to grammar
   rhs_type = type(rhs)
   if rhs_type == "table" then
     -- parser rule
-    for ix, rhs_alternative in ipairs(rhs) do
-      -- extract parser rule adverbs, if any
+    for _, rhs_alternative in ipairs(rhs) do
+      -- extract rule's adverbs, if any
       local adverbs = {}
       if type(rhs_alternative[#rhs_alternative]) == "table" then
         adverbs = table.remove(rhs_alternative)
       end
-      p(lhs, '::=', i(rhs_alternative))
-      if adverbs ~= nil then p("adverbs: ", i(adverbs)) end
-      -- add rule's symbols to grammar
-
-      -- add rule to grammar
-      -- infer rule type
-      if adverbs["quantifier"] == "+" then
-      elseif adverbs["quantifier"] == "*" then
+      d.pt(lhs, '::=', d.inspect(rhs_alternative))
+      -- add rule's rhs symbols to the grammar
+      local S_rhs_symbol = {}
+      for ix, rhs_symbol in pairs(rhs_alternative) do
+        S_rhs_symbol[ix] = symbol_new(rhs_symbol, g)
+      end
+      -- add rule to the grammar
+      if next(adverbs) ~= nil then
+        -- based on adverbs
+        if adverbs["quantifier"] == "+" then
+        elseif adverbs["quantifier"] == "*" then
+        end
+        d.pt("adverbs: ", d.inspect(adverbs))
       end
     end
   elseif rhs_type == "string" then
     -- lexer rule
-    p(lhs, '::=', rhs)
+    d.pt(lhs, '::=', rhs)
   end
-  p()
+  d.p()
 end
-pti(symbols)
+d.pti(symbols)
 os.exit()
 
 local S_begin_array = lib.marpa_g_symbol_new (g)
