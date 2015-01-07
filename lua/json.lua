@@ -87,54 +87,57 @@ assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
 ]]--
 
 local jg = {
-  _start_symbol = 'json',
-  json = {
-    { 'object' },
-    { 'array' }
+  parser = {
+    _start_symbol = 'json',
+    json = {
+      { 'object' },
+      { 'array' }
+    },
+    object = {
+      { 'lcurly', 'rcurly' },
+      { 'lcurly', 'members', 'rcurly' },
+    },
+    members = {
+      { 'pair', { proper = true, quantifier = '+', separator = 'comma' } }
+    },
+    pair = {
+      { 'string', 'colon', 'value' }
+    },
+    value = {
+      { 'string' },
+      { 'object' },
+      { 'number' },
+      { 'array' },
+      { 'true' },
+      { 'false' },
+      { 'null' },
+    },
+    array = {
+      { 'lsquare', 'rsquare' },
+      { 'lsquare', 'elements', 'rsquare' },
+    },
+    elements = {
+      { 'value', { proper = true, quantifier = '+', separator = 'comma' } },
+    },
   },
-  object = {
-    { 'lcurly', 'rcurly' },
-    { 'lcurly', 'members', 'rcurly' },
-  },
-  members = {
-    { 'pair', { proper = true, quantifier = '+', separator = 'comma' } }
-  },
-  pair = {
-    { 'string', 'colon', 'value' }
-  },
-  value = {
-    { 'string' },
-    { 'object' },
-    { 'number' },
-    { 'array' },
-    { 'true' },
-    { 'false' },
-    { 'null' },
-  },
-  array = {
-    { 'lsquare', 'rsquare' },
-    { 'lsquare', 'elements', 'rsquare' },
-  },
-  elements = {
-    { 'value', { proper = true, quantifier = '+', separator = 'comma' } },
-  },
-
-  -- lexer rules
+  -- lexer rules (order is important)
   -- todo: handle escaping
-  [1] = { 'lcurly', '{' },
-  [2] = { 'rcurly',  '}' },
-  [3] = { 'lsquare', '%[' },
-  [4] = { 'rsquare', '%]' },
-  [5] = { 'comma', ',' },
-  [6] = { 'colon', ':' },
+  --
+  lexer = {
+    [1] = { 'lcurly', '{' },
+    [2] = { 'rcurly',  '}' },
+    [3] = { 'lsquare', '%[' },
+    [4] = { 'rsquare', '%]' },
+    [5] = { 'comma', ',' },
+    [6] = { 'colon', ':' },
 
-  [7] = { 'string', '"[^"]+"' },
-  [8] = { 'number', '-?[%d]+[.%d+]*' },
+    [7] = { 'string', '"[^"]+"' },
+    [8] = { 'number', '-?[%d]+[.%d+]*' },
 
-  [9] = { 'true', 'true' },   -- true is a keyword in Lua
-  [10] = { 'false', 'false' }, -- and so is false
-  [11]= { 'null', 'null' },
-
+    [9] = { 'true', 'true' },   -- true is a keyword in Lua
+    [10] = { 'false', 'false' }, -- and so is false
+    [11]= { 'null', 'null' },
+  }
 }
 
 local symbols = {} -- symbol table
@@ -155,23 +158,12 @@ local function symbol_new(s, g)
   return s_id
 end
 
-local token_spec = {}
-
-for lhs, rhs in pairs(jg) do
-  -- handle lexer rules
-  if type(lhs) == "number" then
-    -- d.pt("# lexer rule")
-    local token_symbol  = rhs[1]
-    local token_pattern = rhs[2]
-    -- add token symbol
-    local S_token = symbol_new(token_symbol, g)
-    -- add to token_spec
-    table.insert( token_spec, { token_pattern, token_symbol, S_token } )
-  -- handle start symbol
-  elseif lhs == '_start_symbol' then
+-- parser rules
+assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "parser" key]])
+for lhs, rhs in pairs(jg["parser"]) do
+  if lhs == '_start_symbol' then
     local S_start = symbol_new(rhs, g)
     assert_result( lib.marpa_g_start_symbol_set(g, S_start), "marpa_g_start_symbol_set", g )
-  -- handle parser rules
   else
     -- d.pt(lhs, ':=', d.s(rhs))
     -- add lhs symbol to the grammar
@@ -231,6 +223,23 @@ for lhs, rhs in pairs(jg) do
   end
 end
 -- d.pt(d.i(token_spec))
+
+-- todo:
+-- sanity check: all parser's terminals must exist as lexer rule's token_symbol's
+
+-- lexer rules
+local token_spec = {}
+assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "lexer" key]])
+for _, rule in ipairs(jg["lexer"]) do
+    -- d.pt("# lexer rule")
+    local token_symbol  = rule[1]
+    local token_pattern = rule[2]
+    -- add token symbol
+    local S_token = symbol_new(token_symbol, g)
+    -- add to token_spec
+    table.insert( token_spec, { token_pattern, token_symbol, S_token } )
+  -- handle start symbol
+end
 
 -- add auxiliary tokens representing none of the symbols
 local S_none = -1
