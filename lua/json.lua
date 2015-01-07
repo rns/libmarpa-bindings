@@ -192,7 +192,8 @@ for lhs, rhs in pairs(jg["parser"]) do
             -- d.pt("# sequence rule")
             -- d.pt(d.i(adverbs))
 
-            -- todo implement keep (separator) adverb, off by default
+            -- todo: implement keep (separator) adverb, off by default
+
             -- add separator symbol
             local S_separator = symbol_new(adverbs["separator"], g)
             -- add item symbol
