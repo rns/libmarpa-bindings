@@ -1,6 +1,6 @@
 require 'os'
 
-local d = require 'printf_debugging'
+--local d = require 'printf_debugging'
 
 -- libmarpa binding
 require 'libmarpa'
@@ -11,23 +11,23 @@ local ffi = libmarpa.ffi
 local codes = libmarpa_codes
 
 -- print platform versions
-d.p(
+print(
   "os:",
   table.concat( { ffi.os, ffi.arch, ffi.abi('win') and "Windows variant" or "" }, '/' )
 )
 
 local ver = ffi.new("int [3]")
 lib.marpa_version(ver)
-d.p(d.sf("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
+print(string.format("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
 
-d.p("LuaJIT version:", jit.version )
-d.p(string.rep('-', 28))
+print("LuaJIT version:", jit.version )
+print(string.rep('-', 28))
 
 -- error handling
 local function error_msg(func, g)
   local error_string = ffi.new("const char**")
   local error_code = lib.marpa_g_error(g, error_string)
-  return d.sf("%s returned %d: %s", func, error_code, error_string )
+  return string.format("%s returned %d: %s", func, error_code, error_string )
 end
 
 local function assert_result(result, func, g)
@@ -134,7 +134,7 @@ local jg = {
     [7] = { 'string', '"[^"]+"' },
     [8] = { 'number', '-?[%d]+[.%d+]*' },
 
-    [9] = { 'true', 'true' },   -- true is a keyword in Lua
+    [9] = { 'true', 'true' },   -- true   is a keyword in Lua
     [10] = { 'false', 'false' }, -- and so is false
     [11]= { 'null', 'null' },
   }
@@ -273,10 +273,48 @@ end
 if input == '' then
   input = '[ 1, "abc\ndef", -2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
 end
-
-d.pt(d.i(input))
+-- save input for testing
+local json = input
 
 -- lexing
+-- todo: move tokenizing to start:len via string.find
+--[[ todo:
+  first match               -- fastest, manual longest-first arrangement
+  longest match
+  longest acceptable match
+  lexeme priorities
+    say keyword or id
+]]--
+
+local function expected_terminals(r, max_terminals_count)
+  local expected = ffi.new("Marpa_Symbol_ID[" .. max_terminals_count .. "]")
+  local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
+  local result = {}
+  for i = 0, count_of_expected do
+    result[symbols[tostring(expected[i])]] = 1
+  end
+  return result
+end
+
+-- read tokens ({ symbol_id, value } pairs) with recognizer r
+-- ambiguous tokens are allowed
+-- return terminals expected at current earleme
+local function read_tokens( tokens, r )
+  for _, token in ipairs(tokens) do
+
+    local token_symbol_id = token[1]
+    local token_value = token[2]
+
+    local status = lib.marpa_r_alternative (r, token_symbol_id, token_value, 1)
+    if status ~= lib.MARPA_ERR_NONE then
+      assert_result( status, 'marpa_r_alternative', g )
+    end
+
+  end
+  status = lib.marpa_r_earleme_complete (r)
+  assert_result( status, 'marpa_r_earleme_complete', g )
+  return expected_terminals(r, #token_spec)
+end
 
 local line   = 1
 local column = 1
@@ -285,6 +323,12 @@ local token_value  = ''
 local token_values = {}
 local token_start  = 1
 local token_length = 0
+
+-- these terminals must always be matched
+local always_expected = { SKIP = 1, NEWLINE = 1, MISMATCH = 1 }
+-- initally we assume that all terminals are expected
+local et = {}
+for _, triple in ipairs(token_spec) do et[triple[2]] = 1 end
 
 while true do
 
@@ -299,15 +343,16 @@ while true do
     token_symbol    = triple[2]
     token_symbol_id = triple[3]
 
-    match = string.match(input, "^" .. pattern)
-    if match ~= nil then
-      input = string.gsub(input, "^" .. pattern, "")
-      break
+    if et[token_symbol] ~= nil or always_expected[token_symbol] ~= nil then
+      match = string.match(input, "^" .. pattern)
+      if match ~= nil then
+        input = string.gsub(input, "^" .. pattern, "")
+        break
+      end
     end
-
   end
 
-  assert( token_symbol ~= 'MISMATCH', sf("Invalid token: <%s>", match ) )
+  assert( token_symbol ~= 'MISMATCH', string.format("Invalid token: <%s>", match ) )
 
   if token_symbol == 'NEWLINE' then
     column = 1
@@ -323,25 +368,14 @@ while true do
     token_start = token_start + token_length
     token_value = match
 
-    local status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
-    if status ~= lib.MARPA_ERR_NONE then
-      local expected = ffi.new("Marpa_Symbol_ID*")
-      local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
-      -- todo: list expected terminals
-      assert_result( status, 'marpa_r_alternative', g )
-    end
-
-    status = lib.marpa_r_earleme_complete (r)
-    assert_result( status, 'marpa_r_earleme_complete', g )
-
+    et = read_tokens( { { token_symbol_id, token_start } }, r )
     -- save token value for evaluation
-    -- todo: move tokenizing to start:len via string.find
     token_values[token_start] = token_value
   end
   if input == '' then break end
 end
 
--- for k, v in pairs(token_values) do print (k, v) end
+-- d.pi(token_values)
 
 -- valuation
 local bocage = ffi.gc( lib.marpa_b_new (r, -1), lib.marpa_b_unref )
@@ -369,6 +403,7 @@ assert_result( value, "marpa_v_new", g )
 ]]--
 
 local stack = {}
+local got_json = ''
 -- stepping
 column = 0
 while true do
@@ -378,60 +413,68 @@ while true do
     -- d.pt( "The valuator has gone through all of its steps" )
     break
   elseif step_type == lib.MARPA_STEP_RULE then
-    local arg_0 = value.t_arg_0
-    local arg_n = value.t_arg_n
+    local first_child_ix = value.t_arg_0
+    local last_child_ix  = value.t_arg_n
+    local rule_value_ix  = value.t_result -- rule value must go to that ix
     local rule_id = value.t_rule_id
-    local arg_to = value.t_result
---    io.stderr:write( sf( "R %2d, stack[%2d:%2d] -> [%d]", rule_id, arg_0, arg_n, arg_to ), "\n" )
+    local rule_lhs_id = lib.marpa_g_rule_lhs(g, rule_id)
+--    io.stderr:write( sf( "R%-2d: %-10s stack[%2d:%2d] -> [%d]", rule_id, symbols[tostring(rule_lhs_id)], first_child_ix, last_child_ix, rule_value_ix ), "\n" )
   elseif step_type == lib.MARPA_STEP_TOKEN then
 
     local token_id = value.t_token_id
     -- we called _alternative with token_start as the value,
     -- hence the value is the start position of the token
     local token_value = value.t_token_value
-    local arg_to = value.t_result
---    io.stderr:write( sf( "T %2d, %d -> stack[%d]", token_id, token_value, arg_to), "\n")
+    local token_value_ix = value.t_result
+--    io.stderr:write( sf( "T%-2d: %-10s %d -> stack[%d]", token_id, symbols[tostring(token_id)], token_value, token_value_ix), "\n")
 
     if column > 60 then
-      io.write ("\n")
+      got_json = got_json .. "\n"
       column = 0
     elseif token_id == symbols["lsquare"] then
-      io.write ('[')
+      got_json = got_json .. '['
       column = column + 1
     elseif token_id == symbols["rsquare"] then
-      io.write (']')
+      got_json = got_json .. ']'
       column = column + 1
     elseif token_id == symbols["lcurly"] then
-      io.write ('{')
+      got_json = got_json .. '{'
       column = column + 1
     elseif token_id == symbols["rcurly"] then
-      io.write ('}')
+      got_json = got_json .. '}'
       column = column + 1
     elseif token_id == symbols["colon"] then
-      io.write (':')
+      got_json = got_json .. ':'
       column = column + 1
     elseif token_id == symbols["comma"] then
-      io.write (',')
+      got_json = got_json .. ','
       column = column + 1
     elseif token_id == symbols["null"] then
-      io.write( "null" )
+      got_json = got_json ..  "null"
       column = column + 4
     elseif token_id == symbols["true"] then
-      io.write ('true')
+      got_json = got_json .. 'true'
       column = column + 1
     elseif token_id == symbols["false"] then
-      io.write ('false')
+      got_json = got_json .. 'false'
       column = column + 1
     elseif token_id == symbols["number"] then
       local start_of_number = token_value
-      io.write( token_values[start_of_number] )
+      got_json = got_json .. token_values[start_of_number]
       column = column + 1
     elseif token_id == symbols["string"] then
       local start_of_string = token_value
-      io.write( token_values[start_of_string] )
+      got_json = got_json .. token_values[start_of_string]
     end
   end
 end
 
-io.write("\n")
-
+-- test
+local expected_json, n = string.gsub(json, ' ', '')
+if expected_json == got_json then
+  print("json parsed ok")
+else
+  print("json parsed not ok:")
+  print("expected: ", expected_json)
+  print("got     : ", got_json)
+end
