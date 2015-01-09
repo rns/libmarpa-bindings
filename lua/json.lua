@@ -1,6 +1,6 @@
 require 'os'
 
---local d = require 'printf_debugging'
+local d = require 'printf_debugging'
 
 -- libmarpa binding
 require 'libmarpa'
@@ -62,7 +62,13 @@ assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
     { 'rhs1', ... }
     { 'rhs2', ... { adverb = value, ... } }
   }
+   events
+    predicted
+    completed
+    expected
+    nulled
 ]]--
+
 --[[
   JSON LUIF grammar for Kollos,
   https://github.com/jeffreykegler/kollos/blob/master/working/json.luif
@@ -137,6 +143,10 @@ local jg = {
     [9] = { 'true', 'true' },   -- true   is a keyword in Lua
     [10] = { 'false', 'false' }, -- and so is false
     [11]= { 'null', 'null' },
+  },
+  actions = {
+    --[[ 'lhs1, lhs2, lhs3' = function(span, literal) end
+    ]]--
   }
 }
 
@@ -313,7 +323,6 @@ local function read_tokens( tokens, r )
   end
   status = lib.marpa_r_earleme_complete (r)
   assert_result( status, 'marpa_r_earleme_complete', g )
-  return expected_terminals(r, #token_spec)
 end
 
 local line   = 1
@@ -326,9 +335,6 @@ local token_length = 0
 
 -- these terminals must always be matched
 local always_expected = { SKIP = 1, NEWLINE = 1, MISMATCH = 1 }
--- initally we assume that all terminals are expected
-local et = {}
-for _, triple in ipairs(token_spec) do et[triple[2]] = 1 end
 
 while true do
 
@@ -337,6 +343,7 @@ while true do
   local token_symbol_id
   local match
 
+  local et = expected_terminals(r, #token_spec)
   for _, triple in ipairs(token_spec) do
 
     pattern         = triple[1]
@@ -368,7 +375,7 @@ while true do
     token_start = token_start + token_length
     token_value = match
 
-    et = read_tokens( { { token_symbol_id, token_start } }, r )
+    read_tokens( { { token_symbol_id, token_start } }, r )
     -- save token value for evaluation
     token_values[token_start] = token_value
   end
@@ -378,6 +385,14 @@ end
 -- d.pi(token_values)
 
 -- valuation
+--[[
+  bocage order (next_)tree value steps
+  valuator
+    init
+    tree
+      value
+        steps(value)
+]]--
 local bocage = ffi.gc( lib.marpa_b_new (r, -1), lib.marpa_b_unref )
 assert_result( bocage, "marpa_b_new", g )
 
