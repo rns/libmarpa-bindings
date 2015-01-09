@@ -296,8 +296,8 @@ local json = input
     say keyword or id
 ]]--
 
-local function expected_terminals(r, max_terminals_count)
-  local expected = ffi.new("Marpa_Symbol_ID[" .. max_terminals_count .. "]")
+local expected = ffi.new("Marpa_Symbol_ID[" .. #token_spec .. "]")
+local function expected_terminals(r)
   local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
   local result = {}
   for i = 0, count_of_expected do
@@ -343,7 +343,7 @@ while true do
   local token_symbol_id
   local match
 
-  local et = expected_terminals(r, #token_spec)
+  local et = expected_terminals(r)
   for _, triple in ipairs(token_spec) do
 
     pattern         = triple[1]
