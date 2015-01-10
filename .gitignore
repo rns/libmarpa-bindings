@@ -4,7 +4,7 @@ etc/
 *.exe.stackdump
 
 # exe files
-*.exe
+c#/*.exe
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
