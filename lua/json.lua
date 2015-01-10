@@ -3,12 +3,11 @@ require 'os'
 local d = require 'printf_debugging'
 
 -- libmarpa binding
-require 'libmarpa'
-require 'libmarpa_codes'
+local libmarpa = require 'libmarpa'
 
-local lib = libmarpa.lib
-local ffi = libmarpa.ffi
-local codes = libmarpa_codes
+local lib   = libmarpa.lib
+local ffi   = libmarpa.ffi
+local codes = libmarpa.codes
 
 -- print platform versions
 print(

@@ -3,6 +3,9 @@ etc/
 # cygwin stackdumps
 *.exe.stackdump
 
+# exe files
+*.exe
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
