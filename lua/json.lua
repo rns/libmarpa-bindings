@@ -251,19 +251,32 @@ for _, rule in ipairs(jg["lexer"]) do
   -- handle start symbol
 end
 
--- add auxiliary tokens representing none of the symbols
-local S_none = -1
-local aux_tokens = {
-  [1] = {'[ \t]+',  'SKIP',     S_none},  -- Skip over spaces and tabs
-  [2] = {"\n",      'NEWLINE',  S_none},  -- Line endings
-  [3] = {'.',       'MISMATCH', S_none}   -- Any other character
-}
-for i, v in ipairs(aux_tokens) do
-  table.insert( token_spec, v )
-end
 -- d.pt(d.i(token_spec))
 
 assert_result( lib.marpa_g_precompute(g), "marpa_g_precompute", g )
+
+--[[
+todo: more specific error handlingcheck for errors
+  MARPA_ERR_NO_RULES: The grammar has no rules.
+  MARPA_ERR_NO_START_SYMBOL: No start symbol was specified.
+  MARPA_ERR_INVALID_START_SYMBOL: A start symbol ID was specified, but it is not the ID of a valid symbol.
+  MARPA_ERR_START_NOT_LHS: The start symbol is not on the LHS of any rule.
+  MARPA_ERR_UNPRODUCTIVE_START: The start symbol is not productive.
+  MARPA_ERR_COUNTED_NULLABLE: A symbol on the RHS of a sequence rule is nullable. Libmarpa does not allow this.
+  MARPA_ERR_NULLING_TERMINAL: A terminal is also a nulling symbol. Libmarpa does not allow this.
+  MARPA_ERR_GRAMMAR_HAS_CYCLE
+    marpa_g_has_cycle()
+    marpa_g_rule_is_loop()
+11.4 Symbols
+  unproductive and inaccessible symbols
+    marpa_g_symbol_is_accessible()
+    marpa_g_symbol_is_productive()
+  marpa_g_symbol_is_nullable()
+  marpa_g_symbol_is_nulling()
+
+marpa_g_is_precomputed()
+
+]]--
 
 local r = ffi.gc( lib.marpa_r_new(g), lib.marpa_r_unref )
 assert_result( r, "marpa_r_new", g )
@@ -289,12 +302,19 @@ local json = input
 -- todo: move tokenizing to start:len via string.find
 --[[ todo:
   first match               -- fastest, manual longest-first arrangement
+    with regex, single match of lexemes with ()|<()
+    with lua patterns, loop
   longest match
   longest acceptable match
+    loop with both regex and patterns
+  ambiguous lexing
   lexeme priorities
     say keyword or id
+  preserving whitespaces (to test against inpout cleanly)
+  preserving comments
 ]]--
 
+-- return terminals expected at current earleme
 local expected = ffi.new("Marpa_Symbol_ID[" .. #token_spec .. "]")
 local function expected_terminals(r)
   local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
@@ -305,83 +325,51 @@ local function expected_terminals(r)
   return result
 end
 
--- read tokens ({ symbol_id, value } pairs) with recognizer r
--- ambiguous tokens are allowed
--- return terminals expected at current earleme
-local function read_tokens( tokens, r )
-  for _, token in ipairs(tokens) do
+require 'lexer'
+local lex = lexer.new(token_spec, input)
+local token_values = {}
+while true do
 
-    local token_symbol_id = token[1]
-    local token_value = token[2]
+  local et = expected_terminals(r)
+  local token_symbol, token_symbol_id, token_value, token_start, line, column = lex(et)
+  if token_symbol_id == nil then break end
+  -- p(sf("{ '%s', %s, %s, %s },", token_symbol_id, token_symbol, token_start, line, column))
 
-    local status = lib.marpa_r_alternative (r, token_symbol_id, token_value, 1)
+  if token_symbol == 'MISMATCH' then
+    print(string.format("Invalid symbol %s '%s' at %d:%d", token_symbol, token_value, line, column ));
+  elseif token_symbol_id >= 0 then
+    local status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
     if status ~= lib.MARPA_ERR_NONE then
       assert_result( status, 'marpa_r_alternative', g )
     end
+--[[
+todo:
 
-  end
-  status = lib.marpa_r_earleme_complete (r)
-  assert_result( status, 'marpa_r_earleme_complete', g )
-end
+events
+  if handlers are specified in the grammar)
 
-local line   = 1
-local column = 1
+recovery
+  Several error codes leave the recognizer in a fully recoverable state, allowing the
+  application to retry the marpa_r_alternative() method. Retry is efficient, and quite useable
+  as a parsing technique. The error code of primary interest from this point of view is
+  MARPA_ERR_UNEXPECTED_TOKEN_ID, which indicates that the token was not accepted because
+  of its token ID. Retry after this condition is used in several applications, and is called
+  “the Ruby Slippers technique”.
 
-local token_value  = ''
-local token_values = {}
-local token_start  = 1
-local token_length = 0
-
--- these terminals must always be matched
-local always_expected = { SKIP = 1, NEWLINE = 1, MISMATCH = 1 }
-
-while true do
-
-  local pattern
-  local token_symbol
-  local token_symbol_id
-  local match
-
-  local et = expected_terminals(r)
-  for _, triple in ipairs(token_spec) do
-
-    pattern         = triple[1]
-    token_symbol    = triple[2]
-    token_symbol_id = triple[3]
-
-    if et[token_symbol] ~= nil or always_expected[token_symbol] ~= nil then
-      match = string.match(input, "^" .. pattern)
-      if match ~= nil then
-        input = string.gsub(input, "^" .. pattern, "")
-        break
-      end
-    end
-  end
-
-  assert( token_symbol ~= 'MISMATCH', string.format("Invalid token: <%s>", match ) )
-
-  if token_symbol == 'NEWLINE' then
-    column = 1
-    line = line + 1
-    token_start = token_start + 1
-  elseif token_symbol == 'SKIP' then
-    column = column + string.len(match)
-    token_start = token_start + string.len(match)
+  The error codes MARPA_ERR_DUPLICATE_TOKEN, MARPA_ERR_NO_TOKEN_EXPECTED_HERE and
+  MARPA_ERR_INACCESSIBLE_TOKEN also leave the recognizer in a fully recoverable state, and may
+  also be useable for the Ruby Slippers or similar techniques. At this writing, the author
+  knows of no applications which attempt to recover from these errors.
+]]--
+    status = lib.marpa_r_earleme_complete (r)
+    assert_result( status, 'marpa_r_earleme_complete', g )
+    token_values[token_start .. ""] = token_value
   else
-    -- d.p(token_symbol, token_symbol_id, match, '@', token_start, ';', line, ':', column)
-    token_length = string.len(match)
-    column = column + token_length
-    token_start = token_start + token_length
-    token_value = match
 
-    read_tokens( { { token_symbol_id, token_start } }, r )
-    -- save token value for evaluation
-    token_values[token_start] = token_value
   end
-  if input == '' then break end
 end
 
--- d.pi(token_values)
+-- pi(token_values)
 
 -- valuation
 --[[
@@ -409,11 +397,7 @@ assert_result( value, "marpa_v_new", g )
 
 --[[
   todo:
-    regexp-based lexing
     build the json tree
-    handle ambuguity
-    preserving whitespaces (to test against inpout cleanly)
-    preserving and comments
 ]]--
 
 local stack = {}
@@ -474,11 +458,11 @@ while true do
       column = column + 1
     elseif token_id == symbols["number"] then
       local start_of_number = token_value
-      got_json = got_json .. token_values[start_of_number]
+      got_json = got_json .. token_values[start_of_number .. ""]
       column = column + 1
     elseif token_id == symbols["string"] then
       local start_of_string = token_value
-      got_json = got_json .. token_values[start_of_string]
+      got_json = got_json .. token_values[start_of_string .. ""]
     end
   end
 end

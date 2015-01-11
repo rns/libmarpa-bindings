@@ -11,6 +11,7 @@ function i(...)
     -- based on http://stackoverflow.com/questions/10458306/get-name-of-argument-of-function-in-lua
     local name = ''
     -- see if we can find a local in the caller's scope with the given value
+    -- todo: if several names are foud for a given value, name them as 'N1 or N2 or ...'
     for i=1,math.huge do
       local localname, localvalue = debug.getlocal(2,i,1)
       if not localname then

@@ -4,6 +4,9 @@ using System.Diagnostics;
 
 namespace Marpa {
 
+  // typedefs
+  using Marpa_Error_Code = System.Int32;
+
   public class libmarpa {
     // versions
     public const int MARPA_MAJOR_VERSION = 7;
@@ -135,9 +138,9 @@ namespace Marpa {
     public const int MARPA_STEP_INITIAL = 7;
 
     [DllImport("libmarpa.dll")]
-    public extern static unsafe int marpa_version (int[] version);
+    public extern static unsafe Marpa_Error_Code marpa_version (int[] version);
     [DllImport("libmarpa.dll")]
-    public extern static int marpa_check_version (int required_major, int required_minor, int required_micro);
+    public extern static Marpa_Error_Code marpa_check_version (int required_major, int required_minor, int required_micro);
 
     public class MarpaException: Exception
     {
