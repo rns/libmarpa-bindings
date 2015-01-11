@@ -295,24 +295,8 @@ end
 if input == '' then
   input = '[ 1, "abc\ndef", -2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
 end
--- save input for testing
-local json = input
 
 -- lexing
--- todo: move tokenizing to start:len via string.find
---[[ todo:
-  first match               -- fastest, manual longest-first arrangement
-    with regex, single match of lexemes with ()|<()
-    with lua patterns, loop
-  longest match
-  longest acceptable match
-    loop with both regex and patterns
-  ambiguous lexing
-  lexeme priorities
-    say keyword or id
-  preserving whitespaces (to test against inpout cleanly)
-  preserving comments
-]]--
 
 -- return terminals expected at current earleme
 local expected = ffi.new("Marpa_Symbol_ID[" .. #token_spec .. "]")
@@ -328,12 +312,12 @@ end
 require 'lexer'
 local lex = lexer.new(token_spec, input)
 local token_values = {}
+
 while true do
 
   local et = expected_terminals(r)
-  local token_symbol, token_symbol_id, token_value, token_start, line, column = lex(et)
-  if token_symbol_id == nil then break end
-  -- p(sf("{ '%s', %s, %s, %s },", token_symbol_id, token_symbol, token_start, line, column))
+  local token_symbol, token_symbol_id, token_start, token_length, line, column = lex(et)
+  if token_symbol == nil then break end
 
   if token_symbol == 'MISMATCH' then
     print(string.format("Invalid symbol %s '%s' at %d:%d", token_symbol, token_value, line, column ));
@@ -341,31 +325,30 @@ while true do
     local status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
     if status ~= lib.MARPA_ERR_NONE then
       assert_result( status, 'marpa_r_alternative', g )
+    else
+      --[[
+      todo:
+
+      events
+        if handlers are specified in the grammar)
+
+      recovery
+        Several error codes leave the recognizer in a fully recoverable state, allowing the
+        application to retry the marpa_r_alternative() method. Retry is efficient, and quite useable
+        as a parsing technique. The error code of primary interest from this point of view is
+        MARPA_ERR_UNEXPECTED_TOKEN_ID, which indicates that the token was not accepted because
+        of its token ID. Retry after this condition is used in several applications, and is called
+        “the Ruby Slippers technique”.
+
+        The error codes MARPA_ERR_DUPLICATE_TOKEN, MARPA_ERR_NO_TOKEN_EXPECTED_HERE and
+        MARPA_ERR_INACCESSIBLE_TOKEN also leave the recognizer in a fully recoverable state, and may
+        also be useable for the Ruby Slippers or similar techniques. At this writing, the author
+        knows of no applications which attempt to recover from these errors.
+      ]]--
     end
---[[
-todo:
-
-events
-  if handlers are specified in the grammar)
-
-recovery
-  Several error codes leave the recognizer in a fully recoverable state, allowing the
-  application to retry the marpa_r_alternative() method. Retry is efficient, and quite useable
-  as a parsing technique. The error code of primary interest from this point of view is
-  MARPA_ERR_UNEXPECTED_TOKEN_ID, which indicates that the token was not accepted because
-  of its token ID. Retry after this condition is used in several applications, and is called
-  “the Ruby Slippers technique”.
-
-  The error codes MARPA_ERR_DUPLICATE_TOKEN, MARPA_ERR_NO_TOKEN_EXPECTED_HERE and
-  MARPA_ERR_INACCESSIBLE_TOKEN also leave the recognizer in a fully recoverable state, and may
-  also be useable for the Ruby Slippers or similar techniques. At this writing, the author
-  knows of no applications which attempt to recover from these errors.
-]]--
     status = lib.marpa_r_earleme_complete (r)
     assert_result( status, 'marpa_r_earleme_complete', g )
-    token_values[token_start .. ""] = token_value
-  else
-
+    token_values[token_start .. ""] = token_length
   end
 end
 
@@ -426,49 +409,16 @@ while true do
     local token_value_ix = value.t_result
 --    io.stderr:write( sf( "T%-2d: %-10s %d -> stack[%d]", token_id, symbols[tostring(token_id)], token_value, token_value_ix), "\n")
 
-    if column > 60 then
-      got_json = got_json .. "\n"
-      column = 0
-    elseif token_id == symbols["lsquare"] then
-      got_json = got_json .. '['
-      column = column + 1
-    elseif token_id == symbols["rsquare"] then
-      got_json = got_json .. ']'
-      column = column + 1
-    elseif token_id == symbols["lcurly"] then
-      got_json = got_json .. '{'
-      column = column + 1
-    elseif token_id == symbols["rcurly"] then
-      got_json = got_json .. '}'
-      column = column + 1
-    elseif token_id == symbols["colon"] then
-      got_json = got_json .. ':'
-      column = column + 1
-    elseif token_id == symbols["comma"] then
-      got_json = got_json .. ','
-      column = column + 1
-    elseif token_id == symbols["null"] then
-      got_json = got_json ..  "null"
-      column = column + 4
-    elseif token_id == symbols["true"] then
-      got_json = got_json .. 'true'
-      column = column + 1
-    elseif token_id == symbols["false"] then
-      got_json = got_json .. 'false'
-      column = column + 1
-    elseif token_id == symbols["number"] then
-      local start_of_number = token_value
-      got_json = got_json .. token_values[start_of_number .. ""]
-      column = column + 1
-    elseif token_id == symbols["string"] then
-      local start_of_string = token_value
-      got_json = got_json .. token_values[start_of_string .. ""]
-    end
+    local token_start = token_value
+    local token_end = token_start + token_values[token_start .. ""] - 1
+    local token = input:sub(token_start, token_end)
+    got_json = got_json .. token
+
   end
 end
 
 -- test
-local expected_json, n = string.gsub(json, ' ', '')
+local expected_json = string.gsub(input, ' ', '')
 if expected_json == got_json then
   print("json parsed ok")
 else

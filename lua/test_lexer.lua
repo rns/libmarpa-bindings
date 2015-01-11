@@ -27,7 +27,7 @@ while true do
 
   local token_symbol, token_symbol_id, token_value, token_start, line, column = lex(et)
   if token_symbol == nil then break end
-  p(sf("{ '%s', S%d, '%s', %s, %s, %s },", token_symbol, token_symbol_id, token_value, token_start, line, column))
+  --p(sf("{ '%s', S%d, '%s', %s, %s, %s },", token_symbol, token_symbol_id, token_value, token_start, line, column))
 
   i = i + 1
   if i > imax then print("max iteration count " .. imax .." exceeded") break end

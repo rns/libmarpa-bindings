@@ -26,13 +26,30 @@ function lexer.new (token_specification, input)
   local pattern
   local token_symbol
   local token_symbol_id
-  local token_start = 0
-  local token_value
-  local match
+  local token_start = 1
+  local token_length = 0
 
   return function(expected_terminals)
 
-    if input == '' then return nil, nil, nil, nil end
+    token_start = token_start + token_length
+    if token_start > string.len(input) then return nil end
+--[[
+  todo:
+    implement matchers for
+      first match               -- fastest, manual longest-first arrangement
+        with regex, single match of lexemes with ()|<()
+        with lua patterns, loop
+      longest match
+      longest acceptable match
+        loop with both regex and patterns
+      ambiguous lexing
+    lexeme priorities
+      say keyword or id
+    preserving whitespaces (to test against inpout cleanly)
+    preserving comments
+]]--
+
+    local match
 
     for _, triple in ipairs(token_spec) do
 
@@ -41,33 +58,22 @@ function lexer.new (token_specification, input)
       token_symbol_id = triple[3]
 
       if expected_terminals[token_symbol] ~= nil or always_expected[token_symbol] ~= nil then
-        match = string.match(input, "^" .. pattern)
+        match = string.match(input, "^" .. pattern, token_start)
         if match ~= nil then
-          input = string.gsub(input, "^" .. pattern, "")
+          token_length = string.len(match)
           break
         end
       end
 
     end
 
-    assert( token_symbol ~= 'MISMATCH', string.format("Invalid token: <%s>", match ) )
-
     if token_symbol == 'NEWLINE' then
       column = 1
       line = line + 1
-      token_start = token_start + 1
-    elseif token_symbol == 'WHITESPACE' then
-      column = column + string.len(match)
-      token_start = token_start + string.len(match)
-    else
-      -- d.p(token_symbol, token_symbol_id, match, '@', token_start, ';', line, ':', column)
-      token_length = string.len(match)
-      column = column + token_length
-      token_start = token_start + token_length
-      token_value = match
     end
 
-    return token_symbol, token_symbol_id, token_value, token_start, line, column
+--    pt(token_symbol, token_symbol_id, match, token_start, ':', token_length, line, column)
+    return token_symbol, token_symbol_id, token_start, token_length, line, column
   end
 
 end
