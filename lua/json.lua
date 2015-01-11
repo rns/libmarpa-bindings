@@ -256,7 +256,7 @@ end
 assert_result( lib.marpa_g_precompute(g), "marpa_g_precompute", g )
 
 --[[
-todo: more specific error handlingcheck for errors
+todo: more specific error handling
   MARPA_ERR_NO_RULES: The grammar has no rules.
   MARPA_ERR_NO_START_SYMBOL: No start symbol was specified.
   MARPA_ERR_INVALID_START_SYMBOL: A start symbol ID was specified, but it is not the ID of a valid symbol.
