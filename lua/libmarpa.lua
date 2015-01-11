@@ -159,7 +159,7 @@ for index, value in ipairs(_errors) do
   local num   = value[1]
   local const = value[2]
   local desc  = value[3]
-  table.insert( errors, { const, desc } )
+  errors[num + 1] = { const, desc }
 end
 
 events = {}

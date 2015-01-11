@@ -24,16 +24,18 @@ print(string.rep('-', 28))
 
 -- error handling
 local function error_msg(func, g)
-  local error_string = ffi.new("const char**")
-  local error_code = lib.marpa_g_error(g, error_string)
-  return string.format("%s returned %d: %s", func, error_code, error_string )
+  local error_code = lib.marpa_g_error(g, ffi.NULL)
+  return string.format("%s returned %d: %s", func, error_code, table.concat(codes.errors[error_code+1], ': ') )
 end
 
 local function assert_result(result, func, g)
   local type = type(result)
-  lib.marpa_g_error_clear(g)
   if type == "number" then
-    assert( result >= 0, error_msg(func, g) )
+    if func == 'marpa_r_earleme_complete' then
+      assert( result ~= -2, error_msg(func, g) )
+    else
+      assert( result >= 0, error_msg(func, g) )
+    end
   elseif type == "cdata" then
     assert( result ~= ffi.NULL, error_msg(func, g) )
   end

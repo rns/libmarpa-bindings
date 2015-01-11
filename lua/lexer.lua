@@ -33,6 +33,8 @@ function lexer.new (token_specification, input)
 
     token_start = token_start + token_length
     if token_start > string.len(input) then return nil end
+
+-- start matcher
 --[[
   todo:
     implement matchers for
@@ -48,24 +50,21 @@ function lexer.new (token_specification, input)
     preserving whitespaces (to test against inpout cleanly)
     preserving comments
 ]]--
-
     local match
-
     for _, triple in ipairs(token_spec) do
-
       pattern         = triple[1]
       token_symbol    = triple[2]
       token_symbol_id = triple[3]
-
       if expected_terminals[token_symbol] ~= nil or always_expected[token_symbol] ~= nil then
+        -- doesn't work without "^" somehow despite specifying start pos token_start
         match = string.match(input, "^" .. pattern, token_start)
         if match ~= nil then
           token_length = string.len(match)
           break
         end
       end
-
     end
+-- end matcher
 
     if token_symbol == 'NEWLINE' then
       column = 1
@@ -73,6 +72,7 @@ function lexer.new (token_specification, input)
     end
 
 --    pt(token_symbol, token_symbol_id, match, token_start, ':', token_length, line, column)
+-- todo: line/column as instance members
     return token_symbol, token_symbol_id, token_start, token_length, line, column
   end
 
