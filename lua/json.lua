@@ -323,7 +323,7 @@ while true do
   if token_symbol == nil then break end
 
   if token_symbol == 'MISMATCH' then
-    print(string.format("Invalid symbol %s '%s' at %d:%d", token_symbol, token_value, line, column ));
+    print(string.format("Invalid symbol '%s' at %d:%d", input:sub(token_start, token_length - 1), line, column ));
   elseif token_symbol_id >= 0 then
     local status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
     if status ~= lib.MARPA_ERR_NONE then

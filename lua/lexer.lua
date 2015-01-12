@@ -2,6 +2,27 @@
 require 'printf_debugging';
 
 lexer = { }
+--[[
+options
+  tokens
+    token specification table
+  input
+    input string
+todo:
+  pattern
+    lua
+    pcre
+  matching
+    ft first token
+    lt longest token
+    fat first acceptable token
+    lat longest acceptable token
+  ambiguity
+    fatal
+    warn
+    allow
+
+]]--
 
 function lexer.new (options)
 
@@ -52,24 +73,22 @@ end
 
 --[[
   todo:
-    first token match (concat token regexes)
+    first token match
+      regex-only (not lua patterns)
+      token regexes concatenated with |
     first acceptable token match
+      order in important
     longest acceptable token match
-
-    implement matchers for
-      first match               -- fastest, manual longest-first arrangement
-        with regex, single match of lexemes with ()|<()
-        with lua patterns, loop
-      when several lexemes match at a given location
-      different length
-        longest acceptable match
-      same length -- ambiguous lexing
-          1.1
-            number
-            list numbering
-
-        have the same length, return all variants
-        otherwise
+      order in unimportant -- all expected tokens will be matched
+    ambiguous token match
+      several tokens of the same length
+        1.1
+          number
+          list numbering
+      say
+        keyword
+        identifier
+      have the same length, return all variants
     lexeme priorities
       say keyword or id
     preserving whitespaces (to test against input cleanly)
