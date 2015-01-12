@@ -2,6 +2,7 @@
 require 'printf_debugging';
 
 lexer = { }
+
 function lexer.new (options)
 
   local token_spec = options.tokens
@@ -23,20 +24,38 @@ function lexer.new (options)
   -- these terminals must always be matched
   local always_expected = { WHITESPACE = 1, NEWLINE = 1, MISMATCH = 1 }
 
-  local pattern
-  local token_symbol
-  local token_symbol_id
   local token_start = 1
   local token_length = 0
+
+  -- set matcher
+  local matcher = lexer.lua_pattern_first_acceptable_token_match
 
   return function(expected_terminals)
 
     token_start = token_start + token_length
     if token_start > string.len(input) then return nil end
 
--- start matcher
+    local match, token_symbol, token_symbol_id = matcher(token_spec, expected_terminals, always_expected, input, token_start)
+    token_length = string.len(match)
+
+    if token_symbol == 'NEWLINE' then
+      column = 1
+      line = line + 1
+    end
+
+--    pt(token_symbol, token_symbol_id, match, token_start, ':', token_length, line, column)
+-- todo: line/column as instance members
+    return token_symbol, token_symbol_id, token_start, token_length, line, column
+  end
+
+end
+
 --[[
   todo:
+    first token match (concat token regexes)
+    first acceptable token match
+    longest acceptable token match
+
     implement matchers for
       first match               -- fastest, manual longest-first arrangement
         with regex, single match of lexemes with ()|<()
@@ -58,31 +77,21 @@ function lexer.new (options)
 
     try marpa_r_terminal_is_expected() -- http://irclog.perlgeek.de/marpa/2015-01-11#i_9918855
 ]]--
-    local match
-    for _, triple in ipairs(token_spec) do
-      pattern         = triple[1]
-      token_symbol    = triple[2]
-      token_symbol_id = triple[3]
-      if expected_terminals[token_symbol] ~= nil or always_expected[token_symbol] ~= nil then
-        -- doesn't work without "^" somehow despite specifying start pos token_start
-        match = string.match(input, "^" .. pattern, token_start)
-        if match ~= nil then
-          token_length = string.len(match)
-          break
-        end
+
+function lexer.lua_pattern_first_acceptable_token_match(token_spec, expected_terminals, always_expected, input, token_start)
+  local pattern
+  local token_symbol
+  local token_symbol_id
+  for _, triple in ipairs(token_spec) do
+    pattern         = triple[1]
+    token_symbol    = triple[2]
+    token_symbol_id = triple[3]
+    if expected_terminals[token_symbol] ~= nil or always_expected[token_symbol] ~= nil then
+      -- doesn't work without "^" somehow despite specifying start pos token_start
+      match = string.match(input, "^" .. pattern, token_start)
+      if match ~= nil then
+        return match, token_symbol, token_symbol_id
       end
     end
--- end matcher
-
-    if token_symbol == 'NEWLINE' then
-      column = 1
-      line = line + 1
-    end
-
---    pt(token_symbol, token_symbol_id, match, token_start, ':', token_length, line, column)
--- todo: line/column as instance members
-    return token_symbol, token_symbol_id, token_start, token_length, line, column
   end
-
 end
-
