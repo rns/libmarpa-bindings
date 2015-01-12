@@ -2,10 +2,10 @@
 require 'printf_debugging';
 
 lexer = { }
-function lexer.new (token_specification, input)
+function lexer.new (options)
 
-  local token_spec = token_specification
-  local input = input
+  local token_spec = options.tokens
+  local input = options.input
 
   -- add
   local S_none = -1
@@ -41,14 +41,22 @@ function lexer.new (token_specification, input)
       first match               -- fastest, manual longest-first arrangement
         with regex, single match of lexemes with ()|<()
         with lua patterns, loop
-      longest match
-      longest acceptable match
-        loop with both regex and patterns
-      ambiguous lexing
+      when several lexemes match at a given location
+      different length
+        longest acceptable match
+      same length -- ambiguous lexing
+          1.1
+            number
+            list numbering
+
+        have the same length, return all variants
+        otherwise
     lexeme priorities
       say keyword or id
-    preserving whitespaces (to test against inpout cleanly)
+    preserving whitespaces (to test against input cleanly)
     preserving comments
+
+    try marpa_r_terminal_is_expected() -- http://irclog.perlgeek.de/marpa/2015-01-11#i_9918855
 ]]--
     local match
     for _, triple in ipairs(token_spec) do

@@ -31,6 +31,7 @@ end
 local function assert_result(result, func, g)
   local type = type(result)
   if type == "number" then
+-- todo: use https://gist.github.com/pczarn/50edb39b432f974fb6b4
     if func == 'marpa_r_earleme_complete' then
       assert( result ~= -2, error_msg(func, g) )
     else
@@ -312,7 +313,7 @@ local function expected_terminals(r)
 end
 
 require 'lexer'
-local lex = lexer.new(token_spec, input)
+local lex = lexer.new{tokens = token_spec, input = input}
 local token_values = {}
 
 while true do
