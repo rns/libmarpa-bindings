@@ -31,7 +31,7 @@ end
 local function assert_result(result, func, g)
   local type = type(result)
   if type == "number" then
--- todo: use https://gist.github.com/pczarn/50edb39b432f974fb6b4
+-- todo: move to libmarpa.lua and use https://gist.github.com/pczarn/50edb39b432f974fb6b4
     if func == 'marpa_r_earleme_complete' then
       assert( result ~= -2, error_msg(func, g) )
     else
@@ -51,9 +51,15 @@ local g = ffi.gc(lib.marpa_g_new(config), lib.marpa_g_unref)
 local msg = ffi.new("const char **")
 assert( lib.marpa_c_error(config, msg) == lib.MARPA_ERR_NONE, msg )
 
---[[ this is arguably not for "racing car" programs as efficiency can
+--[[
+
+  "It is recommended that this call be made immediately after the grammar constructor.
+  It turns off a deprecated feature."
+
+  this is arguably not for "racing car" programs as efficiency can
   potentially be gained by not-caring about values of some symbols
-  e.g. array/objects' begin's/end's, separators, etc. ]]--
+  e.g. array/objects' begin's/end's, separators, etc.
+]]--
 assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
 
 -- JSON grammar specification
@@ -129,8 +135,6 @@ local jg = {
     },
   },
   -- lexer rules (order is important)
-  -- todo: handle escaping
-  --
   lexer = {
     [1]  = { '{', 'lcurly' },
     [2]  = { '}', 'rcurly' },
@@ -188,6 +192,7 @@ for lhs, rhs in pairs(jg["parser"]) do
     -- add rhs symbol to grammar
     assert( type(rhs) == "table", "rhs must be a table of strings representing symbols")
     for _, rhs_alternative in ipairs(rhs) do
+      assert( type(rhs_alternative) == "table", "rhs_alternative must be a table of strings representing symbols")
       -- extract rule's adverbs, if any
       local adverbs = {}
       if type(rhs_alternative[#rhs_alternative]) == "table" then
@@ -218,7 +223,7 @@ for lhs, rhs in pairs(jg["parser"]) do
           assert_result(
             lib.marpa_g_sequence_new (
               g, S_lhs, S_item, S_separator,
-              adverbs["quantifier"] == "+" and 1 or 0,
+              adverbs["quantifier"] == "+" and 1 or adverbs["quantifier"] == "*" and 0 or -1,
               lib.MARPA_PROPER_SEPARATION
             ), "marpa_g_sequence_new", g
           )
@@ -249,6 +254,7 @@ for _, rule in ipairs(jg["lexer"]) do
     -- d.pt("# lexer rule")
     local token_pattern = rule[1]
     local token_symbol  = rule[2]
+    -- token lhs must exist in the grammar after adding parser rules
     local S_token = symbols[token_symbol] or -1
     -- add to token_spec
     table.insert( token_spec, { token_pattern, token_symbol, S_token } )
@@ -259,7 +265,7 @@ end
 assert_result( lib.marpa_g_precompute(g), "marpa_g_precompute", g )
 
 --[[
-todo: more specific error handling
+todo: more specific error handling/sanity check
   MARPA_ERR_NO_RULES: The grammar has no rules.
   MARPA_ERR_NO_START_SYMBOL: No start symbol was specified.
   MARPA_ERR_INVALID_START_SYMBOL: A start symbol ID was specified, but it is not the ID of a valid symbol.
@@ -305,6 +311,7 @@ end
 local expected = ffi.new("Marpa_Symbol_ID[" .. #token_spec .. "]")
 local function expected_terminals(r)
   local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
+  assert_result( count_of_expected, "marpa_r_terminals_expected", g )
   -- these terminals must always be matched
   -- once the grammar is represented as BNF + regexes text
   -- these terminals will be added as symbols to Marpa grammar
@@ -329,16 +336,13 @@ while true do
   if token_symbol == 'MISMATCH' then
     print(string.format("Invalid symbol '%s' at %d:%d", input:sub(token_start, token_length - 1), line, column ));
   elseif token_symbol_id >= 0 then
+    -- todo: events. if handlers are specified in the grammar
     local status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
     if status ~= lib.MARPA_ERR_NONE then
       assert_result( status, 'marpa_r_alternative', g )
     else
       --[[
       todo:
-
-      events
-        if handlers are specified in the grammar)
-
       recovery
         Several error codes leave the recognizer in a fully recoverable state, allowing the
         application to retry the marpa_r_alternative() method. Retry is efficient, and quite useable
