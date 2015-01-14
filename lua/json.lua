@@ -132,19 +132,23 @@ local jg = {
   -- todo: handle escaping
   --
   lexer = {
-    [1] = { 'lcurly', '{' },
-    [2] = { 'rcurly',  '}' },
-    [3] = { 'lsquare', '%[' },
-    [4] = { 'rsquare', '%]' },
-    [5] = { 'comma', ',' },
-    [6] = { 'colon', ':' },
+    [1]  = { '{', 'lcurly' },
+    [2]  = { '}', 'rcurly' },
+    [3]  = { '%[', 'lsquare' },
+    [4]  = { '%]', 'rsquare' },
+    [5]  = { ',', 'comma' },
+    [6]  = { ':', 'colon' },
 
-    [7] = { 'string', '"[^"]+"' },
-    [8] = { 'number', '-?[%d]+[.%d+]*' },
+    [7]  = { '"[^"]+"', 'string' },
+    [8]  = { '-?[%d]+[.%d+]*', 'number' },
 
-    [9] = { 'true', 'true' },   -- true   is a keyword in Lua
-    [10] = { 'false', 'false' }, -- and so is false
-    [11]= { 'null', 'null' },
+    [9]  = { 'true',  'true' },
+    [10] = { 'false', 'false' },
+    [11] = { 'null',  'null' },
+
+    [12] = { '[ \t]+', 'WHITESPACE' }, -- Skip over spaces and tabs
+    [13] = { "\n",     'NEWLINE'  },   -- Line endings
+    [14] = { '.',      'MISMATCH' }    -- Any other character
   },
   actions = {
     --[[ 'lhs1, lhs2, lhs3' = function(span, literal) end
@@ -173,6 +177,7 @@ end
 -- parser rules
 assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "parser" key]])
 for lhs, rhs in pairs(jg["parser"]) do
+  -- handle start symbol
   if lhs == '_start_symbol' then
     local S_start = symbol_new(rhs, g)
     assert_result( lib.marpa_g_start_symbol_set(g, S_start), "marpa_g_start_symbol_set", g )
@@ -181,56 +186,53 @@ for lhs, rhs in pairs(jg["parser"]) do
     -- add lhs symbol to the grammar
     local S_lhs = symbol_new(lhs, g)
     -- add rhs symbol to grammar
-    local rhs_type = type(rhs)
-    if rhs_type == "table" then
-      -- parser rule
-      for _, rhs_alternative in ipairs(rhs) do
-        -- extract rule's adverbs, if any
-        local adverbs = {}
-        if type(rhs_alternative[#rhs_alternative]) == "table" then
-          adverbs = table.remove(rhs_alternative)
-        end
-        -- add rule's rhs symbols to the grammar
-        local S_rhs_symbol = {}
-        for ix, rhs_symbol in pairs(rhs_alternative) do
-          S_rhs_symbol[ix] = symbol_new(rhs_symbol, g)
-        end
-        -- add rule to the grammar
-        -- d.pt(lhs, ':=', d.s(rhs_alternative))
-        if next(adverbs) ~= nil then
-          -- based on adverbs
-          if adverbs["quantifier"] == "+" or adverbs["quantifier"] == "*" then
+    assert( type(rhs) == "table", "rhs must be a table of strings representing symbols")
+    for _, rhs_alternative in ipairs(rhs) do
+      -- extract rule's adverbs, if any
+      local adverbs = {}
+      if type(rhs_alternative[#rhs_alternative]) == "table" then
+        adverbs = table.remove(rhs_alternative)
+      end
+      -- add rule's rhs symbols to the grammar
+      local S_rhs_symbol = {}
+      for ix, rhs_symbol in pairs(rhs_alternative) do
+        S_rhs_symbol[ix] = symbol_new(rhs_symbol, g)
+      end
+      -- add rule to the grammar
+      -- d.pt(lhs, ':=', d.s(rhs_alternative))
+      if next(adverbs) ~= nil then
+        -- based on adverbs
+        if adverbs["quantifier"] == "+" or adverbs["quantifier"] == "*" then
 
-            -- d.pt("# sequence rule")
-            -- d.pt(d.i(adverbs))
+          -- d.pt("# sequence rule")
+          -- d.pt(d.i(adverbs))
 
-            -- todo: implement keep (separator) adverb, off by default
+          -- todo: implement keep (separator) adverb, off by default
 
-            -- add separator symbol
-            local S_separator = symbol_new(adverbs["separator"], g)
-            -- add item symbol
-            assert( #rhs_alternative == 1, "sequence rule must have only 1 symbol on its RHS" )
-            local S_item = S_rhs_symbol[1]
-            -- d.pt(d.i(S_separator, S_item))
-            assert_result(
-              lib.marpa_g_sequence_new (
-                g, S_lhs, S_item, S_separator,
-                adverbs["quantifier"] == "+" and 1 or 0,
-                lib.MARPA_PROPER_SEPARATION
-              ), "marpa_g_sequence_new", g
-            )
-          else
-            -- other rule types based on adverbs
-            -- ...
-          end
-        else -- normal rule
-          -- d.pt("# normal rule")
-          local rhs = ffi.new("int[" .. #rhs_alternative .. "]")
-          for ix = 1, #rhs_alternative do
-            rhs[ix-1] = S_rhs_symbol[ix]
-          end
-          assert_result( lib.marpa_g_rule_new (g, S_lhs, rhs, #rhs_alternative), "marpa_g_rule_new", g )
+          -- add separator symbol
+          local S_separator = symbol_new(adverbs["separator"], g)
+          -- add item symbol
+          assert( #rhs_alternative == 1, "sequence rule must have only 1 symbol on its RHS" )
+          local S_item = S_rhs_symbol[1]
+          -- d.pt(d.i(S_separator, S_item))
+          assert_result(
+            lib.marpa_g_sequence_new (
+              g, S_lhs, S_item, S_separator,
+              adverbs["quantifier"] == "+" and 1 or 0,
+              lib.MARPA_PROPER_SEPARATION
+            ), "marpa_g_sequence_new", g
+          )
+        else
+          -- other rule types based on adverbs
+          -- ...
         end
+      else -- normal rule
+        -- d.pt("# normal rule")
+        local rhs = ffi.new("int[" .. #rhs_alternative .. "]")
+        for ix = 1, #rhs_alternative do
+          rhs[ix-1] = S_rhs_symbol[ix]
+        end
+        assert_result( lib.marpa_g_rule_new (g, S_lhs, rhs, #rhs_alternative), "marpa_g_rule_new", g )
       end
     end
   end
@@ -245,13 +247,11 @@ local token_spec = {}
 assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "lexer" key]])
 for _, rule in ipairs(jg["lexer"]) do
     -- d.pt("# lexer rule")
-    local token_symbol  = rule[1]
-    local token_pattern = rule[2]
-    -- add token symbol
-    local S_token = symbol_new(token_symbol, g)
+    local token_pattern = rule[1]
+    local token_symbol  = rule[2]
+    local S_token = symbols[token_symbol] or -1
     -- add to token_spec
     table.insert( token_spec, { token_pattern, token_symbol, S_token } )
-  -- handle start symbol
 end
 
 -- d.pt(d.i(token_spec))
@@ -305,7 +305,11 @@ end
 local expected = ffi.new("Marpa_Symbol_ID[" .. #token_spec .. "]")
 local function expected_terminals(r)
   local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
-  local result = {}
+  -- these terminals must always be matched
+  -- once the grammar is represented as BNF + regexes text
+  -- these terminals will be added as symbols to Marpa grammar
+  -- and this initialization must become {}
+  local result = { WHITESPACE = 1, NEWLINE = 1, MISMATCH = 1 }
   for i = 0, count_of_expected do
     result[symbols[tostring(expected[i])]] = 1
   end

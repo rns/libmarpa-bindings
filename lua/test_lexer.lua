@@ -12,6 +12,9 @@ local ts = {
   { "true", "true", 11 },
   { "false", "false", 12 },
   { "null", "null", 13 },
+  { '[ \t]+', 'WHITESPACE', -1 },  -- Skip over spaces and tabs
+  { "\n", 'NEWLINE',  -1 },  -- Line endings
+  { '.', 'MISMATCH', -1 }   -- Any other character
 }
 
 local input = '[ 1, "abc\ndef",\n-2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
