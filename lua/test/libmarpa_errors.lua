@@ -1,75 +1,56 @@
--- archetypal Libmarpa application: JSON Parser
-require 'os'
+#!/usr/bin/lua
+require 'Test.More'
 
--- libmarpa
+package.path = "../?.lua;" .. package.path
+
 local lib   = require 'libmarpa'
 local C     = lib.C
 local ffi   = lib.ffi
 
--- print platform versions
-print(
-  "os:",
-  table.concat( { ffi.os, ffi.arch, ffi.abi('win') and "Windows variant" or "" }, '/' )
-)
+-- take an archetypal Libmarpa application and simulate errors in it
+-- as far as possible or just call lib.assert with appropriate codes
+-- but libmarpa functions are still called, for pedantry :)
 
-local ver = ffi.new("int [3]")
-C.marpa_version(ver)
-print(string.format("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
-
-print("LuaJIT version:", jit.version )
-print(string.rep('-', 28))
+local ret_or_err
 
 -- Marpa configurarion
 local config = ffi.new("Marpa_Config")
 C.marpa_c_init(config) -- always succeeds
+_, ret_or_err = pcall(lib.assert, -1, "marpa_c_init", config)
+like(ret_or_err, "marpa_c_init returned 0: MARPA_ERR_NONE: No error", "marpa_c_init" )
 
 -- grammar
 local g = ffi.gc(C.marpa_g_new(config), C.marpa_g_unref)
-local msg = ffi.new("const char **")
-assert( C.marpa_c_error(config, msg) == C.MARPA_ERR_NONE, msg )
+_, ret_or_err = pcall(lib.assert, ffi.NULL, "marpa_g_new", config)
+like(ret_or_err, "marpa_g_new returned 0: MARPA_ERR_NONE: No error", "marpa_g_new" )
 
---[[ this is arguably not for "racing car" programs as efficiency can
-  potentially be gained by not-caring about values of some symbols
-  e.g. array/objects' begin's/end's, separators, etc. ]]--
-lib.assert( C.marpa_g_force_valued(g), "marpa_g_force_valued", g )
+-- turn off a deprecated feature
+C.marpa_g_force_valued(g)
+_, ret_or_err = pcall(lib.assert, -1, "marpa_g_force_valued", g )
+like(ret_or_err, "marpa_g_force_valued returned 0: MARPA_ERR_NONE: No error", "marpa_g_force_valued" )
 
--- grammar symbols from RFC 7159
-local S_begin_array = C.marpa_g_symbol_new (g)
-lib.assert(S_begin_array, "marpa_g_symbol_new", g)
-local S_begin_object = C.marpa_g_symbol_new (g)
-lib.assert( S_begin_object, "marpa_g_symbol_new", g )
-local S_end_array = C.marpa_g_symbol_new (g)
-lib.assert( S_end_array, "marpa_g_symbol_new", g )
-local S_end_object = C.marpa_g_symbol_new (g)
-lib.assert( S_end_object, "marpa_g_symbol_new", g )
-local S_name_separator = C.marpa_g_symbol_new (g)
-lib.assert( S_name_separator, "marpa_g_symbol_new", g )
-local S_value_separator = C.marpa_g_symbol_new (g)
-lib.assert( S_value_separator, "marpa_g_symbol_new", g )
-local S_member = C.marpa_g_symbol_new (g)
-lib.assert( S_member, "marpa_g_symbol_new", g )
-local S_value = C.marpa_g_symbol_new (g)
-lib.assert( S_value, "marpa_g_symbol_new", g )
-local S_false = C.marpa_g_symbol_new (g)
-lib.assert( S_false, "marpa_g_symbol_new", g )
-local S_null = C.marpa_g_symbol_new (g)
-lib.assert( S_null, "marpa_g_symbol_new", g )
-local S_true = C.marpa_g_symbol_new (g)
-lib.assert( S_true, "marpa_g_symbol_new", g )
-local S_object = C.marpa_g_symbol_new (g)
-lib.assert( S_object, "marpa_g_symbol_new", g )
-local S_array = C.marpa_g_symbol_new (g)
-lib.assert( S_array, "marpa_g_symbol_new", g )
-local S_number = C.marpa_g_symbol_new (g)
-lib.assert( S_number, "marpa_g_symbol_new", g )
-local S_string = C.marpa_g_symbol_new (g)
-lib.assert( S_string, "marpa_g_symbol_new", g )
+-- the grammar is now empty (nor rules, nor symbols)
+C.marpa_g_start_symbol(g)
 
--- additional symbols
-local S_object_contents = C.marpa_g_symbol_new (g)
-lib.assert( S_object_contents, "marpa_g_symbol_new", g )
-local S_array_contents = C.marpa_g_symbol_new (g)
-lib.assert( S_array_contents, "marpa_g_symbol_new", g )
+-- lib.assert( C.marpa_g_start_symbol(g), "marpa_g_start_symbol", g )
+
+--[[
+lib.assert( C.marpa_g_start_symbol_set(g), "marpa_g_start_symbol_set", g )
+
+lib.assert( C.marpa_g_precompute(g), "marpa_g_precompute", g )
+
+-- new symbol
+-- local S_id = C.marpa_g_symbol_new (g)
+_, ret_or_err = pcall(lib.assert, -2, "marpa_g_symbol_new", g )
+like(ret_or_err, "marpa_g_symbol_new returned 0: MARPA_ERR_NONE: No error", "marpa_g_symbol_new" )
+
+-- grammar has only 1 symbol and no rules
+
+
+print(ret_or_err)
+]]--
+
+--[[
 
 -- rules
 local rhs = ffi.new("int[4]")
@@ -288,3 +269,6 @@ else
   print("got     : ", got_json)
 end
 
+]]--
+
+done_testing()
