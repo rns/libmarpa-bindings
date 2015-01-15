@@ -28,6 +28,9 @@ local function error_msg(func, g)
   return string.format("%s returned %d: %s", func, error_code, table.concat(codes.errors[error_code+1], ': ') )
 end
 
+--[[
+  function_name = { failure_code, success_code }
+]]--
 local function assert_result(result, func, g)
   local type = type(result)
   if type == "number" then

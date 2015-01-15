@@ -1,7 +1,5 @@
 require 'os'
 
-local d = require 'printf_debugging'
-
 -- libmarpa binding
 local libmarpa = require 'libmarpa'
 
