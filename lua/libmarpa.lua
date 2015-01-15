@@ -4,12 +4,6 @@
     libmarpa -- https://github.com/jeffreykegler/libmarpa -- built as a shared library
     LuaJIT 2.0.3 -- http://luajit.org/download.html
 
-  This file is based on marpa_cffi.py by koo5
-  -- https://github.com/koo5/new_shit/tree/master/marpa_cffi -- and marpa_codes.c,
-  which is generated as part of libmarpa builds
-
-  Here is the copyright notice from those files.
-
  /*
   * This file is based on Libmarpa, Copyright 2014 Jeffrey Kegler.
   * Libmarpa is free software: you can
@@ -696,18 +690,18 @@ int marpa_debug_level_set ( int level );
 void marpa_debug_handler_set ( int (*debug_handler)(const char*, ...) );
 ]]
 
-lib = ffi.load( ffi.abi("win") and "libmarpa.dll" or "marpa" )
+C = ffi.load( ffi.abi("win") and "libmarpa.dll" or "marpa" )
 
 local ver = ffi.new("int [3]")
-lib.marpa_version(ver)
+C.marpa_version(ver)
 
 assert(
-  lib.marpa_check_version ( ver[0], ver[1], ver[2] ) == lib.MARPA_ERR_NONE,
+  C.marpa_check_version ( ver[0], ver[1], ver[2] ) == C.MARPA_ERR_NONE,
   string.format(
     "libmarpa version %d.%d.%d required, %d.%d.%d found.",
-    lib.MARPA_MAJOR_VERSION,
-    lib.MARPA_MINOR_VERSION,
-    lib.MARPA_MICRO_VERSION,
+    C.MARPA_MAJOR_VERSION,
+    C.MARPA_MINOR_VERSION,
+    C.MARPA_MICRO_VERSION,
     ver[0],
     ver[1],
     ver[2]
@@ -715,192 +709,221 @@ assert(
 )
 
 -- external errors codes
--- Ref: http://irclog.perlgeek.de/marpa/2014-12-07#i_9772028
+-- Ref:
+--  https://gist.github.com/pczarn/50edb39b432f974fb6b4
+--  http://irclog.perlgeek.de/marpa/2014-12-07#i_9772028
 local FAILURE       = 1
 local INFORMATION   = 2
 local SUCCESS       = 3
 local eec = {
--- Always succeed.
-  marpa_check_version = { nil, nil, nil },
-  marpa_check_version = { nil, nil, nil },
-  marpa_c_init = { nil, nil, nil },
-  marpa_c_error = { nil, nil, nil },
-  marpa_r_earley_item_warning_threshold = { nil, nil, nil },
-  marpa_r_earley_item_warning_threshold_set = { nil, nil, nil },
-  marpa_r_furthest_earleme = { nil, nil, nil },
-  marpa_r_latest_earley_set = { nil, nil, nil },
-  marpa_r_is_exhausted = { nil, nil, nil },
-  marpa_t_parse_count = { nil, nil, nil },
-  marpa_g_error = { nil, nil, nil },
-  marpa_g_error_clear = { nil, nil, nil },
 
-  marpa_r_unref = { nil, nil, nil },
-  marpa_b_unref = { nil, nil, nil },
-  marpa_o_unref = { nil, nil, nil },
-  marpa_t_unref = { nil, nil, nil },
-  marpa_v_unref = { nil, nil, nil },
+-- Always succeed.
+  marpa_check_version = { nil, nil, 0 },
+  marpa_check_version = { nil, nil, 0 },
+  marpa_c_init = { nil, nil, 0 },
+  marpa_c_error = { nil, nil, 0 },
+  marpa_r_earley_item_warning_threshold = { nil, nil, 0 },
+  marpa_r_earley_item_warning_threshold_set = { nil, nil, 0 },
+  marpa_r_furthest_earleme = { nil, nil, 0 },
+  marpa_r_latest_earley_set = { nil, nil, 0 },
+  marpa_r_is_exhausted = { nil, nil, 0 },
+  marpa_t_parse_count = { nil, nil, 0 },
+  marpa_g_error = { nil, nil, 0 },
+  marpa_g_error_clear = { nil, nil, 0 },
+
+  marpa_r_unref = { nil, nil, 0 },
+  marpa_b_unref = { nil, nil, 0 },
+  marpa_o_unref = { nil, nil, 0 },
+  marpa_t_unref = { nil, nil, 0 },
+  marpa_v_unref = { nil, nil, 0 },
+
 -- Always succeeds. Returns -1 on undefined value.
   marpa_r_current_earleme = { nil, -1, nil },
+
 -- On success, a non-negative integer. On failure, a negative integer.
-  marpa_g_force_valued ( , -1, 0 )
-
-}
-
---[[
-
+-- todo: can that "negative integer" be -1? file a github issue
+-- if this error handling approach works
+  marpa_g_force_valued = { nil, -1, 0 },
 
 -- A non-negative number on success, -2 on failure.
+  marpa_version = { -2, nil, 0 },
+  marpa_g_symbol_new = { -2, nil, 0 },
+  marpa_g_highest_symbol_id = { -2, nil, 0 },
 
-marpa_version
-marpa_g_symbol_new
-marpa_g_highest_symbol_id
+  marpa_g_highest_rule_id = { -2, nil, 0 },
+  marpa_g_rule_new = { -2, nil, 0 },
+  marpa_g_rule_length = { -2, nil, 0 },
 
-marpa_g_highest_rule_id
-marpa_g_rule_new
-marpa_g_rule_length
+  marpa_g_sequence_new = { -2, nil, 0 },
+  marpa_g_symbol_is_counted = { -2, nil, 0 },
+  marpa_g_rule_null_high = { -2, nil, 0 },
+  marpa_g_rule_null_high_set = { -2, nil, 0 },
+  marpa_g_precompute = { -2, nil, 0 },
+    -- an error code of MARPA_ERR_GRAMMAR_HAS_CYCLE leaves the grammar in a functional state
+  marpa_g_is_precomputed = { -2, nil, 0 },
+  marpa_g_has_cycle = { -2, nil, 0 },
 
-marpa_g_sequence_new
-marpa_g_symbol_is_counted
-marpa_g_rule_null_high
-marpa_g_rule_null_high_set
-marpa_g_precompute
-  -- an error code of MARPA_ERR_GRAMMAR_HAS_CYCLE leaves the grammar in a functional state
-marpa_g_is_precomputed
-marpa_g_has_cycle
+  marpa_r_start_input = { -2, nil, 0 },
+  marpa_r_earleme_complete  = { -2, nil, 0 },
+    -- an exhausted parse may cause a failure
 
-marpa_r_start_input
-marpa_r_earleme_complete (an exhausted parse may cause a failure)
+  marpa_r_earleme = { -2, nil, 0 },
+  marpa_r_earley_set_value = { -2, nil, 0 },
+  marpa_r_earley_set_values = { -2, nil, 0 },
+  marpa_r_latest_earley_set_value_set = { -2, nil, 0 },
+  marpa_r_latest_earley_set_values_set = { -2, nil, 0 },
 
-marpa_r_earleme
-marpa_r_earley_set_value
-marpa_r_earley_set_values
-marpa_r_latest_earley_set_value_set
-marpa_r_latest_earley_set_values_set
+  marpa_r_expected_symbol_event_set = { -2, nil, 0 },
+  marpa_r_terminals_expected = { -2, nil, 0 },
+  marpa_r_terminal_is_expected = { -2, nil, 0 },
 
-marpa_r_expected_symbol_event_set
-marpa_r_terminals_expected
-marpa_r_terminal_is_expected
+  marpa_r_completion_symbol_activate = { -2, nil, 0 },
+  marpa_r_nulled_symbol_activate = { -2, nil, 0 },
+  marpa_r_prediction_symbol_activate = { -2, nil, 0 },
 
-marpa_r_completion_symbol_activate
-marpa_r_nulled_symbol_activate
-marpa_r_prediction_symbol_activate
+  marpa_r_progress_report_reset = { -2, nil, 0 },
+  marpa_r_progress_report_start = { -2, nil, 0 },
+  marpa_r_progress_report_finish = { -2, nil, 0 },
 
-marpa_r_progress_report_reset
-marpa_r_progress_report_start
-marpa_r_progress_report_finish
+  marpa_b_ambiguity_metric = { -2, nil, 0 },
+  marpa_b_is_null = { -2, nil, 0 },
 
-marpa_b_ambiguity_metric
-marpa_b_is_null
+  marpa_o_ambiguity_metric = { -2, nil, 0 },
+  marpa_o_is_null = { -2, nil, 0 },
 
-marpa_o_ambiguity_metric
-marpa_o_is_null
+  marpa_o_high_rank_only_set = { -2, nil, 0 },
+  marpa_o_high_rank_only = { -2, nil, 0 },
+  marpa_o_rank = { -2, nil, 0 },
 
-marpa_o_high_rank_only_set
-marpa_o_high_rank_only
-marpa_o_rank
+  marpa_v_step = { -2, nil, 0 },
 
-marpa_v_step
+  marpa_g_event = { -2, nil, 0 },
+  marpa_g_event_count = { -2, nil, 0 },
 
-marpa_g_event
-marpa_g_event_count
+  marpa_g_symbol_is_valued = { -2, nil, 0 },
+  marpa_g_symbol_is_valued_set = { -2, nil, 0 },
 
-marpa_g_symbol_is_valued
-marpa_g_symbol_is_valued_set
+  marpa_v_symbol_is_valued = { -2, nil, 0 },
+  marpa_v_symbol_is_valued_set = { -2, nil, 0 },
 
-marpa_v_symbol_is_valued
-marpa_v_symbol_is_valued_set
+  marpa_v_rule_is_valued = { -2, nil, 0 },
+  marpa_v_rule_is_valued_set = { -2, nil, 0 },
 
-marpa_v_rule_is_valued
-marpa_v_rule_is_valued_set
-
-marpa_v_valued_force (sets the error code to an appropriate value, which will never be MARPA_ERR_NONE)
+  marpa_v_valued_force  = { -2, nil, 0 },
+    -- sets the error code to an appropriate value, which will never be MARPA_ERR_NONE)
 
 -- A non-negative number on success, -1 on undefined value, -2 on failure.
 
-marpa_g_start_symbol
-marpa_g_start_symbol_set
-marpa_g_symbol_is_accessible
-marpa_g_symbol_is_completion_event
-marpa_g_symbol_is_completion_event_set
-marpa_g_symbol_is_nulled_event
-marpa_g_symbol_is_nulled_event_set
-marpa_g_symbol_is_nullable
-marpa_g_symbol_is_nulling
-marpa_g_symbol_is_productive
-marpa_g_symbol_is_prediction_event
-marpa_g_symbol_is_prediction_event_set
-marpa_g_symbol_is_start
-marpa_g_symbol_is_terminal
-marpa_g_symbol_is_terminal_set
+  marpa_g_start_symbol = { -2, -1, 0 },
+  marpa_g_start_symbol_set = { -2, -1, 0 },
+  marpa_g_symbol_is_accessible = { -2, -1, 0 },
+  marpa_g_symbol_is_completion_event = { -2, -1, 0 },
+  marpa_g_symbol_is_completion_event_set = { -2, -1, 0 },
+  marpa_g_symbol_is_nulled_event = { -2, -1, 0 },
+  marpa_g_symbol_is_nulled_event_set = { -2, -1, 0 },
+  marpa_g_symbol_is_nullable = { -2, -1, 0 },
+  marpa_g_symbol_is_nulling = { -2, -1, 0 },
+  marpa_g_symbol_is_productive = { -2, -1, 0 },
+  marpa_g_symbol_is_prediction_event = { -2, -1, 0 },
+  marpa_g_symbol_is_prediction_event_set = { -2, -1, 0 },
+  marpa_g_symbol_is_start = { -2, -1, 0 },
+  marpa_g_symbol_is_terminal = { -2, -1, 0 },
+  marpa_g_symbol_is_terminal_set = { -2, -1, 0 },
 
-marpa_g_rule_is_accessible
-marpa_g_rule_is_nullable
-marpa_g_rule_is_nulling
-marpa_g_rule_is_loop
-marpa_g_rule_is_productive
-marpa_g_rule_lhs
-marpa_g_rule_rhs
+  marpa_g_rule_is_accessible = { -2, -1, 0 },
+  marpa_g_rule_is_nullable = { -2, -1, 0 },
+  marpa_g_rule_is_nulling = { -2, -1, 0 },
+  marpa_g_rule_is_loop = { -2, -1, 0 },
+  marpa_g_rule_is_productive = { -2, -1, 0 },
+  marpa_g_rule_lhs = { -2, -1, 0 },
+  marpa_g_rule_rhs = { -2, -1, 0 },
 
-marpa_g_sequence_min
-marpa_g_rule_is_proper_separation
-marpa_g_sequence_separator
+  marpa_g_sequence_min = { -2, -1, 0 },
+  marpa_g_rule_is_proper_separation = { -2, -1, 0 },
+  marpa_g_sequence_separator = { -2, -1, 0 },
 
-marpa_r_progress_item
+  marpa_r_progress_item = { -2, -1, 0 },
 
-marpa_t_next
-
--- NULL on failure.
-
-marpa_g_new
-marpa_g_ref
-
-marpa_b_new
-    If there is no parse ending at Earley set earley_set_ID, marpa_b_new fails and the error code is set to MARPA_ERR_NO_PARSE.
-    NULL.
-marpa_b_ref
-
-marpa_r_new
-marpa_r_ref
-
-marpa_o_new
-marpa_o_ref
-
-marpa_t_new
-marpa_t_ref
-
-marpa_v_new
-marpa_v_ref
+  marpa_t_next = { -2, -1, 0 },
 
 -- A non-negative number on success. Return -2 and set the error code to an appropriate value on failure.
 
-marpa_g_rule_rank
-marpa_g_rule_rank_set
-marpa_g_default_rank
-marpa_g_default_rank_set
-marpa_g_symbol_rank
-marpa_g_symbol_rank_set
-    -2, and sets the error code to an appropriate value, which will never be MARPA_ERR_NONE. Note that when the rank is -2, the error code is the only way to distinguish success from failure. The error code can be determined by using the marpa_g_error() call.
+  marpa_g_rule_rank = { -2, nil, 0 },
+  marpa_g_rule_rank_set = { -2, nil, 0 },
+
+--[[
+      -2, and sets the error code to an appropriate value, which will never be MARPA_ERR_NONE. Note that when the rank is -2, the error code is the only way to distinguish success from failure. The error code can be determined by using the marpa_g_error() call.
+]]--
+
+-- NULL on failure.
+  --[[ those are checked by assert_result()
+  marpa_g_new
+  marpa_g_ref
+
+  marpa_b_new
+      If there is no parse ending at Earley set earley_set_ID, marpa_b_new fails and the error code is set to MARPA_ERR_NO_PARSE.
+      NULL.
+  marpa_b_ref
+
+  marpa_r_new
+  marpa_r_ref
+
+  marpa_o_new
+  marpa_o_ref
+
+  marpa_t_new
+  marpa_t_ref
+
+  marpa_v_new
+  marpa_v_ref
+  ]]--
 
 -- Other.
 
-marpa_r_alternative
-    Returns MARPA_ERR_NONE on success. On failure, some other error code. Several error codes leave the recognizer in a fully recoverable state.
+  marpa_r_alternative = { nil, nil, 0 },
+    -- Returns MARPA_ERR_NONE on success. On failure, some other error code. Several error codes leave the recognizer in a fully recoverable state.
 
--- Undocumented.
+-- Untested methods
+  --[[ The methods of this section are not in the external interface, because they have not been adequately tested. Their fate is uncertain. Users should regard these methods as unsupported. ]]--
 
-marpa_g_highest_zwa_id
+  marpa_g_default_rank = { -2, nil, 0 },
+  marpa_g_default_rank_set = { -2, nil, 0 },
+  marpa_g_symbol_rank = { -2, nil, 0 },
+  marpa_g_symbol_rank_set = { -2, nil, 0 },
 
-marpa_g_zwa_new
-marpa_g_zwa_place
-marpa_r_zwa_default_set
-    On success, returns previous default value of the assertion.
+  marpa_g_zwa_new = { nil, nil, nil },
+  marpa_g_zwa_place = { nil, nil, nil },
 
--------------
+  marpa_r_zwa_default = { nil, nil, nil },
+  marpa_r_zwa_default_set = { nil, nil, nil },
+      -- On success, returns previous default value of the assertion.
+  marpa_g_highest_zwa_id = { nil, nil, nil },
 
-]]--
+  marpa_r_clean = { nil, nil, nil },
+
+} -- local eec = {
+
+-- error handling
+local function error_msg(func, g)
+  local error_code = C.marpa_g_error(g, ffi.NULL)
+  return string.format("%s returned %d: %s", func, error_code, table.concat(codes.errors[error_code+1], ': ') )
+end
+
+local function assert_result(result, func, g)
+  local type = type(result)
+  if type == "number" then
+    if func == 'marpa_r_earleme_complete' then
+      assert( result ~= -2, error_msg(func, g) )
+    else
+      assert( result >= 0, error_msg(func, g) )
+    end
+  elseif type == "cdata" then
+    assert( result ~= ffi.NULL, error_msg(func, g) )
+  end
+end
 
 return {
-  lib = lib,
+  C = C,
   ffi = ffi,
-  codes = codes
+  assert = assert_result
 }

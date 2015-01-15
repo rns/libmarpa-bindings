@@ -1,11 +1,9 @@
 require 'os'
 
--- libmarpa binding
-local libmarpa = require 'libmarpa'
-
-local lib   = libmarpa.lib
-local ffi   = libmarpa.ffi
-local codes = libmarpa.codes
+-- libmarpa
+local lib   = require 'libmarpa'
+local C     = lib.C
+local ffi   = lib.ffi
 
 -- print platform versions
 print(
@@ -14,136 +12,117 @@ print(
 )
 
 local ver = ffi.new("int [3]")
-lib.marpa_version(ver)
+C.marpa_version(ver)
 print(string.format("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
 
 print("LuaJIT version:", jit.version )
 print(string.rep('-', 28))
 
--- error handling
-local function error_msg(func, g)
-  local error_code = lib.marpa_g_error(g, ffi.NULL)
-  return string.format("%s returned %d: %s", func, error_code, table.concat(codes.errors[error_code+1], ': ') )
-end
-
-local function assert_result(result, func, g)
-  local type = type(result)
-  if type == "number" then
-    if func == 'marpa_r_earleme_complete' then
-      assert( result ~= -2, error_msg(func, g) )
-    else
-      assert( result >= 0, error_msg(func, g) )
-    end
-  elseif type == "cdata" then
-    assert( result ~= ffi.NULL, error_msg(func, g) )
-  end
-end
-
 -- Marpa configurarion
 local config = ffi.new("Marpa_Config")
-lib.marpa_c_init(config) -- always succeeds
+C.marpa_c_init(config) -- always succeeds
 
 -- grammar
-local g = ffi.gc(lib.marpa_g_new(config), lib.marpa_g_unref)
+local g = ffi.gc(C.marpa_g_new(config), C.marpa_g_unref)
 local msg = ffi.new("const char **")
-assert( lib.marpa_c_error(config, msg) == lib.MARPA_ERR_NONE, msg )
+assert( C.marpa_c_error(config, msg) == C.MARPA_ERR_NONE, msg )
 
 --[[ this is arguably not for "racing car" programs as efficiency can
   potentially be gained by not-caring about values of some symbols
   e.g. array/objects' begin's/end's, separators, etc. ]]--
-assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
+lib.assert( C.marpa_g_force_valued(g), "marpa_g_force_valued", g )
 
 -- grammar symbols from RFC 7159
-local S_begin_array = lib.marpa_g_symbol_new (g)
-assert_result(S_begin_array, "marpa_g_symbol_new", g)
-local S_begin_object = lib.marpa_g_symbol_new (g)
-assert_result( S_begin_object, "marpa_g_symbol_new", g )
-local S_end_array = lib.marpa_g_symbol_new (g)
-assert_result( S_end_array, "marpa_g_symbol_new", g )
-local S_end_object = lib.marpa_g_symbol_new (g)
-assert_result( S_end_object, "marpa_g_symbol_new", g )
-local S_name_separator = lib.marpa_g_symbol_new (g)
-assert_result( S_name_separator, "marpa_g_symbol_new", g )
-local S_value_separator = lib.marpa_g_symbol_new (g)
-assert_result( S_value_separator, "marpa_g_symbol_new", g )
-local S_member = lib.marpa_g_symbol_new (g)
-assert_result( S_member, "marpa_g_symbol_new", g )
-local S_value = lib.marpa_g_symbol_new (g)
-assert_result( S_value, "marpa_g_symbol_new", g )
-local S_false = lib.marpa_g_symbol_new (g)
-assert_result( S_false, "marpa_g_symbol_new", g )
-local S_null = lib.marpa_g_symbol_new (g)
-assert_result( S_null, "marpa_g_symbol_new", g )
-local S_true = lib.marpa_g_symbol_new (g)
-assert_result( S_true, "marpa_g_symbol_new", g )
-local S_object = lib.marpa_g_symbol_new (g)
-assert_result( S_object, "marpa_g_symbol_new", g )
-local S_array = lib.marpa_g_symbol_new (g)
-assert_result( S_array, "marpa_g_symbol_new", g )
-local S_number = lib.marpa_g_symbol_new (g)
-assert_result( S_number, "marpa_g_symbol_new", g )
-local S_string = lib.marpa_g_symbol_new (g)
-assert_result( S_string, "marpa_g_symbol_new", g )
+local S_begin_array = C.marpa_g_symbol_new (g)
+lib.assert(S_begin_array, "marpa_g_symbol_new", g)
+local S_begin_object = C.marpa_g_symbol_new (g)
+lib.assert( S_begin_object, "marpa_g_symbol_new", g )
+local S_end_array = C.marpa_g_symbol_new (g)
+lib.assert( S_end_array, "marpa_g_symbol_new", g )
+local S_end_object = C.marpa_g_symbol_new (g)
+lib.assert( S_end_object, "marpa_g_symbol_new", g )
+local S_name_separator = C.marpa_g_symbol_new (g)
+lib.assert( S_name_separator, "marpa_g_symbol_new", g )
+local S_value_separator = C.marpa_g_symbol_new (g)
+lib.assert( S_value_separator, "marpa_g_symbol_new", g )
+local S_member = C.marpa_g_symbol_new (g)
+lib.assert( S_member, "marpa_g_symbol_new", g )
+local S_value = C.marpa_g_symbol_new (g)
+lib.assert( S_value, "marpa_g_symbol_new", g )
+local S_false = C.marpa_g_symbol_new (g)
+lib.assert( S_false, "marpa_g_symbol_new", g )
+local S_null = C.marpa_g_symbol_new (g)
+lib.assert( S_null, "marpa_g_symbol_new", g )
+local S_true = C.marpa_g_symbol_new (g)
+lib.assert( S_true, "marpa_g_symbol_new", g )
+local S_object = C.marpa_g_symbol_new (g)
+lib.assert( S_object, "marpa_g_symbol_new", g )
+local S_array = C.marpa_g_symbol_new (g)
+lib.assert( S_array, "marpa_g_symbol_new", g )
+local S_number = C.marpa_g_symbol_new (g)
+lib.assert( S_number, "marpa_g_symbol_new", g )
+local S_string = C.marpa_g_symbol_new (g)
+lib.assert( S_string, "marpa_g_symbol_new", g )
 
 -- additional symbols
-local S_object_contents = lib.marpa_g_symbol_new (g)
-assert_result( S_object_contents, "marpa_g_symbol_new", g )
-local S_array_contents = lib.marpa_g_symbol_new (g)
-assert_result( S_array_contents, "marpa_g_symbol_new", g )
+local S_object_contents = C.marpa_g_symbol_new (g)
+lib.assert( S_object_contents, "marpa_g_symbol_new", g )
+local S_array_contents = C.marpa_g_symbol_new (g)
+lib.assert( S_array_contents, "marpa_g_symbol_new", g )
 
 -- rules
 local rhs = ffi.new("int[4]")
 
 rhs[0] = S_false;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
 rhs[0] = S_null;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
 rhs[0] = S_true;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
 rhs[0] = S_object;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
 rhs[0] = S_array;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
 rhs[0] = S_number;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
 rhs[0] = S_string;
-assert_result( lib.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_value, rhs, 1), "marpa_g_rule_new", g )
 
 rhs[0] = S_begin_array
 rhs[1] = S_array_contents
 rhs[2] = S_end_array
-assert_result( lib.marpa_g_rule_new (g, S_array, rhs, 3), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_array, rhs, 3), "marpa_g_rule_new", g )
 
 rhs[0] = S_begin_object
 rhs[1] = S_object_contents
 rhs[2] = S_end_object
-assert_result( lib.marpa_g_rule_new (g, S_object, rhs, 3), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_object, rhs, 3), "marpa_g_rule_new", g )
 
-assert_result(
-  lib.marpa_g_sequence_new (
-    g, S_array_contents, S_value, S_value_separator, 0, lib.MARPA_PROPER_SEPARATION
+lib.assert(
+  C.marpa_g_sequence_new (
+    g, S_array_contents, S_value, S_value_separator, 0, C.MARPA_PROPER_SEPARATION
   ), "marpa_g_sequence_new", g
 )
 
-assert_result(
-  lib.marpa_g_sequence_new (
-    g, S_object_contents, S_member, S_value_separator, 0, lib.MARPA_PROPER_SEPARATION
+lib.assert(
+  C.marpa_g_sequence_new (
+    g, S_object_contents, S_member, S_value_separator, 0, C.MARPA_PROPER_SEPARATION
   ), "marpa_g_sequence_new", g
 )
 
 rhs[0] = S_string;
 rhs[1] = S_name_separator;
 rhs[2] = S_value;
-assert_result( lib.marpa_g_rule_new (g, S_member, rhs, 3), "marpa_g_rule_new", g )
+lib.assert( C.marpa_g_rule_new (g, S_member, rhs, 3), "marpa_g_rule_new", g )
 
-assert_result( lib.marpa_g_start_symbol_set(g, S_value), "marpa_g_start_symbol_set", g )
+lib.assert( C.marpa_g_start_symbol_set(g, S_value), "marpa_g_start_symbol_set", g )
 
-assert_result( lib.marpa_g_precompute(g), "marpa_g_precompute", g )
+lib.assert( C.marpa_g_precompute(g), "marpa_g_precompute", g )
 
-local r = ffi.gc( lib.marpa_r_new(g), lib.marpa_r_unref )
-assert_result( r, "marpa_g_precompute", g )
+local r = ffi.gc( C.marpa_r_new(g), C.marpa_r_unref )
+lib.assert( r, "marpa_g_precompute", g )
 
-assert_result( lib.marpa_r_start_input(r), "marpa_r_start_input", g )
+lib.assert( C.marpa_r_start_input(r), "marpa_r_start_input", g )
 
 -- read input from file, if specified on the command line, or set to default value
 local input = ''
@@ -227,13 +206,13 @@ while true do
     token_start = token_start + token_length
     token_value = match
 
-    local status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
-    if status ~= lib.MARPA_ERR_NONE then
-      assert_result( status, 'marpa_r_alternative', g )
+    local status = C.marpa_r_alternative (r, token_symbol_id, token_start, 1)
+    if status ~= C.MARPA_ERR_NONE then
+      lib.assert( status, 'marpa_r_alternative', g )
     end
 
-    status = lib.marpa_r_earleme_complete (r)
-    assert_result( status, 'marpa_r_earleme_complete', g )
+    status = C.marpa_r_earleme_complete (r)
+    lib.assert( status, 'marpa_r_earleme_complete', g )
 
     -- save token value for evaluation
     token_values[token_start] = token_value
@@ -244,29 +223,29 @@ end
 -- for k, v in pairs(token_values) do print (k, v) end
 
 -- valuation
-local bocage = ffi.gc( lib.marpa_b_new (r, -1), lib.marpa_b_unref )
-assert_result( bocage, "marpa_b_new", g )
+local bocage = ffi.gc( C.marpa_b_new (r, -1), C.marpa_b_unref )
+lib.assert( bocage, "marpa_b_new", g )
 
-local order  = ffi.gc( lib.marpa_o_new (bocage), lib.marpa_o_unref )
-assert_result( order, "marpa_o_new", g )
+local order  = ffi.gc( C.marpa_o_new (bocage), C.marpa_o_unref )
+lib.assert( order, "marpa_o_new", g )
 
-local tree   = ffi.gc( lib.marpa_t_new (order), lib.marpa_t_unref )
-assert_result( tree, "marpa_t_new", g )
+local tree   = ffi.gc( C.marpa_t_new (order), C.marpa_t_unref )
+lib.assert( tree, "marpa_t_new", g )
 
-local tree_status = lib.marpa_t_next (tree)
-assert_result( tree_status, "marpa_t_next", g )
+local tree_status = C.marpa_t_next (tree)
+lib.assert( tree_status, "marpa_t_next", g )
 
-local value = ffi.gc( lib.marpa_v_new (tree), marpa_v_unref )
-assert_result( value, "marpa_v_new", g )
+local value = ffi.gc( C.marpa_v_new (tree), marpa_v_unref )
+lib.assert( value, "marpa_v_new", g )
 
 -- steps
 local got_json = ''
 while true do
-  local step_type = lib.marpa_v_step (value)
-  assert_result( step_type, "marpa_v_step", g )
-  if step_type == lib.MARPA_STEP_INACTIVE then
+  local step_type = C.marpa_v_step (value)
+  lib.assert( step_type, "marpa_v_step", g )
+  if step_type == C.MARPA_STEP_INACTIVE then
     break
-  elseif step_type == lib.MARPA_STEP_TOKEN then
+  elseif step_type == C.MARPA_STEP_TOKEN then
     local token = value.t_token_id
     if token == S_begin_array then
       got_json = got_json .. '['

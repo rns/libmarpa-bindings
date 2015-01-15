@@ -3,11 +3,9 @@ require 'os'
 local d = require 'printf_debugging'
 
 -- libmarpa binding
-local libmarpa = require 'libmarpa'
-
-local lib   = libmarpa.lib
-local ffi   = libmarpa.ffi
-local codes = libmarpa.codes
+local lib   = require 'libmarpa'
+local C     = lib.C
+local ffi   = lib.ffi
 
 -- print platform versions
 print(
@@ -16,40 +14,20 @@ print(
 )
 
 local ver = ffi.new("int [3]")
-lib.marpa_version(ver)
+C.marpa_version(ver)
 print(string.format("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
 
 print("LuaJIT version:", jit.version )
 print(string.rep('-', 28))
 
--- error handling
-local function error_msg(func, g)
-  local error_code = lib.marpa_g_error(g, ffi.NULL)
-  return string.format("%s returned %d: %s", func, error_code, table.concat(codes.errors[error_code+1], ': ') )
-end
-
-local function assert_result(result, func, g)
-  local type = type(result)
-  if type == "number" then
--- todo: move to libmarpa.lua and use https://gist.github.com/pczarn/50edb39b432f974fb6b4
-    if func == 'marpa_r_earleme_complete' then
-      assert( result ~= -2, error_msg(func, g) )
-    else
-      assert( result >= 0, error_msg(func, g) )
-    end
-  elseif type == "cdata" then
-    assert( result ~= ffi.NULL, error_msg(func, g) )
-  end
-end
-
 -- Marpa configurarion
 local config = ffi.new("Marpa_Config")
-lib.marpa_c_init(config) -- always succeeds
+C.marpa_c_init(config) -- always succeeds
 
 -- grammar
-local g = ffi.gc(lib.marpa_g_new(config), lib.marpa_g_unref)
+local g = ffi.gc(C.marpa_g_new(config), C.marpa_g_unref)
 local msg = ffi.new("const char **")
-assert( lib.marpa_c_error(config, msg) == lib.MARPA_ERR_NONE, msg )
+assert( C.marpa_c_error(config, msg) == C.MARPA_ERR_NONE, msg )
 
 --[[
 
@@ -60,7 +38,7 @@ assert( lib.marpa_c_error(config, msg) == lib.MARPA_ERR_NONE, msg )
   potentially be gained by not-caring about values of some symbols
   e.g. array/objects' begin's/end's, separators, etc.
 ]]--
-assert_result( lib.marpa_g_force_valued(g), "marpa_g_force_valued", g )
+lib.assert( C.marpa_g_force_valued(g), "marpa_g_force_valued", g )
 
 -- JSON grammar specification
 -- only symbols in quotes: no literals or regexes
@@ -168,8 +146,8 @@ local function symbol_new(s, g)
   assert(type(g) == "cdata", "grammar must be cdata")
   local s_id = symbols[s]
   if s_id == nil then
-    s_id = lib.marpa_g_symbol_new (g)
-    assert_result(s_id, "marpa_g_symbol_new", g)
+    s_id = C.marpa_g_symbol_new (g)
+    lib.assert(s_id, "marpa_g_symbol_new", g)
     symbols[tostring(s_id)] = s
     symbols[s]    = s_id
   else
@@ -184,7 +162,7 @@ for lhs, rhs in pairs(jg["parser"]) do
   -- handle start symbol
   if lhs == '_start_symbol' then
     local S_start = symbol_new(rhs, g)
-    assert_result( lib.marpa_g_start_symbol_set(g, S_start), "marpa_g_start_symbol_set", g )
+    lib.assert( C.marpa_g_start_symbol_set(g, S_start), "marpa_g_start_symbol_set", g )
   else
     -- d.pt(lhs, ':=', d.s(rhs))
     -- add lhs symbol to the grammar
@@ -220,11 +198,11 @@ for lhs, rhs in pairs(jg["parser"]) do
           assert( #rhs_alternative == 1, "sequence rule must have only 1 symbol on its RHS" )
           local S_item = S_rhs_symbol[1]
           -- d.pt(d.i(S_separator, S_item))
-          assert_result(
-            lib.marpa_g_sequence_new (
+          lib.assert(
+            C.marpa_g_sequence_new (
               g, S_lhs, S_item, S_separator,
               adverbs["quantifier"] == "+" and 1 or adverbs["quantifier"] == "*" and 0 or -1,
-              lib.MARPA_PROPER_SEPARATION
+              C.MARPA_PROPER_SEPARATION
             ), "marpa_g_sequence_new", g
           )
         else
@@ -237,7 +215,7 @@ for lhs, rhs in pairs(jg["parser"]) do
         for ix = 1, #rhs_alternative do
           rhs[ix-1] = S_rhs_symbol[ix]
         end
-        assert_result( lib.marpa_g_rule_new (g, S_lhs, rhs, #rhs_alternative), "marpa_g_rule_new", g )
+        lib.assert( C.marpa_g_rule_new (g, S_lhs, rhs, #rhs_alternative), "marpa_g_rule_new", g )
       end
     end
   end
@@ -262,7 +240,7 @@ end
 
 -- d.pt(d.i(token_spec))
 
-assert_result( lib.marpa_g_precompute(g), "marpa_g_precompute", g )
+lib.assert( C.marpa_g_precompute(g), "marpa_g_precompute", g )
 
 --[[
 todo: more specific error handling/sanity check
@@ -287,10 +265,10 @@ marpa_g_is_precomputed()
 
 ]]--
 
-local r = ffi.gc( lib.marpa_r_new(g), lib.marpa_r_unref )
-assert_result( r, "marpa_r_new", g )
+local r = ffi.gc( C.marpa_r_new(g), C.marpa_r_unref )
+lib.assert( r, "marpa_r_new", g )
 
-assert_result( lib.marpa_r_start_input(r), "marpa_r_start_input", g )
+lib.assert( C.marpa_r_start_input(r), "marpa_r_start_input", g )
 
 -- read input from file, if specified on the command line, or set to default value
 local input = ''
@@ -310,8 +288,8 @@ end
 -- return terminals expected at current earleme
 local expected = ffi.new("Marpa_Symbol_ID[" .. #token_spec .. "]")
 local function expected_terminals(r)
-  local count_of_expected = lib.marpa_r_terminals_expected (r, expected)
-  assert_result( count_of_expected, "marpa_r_terminals_expected", g )
+  local count_of_expected = C.marpa_r_terminals_expected (r, expected)
+  lib.assert( count_of_expected, "marpa_r_terminals_expected", g )
   -- these terminals must always be matched
   -- once the grammar is represented as BNF + regexes text
   -- these terminals will be added as symbols to Marpa grammar
@@ -337,9 +315,9 @@ while true do
     print(string.format("Invalid symbol '%s' at %d:%d", input:sub(token_start, token_length - 1), line, column ));
   elseif token_symbol_id >= 0 then
     -- todo: events. if handlers are specified in the grammar
-    local status = lib.marpa_r_alternative (r, token_symbol_id, token_start, 1)
-    if status ~= lib.MARPA_ERR_NONE then
-      assert_result( status, 'marpa_r_alternative', g )
+    local status = C.marpa_r_alternative (r, token_symbol_id, token_start, 1)
+    if status ~= C.MARPA_ERR_NONE then
+      lib.assert( status, 'marpa_r_alternative', g )
     else
       --[[
       todo:
@@ -357,8 +335,8 @@ while true do
         knows of no applications which attempt to recover from these errors.
       ]]--
     end
-    status = lib.marpa_r_earleme_complete (r)
-    assert_result( status, 'marpa_r_earleme_complete', g )
+    status = C.marpa_r_earleme_complete (r)
+    lib.assert( status, 'marpa_r_earleme_complete', g )
     token_values[token_start .. ""] = token_length
   end
 end
@@ -374,20 +352,20 @@ end
       value
         steps(value)
 ]]--
-local bocage = ffi.gc( lib.marpa_b_new (r, -1), lib.marpa_b_unref )
-assert_result( bocage, "marpa_b_new", g )
+local bocage = ffi.gc( C.marpa_b_new (r, -1), C.marpa_b_unref )
+lib.assert( bocage, "marpa_b_new", g )
 
-local order  = ffi.gc( lib.marpa_o_new (bocage), lib.marpa_o_unref )
-assert_result( order, "marpa_o_new", g )
+local order  = ffi.gc( C.marpa_o_new (bocage), C.marpa_o_unref )
+lib.assert( order, "marpa_o_new", g )
 
-local tree   = ffi.gc( lib.marpa_t_new (order), lib.marpa_t_unref )
-assert_result( tree, "marpa_t_new", g )
+local tree   = ffi.gc( C.marpa_t_new (order), C.marpa_t_unref )
+lib.assert( tree, "marpa_t_new", g )
 
-local tree_status = lib.marpa_t_next (tree)
-assert_result( tree_status, "marpa_t_next", g )
+local tree_status = C.marpa_t_next (tree)
+lib.assert( tree_status, "marpa_t_next", g )
 
-local value = ffi.gc( lib.marpa_v_new (tree), marpa_v_unref )
-assert_result( value, "marpa_v_new", g )
+local value = ffi.gc( C.marpa_v_new (tree), marpa_v_unref )
+lib.assert( value, "marpa_v_new", g )
 
 --[[
   todo:
@@ -399,19 +377,19 @@ local got_json = ''
 -- stepping
 column = 0
 while true do
-  local step_type = lib.marpa_v_step (value)
-  assert_result( step_type, "marpa_v_step", g )
-  if step_type == lib.MARPA_STEP_INACTIVE then
+  local step_type = C.marpa_v_step (value)
+  lib.assert( step_type, "marpa_v_step", g )
+  if step_type == C.MARPA_STEP_INACTIVE then
     -- d.pt( "The valuator has gone through all of its steps" )
     break
-  elseif step_type == lib.MARPA_STEP_RULE then
+  elseif step_type == C.MARPA_STEP_RULE then
     local first_child_ix = value.t_arg_0
     local last_child_ix  = value.t_arg_n
     local rule_value_ix  = value.t_result -- rule value must go to that ix
     local rule_id = value.t_rule_id
-    local rule_lhs_id = lib.marpa_g_rule_lhs(g, rule_id)
+    local rule_lhs_id = C.marpa_g_rule_lhs(g, rule_id)
 --    io.stderr:write( sf( "R%-2d: %-10s stack[%2d:%2d] -> [%d]", rule_id, symbols[tostring(rule_lhs_id)], first_child_ix, last_child_ix, rule_value_ix ), "\n" )
-  elseif step_type == lib.MARPA_STEP_TOKEN then
+  elseif step_type == C.MARPA_STEP_TOKEN then
 
     local token_id = value.t_token_id
     -- we called _alternative with token_start as the value,
