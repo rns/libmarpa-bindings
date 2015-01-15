@@ -719,3 +719,186 @@ return {
   ffi = ffi,
   codes = codes
 }
+
+--[[
+Libmarpa 7.3.0
+failure return values, for your bindings-writing pleasure
+
+-- Always succeed.
+
+marpa_check_version
+marpa_c_init
+marpa_c_error
+marpa_r_earley_item_warning_threshold
+marpa_r_earley_item_warning_threshold_set
+marpa_r_furthest_earleme
+marpa_r_latest_earley_set
+marpa_r_is_exhausted
+marpa_t_parse_count
+marpa_g_error
+marpa_g_error_clear
+
+marpa_r_unref
+marpa_b_unref
+marpa_o_unref
+marpa_t_unref
+marpa_v_unref
+
+-- Always succeed. Return -1 on undefined value.
+
+marpa_r_current_earleme
+
+-- A non-negative number on success.
+
+marpa_g_force_valued
+
+-- A non-negative number on success, -2 on failure.
+
+marpa_version
+marpa_g_symbol_new
+marpa_g_highest_symbol_id
+
+marpa_g_highest_rule_id
+marpa_g_rule_new
+marpa_g_rule_length
+
+marpa_g_sequence_new
+marpa_g_symbol_is_counted
+marpa_g_rule_null_high
+marpa_g_rule_null_high_set
+marpa_g_precompute
+  -- an error code of MARPA_ERR_GRAMMAR_HAS_CYCLE leaves the grammar in a functional state
+marpa_g_is_precomputed
+marpa_g_has_cycle
+
+marpa_r_start_input
+marpa_r_earleme_complete (an exhausted parse may cause a failure)
+
+marpa_r_earleme
+marpa_r_earley_set_value
+marpa_r_earley_set_values
+marpa_r_latest_earley_set_value_set
+marpa_r_latest_earley_set_values_set
+
+marpa_r_expected_symbol_event_set
+marpa_r_terminals_expected
+marpa_r_terminal_is_expected
+
+marpa_r_completion_symbol_activate
+marpa_r_nulled_symbol_activate
+marpa_r_prediction_symbol_activate
+
+marpa_r_progress_report_reset
+marpa_r_progress_report_start
+marpa_r_progress_report_finish
+
+marpa_b_ambiguity_metric
+marpa_b_is_null
+
+marpa_o_ambiguity_metric
+marpa_o_is_null
+
+marpa_o_high_rank_only_set
+marpa_o_high_rank_only
+marpa_o_rank
+
+marpa_v_step
+
+marpa_g_event
+marpa_g_event_count
+
+marpa_g_symbol_is_valued
+marpa_g_symbol_is_valued_set
+
+marpa_v_symbol_is_valued
+marpa_v_symbol_is_valued_set
+
+marpa_v_rule_is_valued
+marpa_v_rule_is_valued_set
+
+marpa_v_valued_force (sets the error code to an appropriate value, which will never be MARPA_ERR_NONE)
+
+-- A non-negative number on success, -1 on undefined value, -2 on failure.
+
+marpa_g_start_symbol
+marpa_g_start_symbol_set
+marpa_g_symbol_is_accessible
+marpa_g_symbol_is_completion_event
+marpa_g_symbol_is_completion_event_set
+marpa_g_symbol_is_nulled_event
+marpa_g_symbol_is_nulled_event_set
+marpa_g_symbol_is_nullable
+marpa_g_symbol_is_nulling
+marpa_g_symbol_is_productive
+marpa_g_symbol_is_prediction_event
+marpa_g_symbol_is_prediction_event_set
+marpa_g_symbol_is_start
+marpa_g_symbol_is_terminal
+marpa_g_symbol_is_terminal_set
+
+marpa_g_rule_is_accessible
+marpa_g_rule_is_nullable
+marpa_g_rule_is_nulling
+marpa_g_rule_is_loop
+marpa_g_rule_is_productive
+marpa_g_rule_lhs
+marpa_g_rule_rhs
+
+marpa_g_sequence_min
+marpa_g_rule_is_proper_separation
+marpa_g_sequence_separator
+
+marpa_r_progress_item
+
+marpa_t_next
+
+-- NULL on failure.
+
+marpa_g_new
+marpa_g_ref
+
+marpa_b_new
+    If there is no parse ending at Earley set earley_set_ID, marpa_b_new fails and the error code is set to MARPA_ERR_NO_PARSE.
+    NULL.
+marpa_b_ref
+
+marpa_r_new
+marpa_r_ref
+
+marpa_o_new
+marpa_o_ref
+
+marpa_t_new
+marpa_t_ref
+
+marpa_v_new
+marpa_v_ref
+
+-- A non-negative number on success. Return -2 and set the error code to an appropriate value on failure.
+
+marpa_g_rule_rank
+marpa_g_rule_rank_set
+marpa_g_default_rank
+marpa_g_default_rank_set
+marpa_g_symbol_rank
+marpa_g_symbol_rank_set
+    -2, and sets the error code to an appropriate value, which will never be MARPA_ERR_NONE. Note that when the rank is -2, the error code is the only way to distinguish success from failure. The error code can be determined by using the marpa_g_error() call.
+
+-- Other.
+
+marpa_r_alternative
+    Returns MARPA_ERR_NONE on success. On failure, some other error code. Several error codes leave the recognizer in a fully recoverable state.
+
+-- Undocumented.
+
+marpa_g_highest_zwa_id
+
+marpa_g_zwa_new
+marpa_g_zwa_place
+marpa_r_zwa_default_set
+    On success, returns previous default value of the assertion.
+
+-------------
+
+http://irclog.perlgeek.de/marpa/2014-12-07#i_9772028
+]]--
