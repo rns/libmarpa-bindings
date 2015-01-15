@@ -15,6 +15,7 @@ print "os:", uname[0], uname[2], uname[3], uname[4]
 print "python version:",    '.'.join(map(str, sys.version_info[0:3]))
 print "libmarpa version:",  '.'.join(map(str, ver))
 print "cffi version:",      cffi.__version__
+print "-" * 19
 
 config = ffi.new("Marpa_Config*")
 lib.marpa_c_init(config)
@@ -123,12 +124,6 @@ rhs[1] = S_name_separator;
 rhs[2] = S_value;
 assert lib.marpa_g_rule_new (g, S_member, rhs, 3) >= 0, fail ("marpa_g_rule_new", g)
 
-# it is in json.c for some reason so preserved here
-# todo: check why it is
-if 0:
-  assert lib.marpa_g_symbol_is_terminal_set (g, S_value_separator, 1) >= 0, \
-    fail ("marpa_g_symbol_is_terminal", g)
-
 assert lib.marpa_g_start_symbol_set (g, S_value) >= 0, fail ("marpa_g_start_symbol_set", g)
 
 if lib.marpa_g_precompute (g) < 0:
@@ -155,7 +150,7 @@ if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
 else:
   input = '[ 1, "abc\ndef", -2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
 
-print input
+print "\nJSON Input:\n", input
 
 # lexing
 S_none = -1
@@ -229,7 +224,7 @@ for mo in re.finditer(token_regex, input):
       token_symbol_id = token_id[token_symbol]
       token_start     = mo.start()
       token_length    = len(token_value)
-# todo: handle multiple matches
+
 #     print token_symbol, token_symbol_id, "'%s'" % token_value, "%s:%s" % (token_start, token_length), '@%s:%s' % (line_num, column)
       
       status = lib.marpa_r_alternative (r, token_symbol_id, token_start + 1, 1)
@@ -247,9 +242,9 @@ for mo in re.finditer(token_regex, input):
         sys.exit (1)
       
       token_values[token_start] = token_value
-      
-if 0: print token_values
 
+# valuate
+      
 bocage = lib.marpa_b_new (r, -1)
 if bocage == ffi.NULL:
   e = lib.marpa_g_error (g, ffi.new("char**"))
@@ -281,6 +276,8 @@ if value == ffi.NULL:
   sys.exit (1)
 
 column = 0
+
+print "Parser Output:"
 
 while 1:
   step_type = lib.marpa_v_step (value)
@@ -342,3 +339,4 @@ while 1:
     sys.stdout.write( token_values[start_of_string] )
     
 sys.stdout.write("\n")
+
