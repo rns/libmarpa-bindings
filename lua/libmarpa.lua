@@ -714,43 +714,40 @@ assert(
   )
 )
 
-return {
-  lib = lib,
-  ffi = ffi,
-  codes = codes
+-- external errors codes
+-- Ref: http://irclog.perlgeek.de/marpa/2014-12-07#i_9772028
+local FAILURE       = 1
+local INFORMATION   = 2
+local SUCCESS       = 3
+local eec = {
+-- Always succeed.
+  marpa_check_version = { nil, nil, nil },
+  marpa_check_version = { nil, nil, nil },
+  marpa_c_init = { nil, nil, nil },
+  marpa_c_error = { nil, nil, nil },
+  marpa_r_earley_item_warning_threshold = { nil, nil, nil },
+  marpa_r_earley_item_warning_threshold_set = { nil, nil, nil },
+  marpa_r_furthest_earleme = { nil, nil, nil },
+  marpa_r_latest_earley_set = { nil, nil, nil },
+  marpa_r_is_exhausted = { nil, nil, nil },
+  marpa_t_parse_count = { nil, nil, nil },
+  marpa_g_error = { nil, nil, nil },
+  marpa_g_error_clear = { nil, nil, nil },
+
+  marpa_r_unref = { nil, nil, nil },
+  marpa_b_unref = { nil, nil, nil },
+  marpa_o_unref = { nil, nil, nil },
+  marpa_t_unref = { nil, nil, nil },
+  marpa_v_unref = { nil, nil, nil },
+-- Always succeeds. Returns -1 on undefined value.
+  marpa_r_current_earleme = { nil, -1, nil },
+-- On success, a non-negative integer. On failure, a negative integer.
+  marpa_g_force_valued ( , -1, 0 )
+
 }
 
 --[[
-Libmarpa 7.3.0
-failure return values, for your bindings-writing pleasure
 
--- Always succeed.
-
-marpa_check_version
-marpa_c_init
-marpa_c_error
-marpa_r_earley_item_warning_threshold
-marpa_r_earley_item_warning_threshold_set
-marpa_r_furthest_earleme
-marpa_r_latest_earley_set
-marpa_r_is_exhausted
-marpa_t_parse_count
-marpa_g_error
-marpa_g_error_clear
-
-marpa_r_unref
-marpa_b_unref
-marpa_o_unref
-marpa_t_unref
-marpa_v_unref
-
--- Always succeed. Return -1 on undefined value.
-
-marpa_r_current_earleme
-
--- A non-negative number on success.
-
-marpa_g_force_valued
 
 -- A non-negative number on success, -2 on failure.
 
@@ -900,5 +897,10 @@ marpa_r_zwa_default_set
 
 -------------
 
-http://irclog.perlgeek.de/marpa/2014-12-07#i_9772028
 ]]--
+
+return {
+  lib = lib,
+  ffi = ffi,
+  codes = codes
+}
