@@ -856,27 +856,25 @@ local eec = {
 ]]--
 
 -- NULL on failure.
-  --[[ those are checked by assert_result()
-  marpa_g_new
-  marpa_g_ref
+  -- those are currently checked by assert_result()
+  marpa_g_new = { ffi.NULL, nil, nil },
+  marpa_g_ref = { ffi.NULL, nil, nil },
 
-  marpa_b_new
-      If there is no parse ending at Earley set earley_set_ID, marpa_b_new fails and the error code is set to MARPA_ERR_NO_PARSE.
-      NULL.
-  marpa_b_ref
+  marpa_b_new = { ffi.NULL, nil, nil },
+      -- If there is no parse ending at Earley set earley_set_ID, marpa_b_new fails and the error code is set to MARPA_ERR_NO_PARSE.
+  marpa_b_ref = { ffi.NULL, nil, nil },
 
-  marpa_r_new
-  marpa_r_ref
+  marpa_r_new = { ffi.NULL, nil, nil },
+  marpa_r_ref = { ffi.NULL, nil, nil },
 
-  marpa_o_new
-  marpa_o_ref
+  marpa_o_new = { ffi.NULL, nil, nil },
+  marpa_o_ref = { ffi.NULL, nil, nil },
 
-  marpa_t_new
-  marpa_t_ref
+  marpa_t_new = { ffi.NULL, nil, nil },
+  marpa_t_ref = { ffi.NULL, nil, nil },
 
-  marpa_v_new
-  marpa_v_ref
-  ]]--
+  marpa_v_new = { ffi.NULL, nil, nil },
+  marpa_v_ref = { ffi.NULL, nil, nil },
 
 -- Other.
 
