@@ -1,7 +1,13 @@
 ﻿libmarpa-bindings
 =================
 
-Mostly [libffi](https://sourceware.org/libffi/)-based bindings to [libmarpa](https://github.com/jeffreykegler/libmarpa) -- an ANSI C library, which implements [Marpa parsing algorithm](http://savage.net.au/Marpa.html) ("parse anything that can be written in BNF"). 
+Mostly [libffi](https://sourceware.org/libffi/)-based bindings to 
+[libmarpa](https://github.com/jeffreykegler/libmarpa) 
+-- an ANSI C library, which implements 
+[Marpa parsing algorithm](http://savage.net.au/Marpa.html)
+("parse anything that can be written in BNF", 
+[really](http://metacpan.org/source/JDDPAUSE/MarpaX-Languages-SQL2003-AST-0.005/lib/MarpaX/Languages/SQL2003/AST.pm#L299)
+). 
 
 Status
 ======
