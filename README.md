@@ -25,7 +25,7 @@ Lua
 
   libmarpa C functions can be called (and error-checked) from Lua via luajit FFI Library.
 
-  [Sample JSON Parser](https://github.com/rns/libmarpa-bindings/blob/master/lua/json-libmarpa.lua), 
+  Sample [JSON Parser](https://github.com/rns/libmarpa-bindings/blob/master/lua/json-libmarpa.lua), 
   mostly a port of [json.c](https://github.com/jeffreykegler/libmarpa/blob/master/test/json.c)
   with libmarpa bindings and with a very basic handwritten lexer based on Lua patterns.
 
@@ -36,7 +36,7 @@ Python
 
   libmarpa C functions can be called (and error-checked) from Python via cffi.
 
-  [Sample JSON Parser](https://github.com/rns/libmarpa-bindings/blob/master/python/json-libmarpa.py), 
+  Sample [JSON Parser](https://github.com/rns/libmarpa-bindings/blob/master/python/json-libmarpa.py), 
   also a port of [json.c](https://github.com/jeffreykegler/libmarpa/blob/master/test/json.c) 
   with a handwritten lexer based on Python regexes.
   
