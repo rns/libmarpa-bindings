@@ -838,7 +838,7 @@ local eec = {
 
 -- NULL on failure.
 
-  marpa_g_new = { "ffi.NULL", nil, 0 },
+  marpa_g_new = { "ffi.NULL", nil, nil },
   marpa_g_ref = { "ffi.NULL", nil, nil },
 
   marpa_b_new = { "ffi.NULL", nil, nil },
@@ -885,10 +885,15 @@ local eec = {
 
 } -- local eec = {
 
+local soft_errors = {
+  marpa_g_start_symbol = 1,
+}
+
 -- error handling
 local function error_string(result, func, object) -- object can be grammar or config
   local error_code
-  if func == "marpa_c_init" or func == "marpa_g_new" then
+  local initialization = func == "marpa_c_init" or func == "marpa_g_new"
+  if initialization then
     error_code = C.marpa_c_error(object, ffi.NULL)
   else
     error_code = C.marpa_g_error(object, ffi.NULL)
@@ -896,10 +901,16 @@ local function error_string(result, func, object) -- object can be grammar or co
   assert( error_code ~= nil, "Invalid error code: " .. error_code )
   if result ~= nil then
     if result == -1 and error_code == 0 then
-      if func:find("_symbol") ~= nil then
-        error_code = C.MARPA_ERR_NO_START_SYMBOL
+      if soft_errors[func] ~= nil then
+        if func == 'marpa_g_start_symbol' then
+          error_code = C.MARPA_ERR_NO_START_SYMBOL
+        end
       end
     end
+  end
+  -- clear error
+  if not initialization then
+    C.marpa_g_error_clear(object)
   end
   return string.format(
     "%s returned %d: %s", func, error_code, table.concat(codes.errors[error_code+1], ': ')
@@ -915,7 +926,7 @@ end
 ]]--
 local function assert_result(result, func, object)
   assert( eec[func] ~= nil, "No error code info for libmarpa function: " .. func)
-  pti("assert_result", result, func, object, eec[func])
+--  pti("assert_result", result, func, object, eec[func])
   if eec[func][FAILURE] ~= nil then
     -- ffi.NULL is nil, so we represent it as a string
     if eec[func][FAILURE] == "ffi.NULL" then

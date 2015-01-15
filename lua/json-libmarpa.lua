@@ -121,7 +121,7 @@ lib.assert( C.marpa_g_start_symbol_set(g, S_value), "marpa_g_start_symbol_set", 
 lib.assert( C.marpa_g_precompute(g), "marpa_g_precompute", g )
 
 local r = ffi.gc( C.marpa_r_new(g), C.marpa_r_unref )
-lib.assert( r, "marpa_g_precompute", g )
+lib.assert( r, "marpa_r_new", g )
 
 lib.assert( C.marpa_r_start_input(r), "marpa_r_start_input", g )
 

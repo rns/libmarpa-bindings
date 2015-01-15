@@ -44,19 +44,21 @@ like(
   "marpa_g_precompute on an empty grammar"
 )
 
---[[
-local S_id = C.marpa_g_symbol_new (g)
-
-
 -- new symbol
--- local S_id = C.marpa_g_symbol_new (g)
+local S_id = C.marpa_g_symbol_new (g)
 _, ret_or_err = pcall(lib.assert, -2, "marpa_g_symbol_new", g )
-like(ret_or_err, "marpa_g_symbol_new returned 0: MARPA_ERR_NONE: No error", "marpa_g_symbol_new" )
+like(
+  ret_or_err,
+  "marpa_g_symbol_new returned 0: MARPA_ERR_NONE: No error",
+  "marpa_g_symbol_new"
+)
 
 -- grammar has only 1 symbol and no rules
 
+--[[
 
 print(ret_or_err)
+
 ]]--
 
 --[[
