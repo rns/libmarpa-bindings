@@ -30,14 +30,23 @@ _, ret_or_err = pcall(lib.assert, -1, "marpa_g_force_valued", g )
 like(ret_or_err, "marpa_g_force_valued returned 0: MARPA_ERR_NONE: No error", "marpa_g_force_valued" )
 
 -- the grammar is now empty (nor rules, nor symbols)
-C.marpa_g_start_symbol(g)
+_, ret_or_err = pcall(lib.assert, C.marpa_g_start_symbol(g), "marpa_g_start_symbol", g )
+like(
+  ret_or_err,
+  "marpa_g_start_symbol returned 43: MARPA_ERR_NO_START_SYMBOL: This grammar has no start symbol",
+  "marpa_g_start_symbol on an empty or otherwise non-precomputed grammar"
+)
 
--- lib.assert( C.marpa_g_start_symbol(g), "marpa_g_start_symbol", g )
+_, ret_or_err = pcall(lib.assert, C.marpa_g_precompute(g), "marpa_g_precompute", g )
+like(
+  ret_or_err,
+  "marpa_g_precompute returned 42: MARPA_ERR_NO_RULES: This grammar does not have any rules",
+  "marpa_g_precompute on an empty grammar"
+)
 
 --[[
-lib.assert( C.marpa_g_start_symbol_set(g), "marpa_g_start_symbol_set", g )
+local S_id = C.marpa_g_symbol_new (g)
 
-lib.assert( C.marpa_g_precompute(g), "marpa_g_precompute", g )
 
 -- new symbol
 -- local S_id = C.marpa_g_symbol_new (g)

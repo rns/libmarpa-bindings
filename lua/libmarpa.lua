@@ -891,15 +891,15 @@ local function error_string(result, func, object) -- object can be grammar or co
   if func == "marpa_c_init" or func == "marpa_g_new" then
     error_code = C.marpa_c_error(object, ffi.NULL)
   else
-    print("calling marpa_g_error()")
     error_code = C.marpa_g_error(object, ffi.NULL)
   end
   assert( error_code ~= nil, "Invalid error code: " .. error_code )
   if result ~= nil then
-    assert(
-      not ( result < 0 and error_code == 0 ),
-      "Error code " .. error_code .. " (nor error) for result " .. result
-    )
+    if result == -1 and error_code == 0 then
+      if func:find("_symbol") ~= nil then
+        error_code = C.MARPA_ERR_NO_START_SYMBOL
+      end
+    end
   end
   return string.format(
     "%s returned %d: %s", func, error_code, table.concat(codes.errors[error_code+1], ': ')
