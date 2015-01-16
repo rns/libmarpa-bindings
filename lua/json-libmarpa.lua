@@ -111,9 +111,9 @@ lib.assert(
   ), "marpa_g_sequence_new", g
 )
 
-rhs[0] = S_string;
-rhs[1] = S_name_separator;
-rhs[2] = S_value;
+rhs[0] = S_string
+rhs[1] = S_name_separator
+rhs[2] = S_value
 lib.assert( C.marpa_g_rule_new (g, S_member, rhs, 3), "marpa_g_rule_new", g )
 
 lib.assert( C.marpa_g_start_symbol_set(g, S_value), "marpa_g_start_symbol_set", g )
