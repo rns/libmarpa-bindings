@@ -134,6 +134,8 @@ static const int MARPA_ERR_INVALID_ASSERTION_ID = 96;
 static const int MARPA_ERR_NO_SUCH_ASSERTION_ID = 97;
 static const int MARPA_ERR_HEADERS_DO_NOT_MATCH = 98;
 
+// libmarpa has no such error code, so we add it
+static const int MARPA_ERR_RULE_IS_NOT_SEQUENCE = 201;
 
 static const int MARPA_EVENT_COUNT = 10;
 static const int MARPA_EVENT_NONE = 0;
@@ -146,7 +148,6 @@ static const int MARPA_EVENT_SYMBOL_COMPLETED = 6;
 static const int MARPA_EVENT_SYMBOL_EXPECTED = 7;
 static const int MARPA_EVENT_SYMBOL_NULLED = 8;
 static const int MARPA_EVENT_SYMBOL_PREDICTED = 9;
-
 
 static const int MARPA_STEP_COUNT = 8;
 static const int MARPA_STEP_INTERNAL1 = 0;
@@ -657,7 +658,9 @@ local _errors = {
   { 95, "MARPA_ERR_RECCE_IS_INCONSISTENT", "MARPA_ERR_RECCE_IS_INCONSISTENT" },
   { 96, "MARPA_ERR_INVALID_ASSERTION_ID", "Assertion ID is malformed" },
   { 97, "MARPA_ERR_NO_SUCH_ASSERTION_ID", "No assertion with this ID exists" },
-  { 98, "MARPA_ERR_HEADERS_DO_NOT_MATCH", "Internal error: Libmarpa was built incorrectly" }
+  { 98, "MARPA_ERR_HEADERS_DO_NOT_MATCH", "Internal error: Libmarpa was built incorrectly" },
+-- libmarpa has no such error code, so we add it
+  { 201, "MARPA_ERR_RULE_IS_NOT_SEQUENCE", "Rule is not a sequence rule" }
 }
 
 local _events = {
@@ -858,8 +861,9 @@ local eec = {
   marpa_v_ref = { "ffi.NULL", nil, nil },
 
 -- Other.
-
-  marpa_r_alternative = { nil, nil, 0 },
+  -- this function returns error code to we set success code to a value
+  -- larger than the highest error code to force a call to error_string
+  marpa_r_alternative = { nil, nil, 100 },
     -- Returns MARPA_ERR_NONE on success. On failure, some other error code. Several error codes leave the recognizer in a fully recoverable state.
 
 -- Untested methods
@@ -885,8 +889,42 @@ local eec = {
 
 } -- local eec = {
 
+-- libmarpa returns -1 for these methods and marpa_g_error returns 0, because
+-- they are "soft errors" (http://irclog.perlgeek.de/marpa/2015-01-15#i_9947368),
+-- so they need to be treated separately in this table we assign an error code
+-- if there is suitable one, e.g. MARPA_ERR_NO_START_SYMBOL
+-- for marpa_g_start_symbol() == -1
+-- or a custom error message is there is suitable marpa error code
 local soft_errors = {
-  marpa_g_start_symbol = 1,
+
+  marpa_g_start_symbol = C.MARPA_ERR_NO_START_SYMBOL,
+  marpa_g_start_symbol_set = C.MARPA_ERR_NO_START_SYMBOL,
+  marpa_g_symbol_is_accessible = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_completion_event = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_completion_event_set = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_nulled_event = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_nulled_event_set = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_nullable = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_nulling = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_productive = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_prediction_event = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_prediction_event_set = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_start = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_terminal = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+  marpa_g_symbol_is_terminal_set = C.MARPA_ERR_NO_SUCH_SYMBOL_ID,
+
+  marpa_g_rule_is_accessible = C.MARPA_ERR_NO_SUCH_RULE_ID,
+  marpa_g_rule_is_nullable = C.MARPA_ERR_NO_SUCH_RULE_ID,
+  marpa_g_rule_is_nulling = C.MARPA_ERR_NO_SUCH_RULE_ID,
+  marpa_g_rule_is_loop = C.MARPA_ERR_NO_SUCH_RULE_ID,
+  marpa_g_rule_is_productive = C.MARPA_ERR_NO_SUCH_RULE_ID,
+  marpa_g_rule_lhs = C.MARPA_ERR_NO_SUCH_RULE_ID,
+  marpa_g_rule_rhs = C.MARPA_ERR_NO_SUCH_RULE_ID,
+
+  marpa_g_sequence_min = C.MARPA_ERR_RULE_IS_NOT_SEQUENCE,
+  marpa_g_rule_is_proper_separation = C.MARPA_ERR_NO_SUCH_RULE_ID,
+  marpa_g_sequence_separator = C.MARPA_ERR_RULE_IS_NOT_SEQUENCE,
+
 }
 
 -- error handling
@@ -899,14 +937,10 @@ local function error_string(result, func, object) -- object can be grammar or co
     error_code = C.marpa_g_error(object, ffi.NULL)
   end
   assert( error_code ~= nil, "Invalid error code: " .. error_code )
-  if result ~= nil then
-    if result == -1 and error_code == 0 then
-      if soft_errors[func] ~= nil then
-        if func == 'marpa_g_start_symbol' then
-          error_code = C.MARPA_ERR_NO_START_SYMBOL
-        end
-      end
-    end
+  if result ~= nil and result == -1
+    and error_code == 0
+    and soft_errors[func] ~= nil then
+    error_code = soft_errors[func]
   end
   -- clear error
   if not initialization then
@@ -926,7 +960,7 @@ end
 ]]--
 local function assert_result(result, func, object)
   assert( eec[func] ~= nil, "No error code info for libmarpa function: " .. func)
---  pti("assert_result", result, func, object, eec[func])
+--  pti("assert_result: ", result, func, object, eec[func])
   if eec[func][FAILURE] ~= nil then
     -- ffi.NULL is nil, so we represent it as a string
     if eec[func][FAILURE] == "ffi.NULL" then
@@ -941,10 +975,12 @@ local function assert_result(result, func, object)
   if eec[func][SUCCESS] ~= nil then
     assert( result >= eec[func][SUCCESS], error_string(result, func, object))
   end
+  -- on no error, just return result
+  return result
 end
 
 return {
   C = C,
   ffi = ffi,
-  assert = assert_result
+  assert = assert_result,
 }
