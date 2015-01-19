@@ -1,5 +1,6 @@
 # random notes
 etc/
+test.in
 # cygwin stackdumps
 *.exe.stackdump
 
