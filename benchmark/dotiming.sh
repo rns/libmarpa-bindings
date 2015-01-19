@@ -1,10 +1,11 @@
 time=/usr/bin/time
 LUA_PATH="../lua/?.lua;${LUA_PATH}"
 
-date > timings.out
+echo Date: `date` >timings.out
+echo Platform: `uname -a` >> timings.out
 echo "============================================" >> timings.out
-echo "ID              SYST  USER  REAL    MAXRES  " >> timings.out
-echo "--              ----  ----  ----  ----------" >> timings.out
+echo "DESCRIPTION     SYST  USER  REAL    MAXRES  " >> timings.out
+echo "-----------     ----  ----  ----  ----------" >> timings.out
 for i in 0 #1 2
 do
 
