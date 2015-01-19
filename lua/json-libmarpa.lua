@@ -71,6 +71,28 @@ lib.assert( S_object_contents, "marpa_g_symbol_new", g )
 local S_array_contents = C.marpa_g_symbol_new (g)
 lib.assert( S_array_contents, "marpa_g_symbol_new", g )
 
+--[[
+
+S_value ::= S_false
+S_value ::= S_null
+S_value ::= S_true
+S_value ::= S_object
+S_value ::= S_array
+S_value ::= S_number
+S_value ::= S_string
+
+S_array ::= S_begin_array S_array_contents S_end_array
+S_object ::= S_begin_object S_object_contents S_end_object
+
+S_array_contents ::= S_value*, S_value_separator, 0, C.MARPA_PROPER_SEPARATION
+S_object_contents ::= S_member*, S_value_separator, 0, C.MARPA_PROPER_SEPARATION
+
+S_member ::= S_string S_name_separator S_value
+
+:start = S_value
+
+]]--
+
 -- rules
 local rhs = ffi.new("int[4]")
 
@@ -240,51 +262,53 @@ local value = ffi.gc( C.marpa_v_new (tree), marpa_v_unref )
 lib.assert( value, "marpa_v_new", g )
 
 -- steps
-local got_json = ''
+column = 0
 while true do
   local step_type = C.marpa_v_step (value)
-  lib.assert( step_type, "marpa_v_step", g )
   if step_type == C.MARPA_STEP_INACTIVE then
+    if false then print ("No more events\n") end
     break
   elseif step_type == C.MARPA_STEP_TOKEN then
     local token = value.t_token_id
-    if token == S_begin_array then
-      got_json = got_json .. '['
+    if column > 60 then
+      io.write ("\n")
+      column = 0
+    elseif token == S_begin_array then
+      io.write ('[')
+      column = column + 1
     elseif token == S_end_array then
-      got_json = got_json .. ']'
+      io.write (']')
+      column = column + 1
     elseif token == S_begin_object then
-      got_json = got_json .. '{'
+      io.write ('{')
+      column = column + 1
     elseif token == S_end_object then
-      got_json = got_json .. '}'
+      io.write ('}')
+      column = column + 1
     elseif token == S_name_separator then
-      got_json = got_json .. ':'
+      io.write (':')
+      column = column + 1
     elseif token == S_value_separator then
-      got_json = got_json .. ','
+      io.write (',')
+      column = column + 1
     elseif token == S_null then
-      got_json = got_json .. "null"
+      io.write( "null" )
+      column = column + 4
     elseif token == S_true then
-      got_json = got_json .. 'true'
+      io.write ('true')
+      column = column + 1
     elseif token == S_false then
-      got_json = got_json .. 'false'
+      io.write ('false')
+      column = column + 1
     elseif token == S_number then
       local start_of_number = value.t_token_value
-      got_json = got_json .. token_values[start_of_number]
+      io.write( token_values[start_of_number] )
+      column = column + 1
     elseif token == S_string then
       local start_of_string = value.t_token_value
-      got_json = got_json .. token_values[start_of_string]
-    else
-      io.write(io.stderr, "Invalid token id:", token, "\n")
+      io.write( token_values[start_of_string] )
     end
   end
 end
 
--- test
-expected_json, _ = expected_json:gsub(' ', '') -- remove spaces, the lexer discards them
-if expected_json == got_json then
-  print("json parsed ok")
-else
-  print("json parsed not ok:")
-  print("expected: ", expected_json)
-  print("got     : ", got_json)
-end
-
+io.write("\n")

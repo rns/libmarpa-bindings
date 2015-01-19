@@ -145,12 +145,13 @@ if not lib.marpa_r_start_input (r) >= 0:
 
 input = ''
 if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
-  with open(sys.argv[1], "rb") as f:
-    input = mmap.mmap(f.fileno(), 0)
+  print sys.argv[1]
+  f = os.open(sys.argv[1], os.O_RDONLY)
+  input = mmap.mmap(f, 0, prot=mmap.PROT_READ)
 else:
   input = '[ 1, "abc\ndef", -2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
 
-print "\nJSON Input:\n", input
+#print "\nJSON Input:\n", input
 
 # lexing
 S_none = -1
@@ -277,7 +278,7 @@ if value == ffi.NULL:
 
 column = 0
 
-print "Parser Output:"
+#print "Parser Output:"
 
 while 1:
   step_type = lib.marpa_v_step (value)

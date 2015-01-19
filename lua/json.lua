@@ -280,7 +280,7 @@ if table.getn(arg) > 0 then
   end
 end
 if input == '' then
-  input = '[ 1, "abc\ndef", -2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
+  input = '[1,"abc\ndef",-2.3,null,[],[1,2,3],{},{"a":1,"b":2}]'
 end
 
 -- lexing
