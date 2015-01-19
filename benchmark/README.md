@@ -8,6 +8,11 @@ A modified version of Jeffrey Kegler’s json benchmark
 Pre-reqs
 --------
 
+libmarpa
+
+    https://github.com/jeffreykegler/libmarpa
+    https://github.com/rns/libmarpa-bindings/releases
+    
 Perl
 
     JSON::XS
