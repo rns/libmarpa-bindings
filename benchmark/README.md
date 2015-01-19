@@ -23,6 +23,8 @@ Lua
     lua-cjson
     dkjson
 
+Python
+
 Running   
 -------
   
