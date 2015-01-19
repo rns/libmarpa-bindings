@@ -1,6 +1,8 @@
 # random notes
 etc/
+# benchmark working files
 test.in
+a.out
 # cygwin stackdumps
 *.exe.stackdump
 
