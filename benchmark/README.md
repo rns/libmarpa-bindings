@@ -8,12 +8,12 @@
 Pre-reqs
 --------
 
-perl
+Perl
 
     JSON::XS
     JSON::PP
 
-lua
+Lua
 
     lua-cjson
     dkjson
