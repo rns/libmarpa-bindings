@@ -8,21 +8,16 @@
 Pre-reqs
 --------
 
-  perl
-    
-    JSON::XS
-    
-    JSON::PP
-    
-  lua
-    
-    lua-cjson
-    
-    dkjson
+    perl
+      JSON::XS
+      JSON::PP
+    lua
+      lua-cjson
+      dkjson
 
 Running   
 -------
   
-  gcc json.c -lmarpa
-  perl make_test_in.pl > test.in
-  ./dotiming.sh && cat timings.out
+    gcc json.c -lmarpa
+    perl make_test_in.pl > test.in
+    ./dotiming.sh && cat timings.out
