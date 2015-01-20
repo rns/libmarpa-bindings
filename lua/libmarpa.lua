@@ -22,8 +22,6 @@
   */
 ]]--
 
-require 'printf_debugging'
-
 local jit = require("jit")
 assert(jit.version_num >= 20003, jit.version .. " found, at least 2.0.3 required.")
 

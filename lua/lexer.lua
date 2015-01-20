@@ -1,5 +1,4 @@
 -- return iterator
-require 'printf_debugging';
 local rex = require 'rex_pcre'
 
 lexer = { }
@@ -128,7 +127,7 @@ function lexer.lua_pattern_first_acceptable_token_match(token_spec, expected_ter
   end
 end
 
-function lexer.pcre_first_acceptable_token_match(token_spec, expected_terminals, input, token_start)
+function lexer.pcre_first_acceptable_token_match_slow(token_spec, expected_terminals, input, token_start)
   local pattern
   local token_symbol
   local token_symbol_id
@@ -147,7 +146,7 @@ function lexer.pcre_first_acceptable_token_match(token_spec, expected_terminals,
   end
 end
 
-function lexer.pcre_first_acceptable_token_match_slow(token_spec, expected_terminals, input, token_start)
+function lexer.pcre_first_acceptable_token_match(token_spec, expected_terminals, input, token_start)
   local s, e, matches = lexer.token_regex:tfind(input, token_start)
 --  pi(s, e, matches)
   for token_ix, match in ipairs(matches) do

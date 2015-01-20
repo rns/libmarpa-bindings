@@ -64,7 +64,7 @@ for _, opts in ipairs{ { 'lua', ts_lua_patterns }, { 'pcre', ts_pcre } } do
     is_deeply(
       { token_symbol, token_symbol_id, token_start, token_length, line, column },
       expected_tokens[i],
-      "json token " .. sf("{ '%s', S%d, '%s', %s, %s, %s },", token_symbol, token_symbol_id, token_start, token_length, line, column)
+      "json token " .. string.format("{ '%s', S%d, '%s', %s, %s, %s },", token_symbol, token_symbol_id, token_start, token_length, line, column)
     )
     i = i + 1
   end

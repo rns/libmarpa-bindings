@@ -188,9 +188,10 @@ require 'lexer'
 local lex = lexer.new{tokens = token_spec, input = input }
 local token_values = {}
 
+local expected_terminals = {} for _, v in pairs(token_spec) do expected_terminals[v[2]] = 1 end
+
 while true do
 
-  local expected_terminals = {} for _, v in pairs(token_spec) do expected_terminals[v[2]] = 1 end
   local token_symbol, token_symbol_id, token_start, token_length, line, column = lex(expected_terminals)
   if token_symbol == nil then break end
 
