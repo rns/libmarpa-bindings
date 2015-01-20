@@ -1,0 +1,12 @@
+20.01.2015 
+
+Microsoft Windows XP [Версия 5.1.2600]
+============================================ 
+DESCRIPTION     SYST  USER  REAL    MAXRES   
+-----------     ----  ----  ----  ---------- 
+c libmarpa      0.10  1.34  1.42  32374784
+perl XS         0.00  0.01  1.34  165376
+pure perl       0.00  0.01  3.46  164608
+luajit dkjson   0.00  0.01  0.68  166400
+python json     0.00  0.01  11.46  165376
+luajit libmarpa 0.00  0.01  13.18  168448
