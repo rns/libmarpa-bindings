@@ -3,6 +3,13 @@ etc/
 # benchmark working files
 test.in
 a.out
+a.exe
+# ProFi.lua reports
+MyProfilingReport.txt
+out
+ProFi.lua
+prof_out
+profile_lexer.lua
 # cygwin stackdumps
 *.exe.stackdump
 

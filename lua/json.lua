@@ -1,5 +1,7 @@
 require 'os'
 
+package.path = '?.lua;../lua/?.lua;' .. package.path
+
 local d = require 'printf_debugging'
 
 -- libmarpa binding
@@ -114,23 +116,23 @@ local jg = {
   },
   -- lexer rules (order is important)
   lexer = {
-    [1]  = { '{', 'lcurly' },
-    [2]  = { '}', 'rcurly' },
-    [3]  = { '%[', 'lsquare' },
-    [4]  = { '%]', 'rsquare' },
-    [5]  = { ',', 'comma' },
-    [6]  = { ':', 'colon' },
+    { [[\{]], "lcurly" },
+    { [[\}]], "rcurly" },
+    { [[\[]], "lsquare" },
+    { '\\]',  "rsquare" },
+    { ',',    "comma" },
+    { ':',    "colon" },
 
-    [7]  = { '"[^"]+"', 'string' },
-    [8]  = { '-?[%d]+[.%d+]*', 'number' },
+    { [["(?:(?:[^"\\]|\\[\\"/bfnrt]|\\u\d{4})*)"]],     "string", 8 },
+    { [[-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?]],  "number", 9 },
 
-    [9]  = { 'true',  'true' },
-    [10] = { 'false', 'false' },
-    [11] = { 'null',  'null' },
+    { [[\btrue\b]],  "true" },
+    { [[\bfalse\b]], "false" },
+    { [[\bnull\b]],  "null" },
 
-    [12] = { '[ \t]+', 'WHITESPACE' }, -- Skip over spaces and tabs
-    [13] = { "\n",     'NEWLINE'  },   -- Line endings
-    [14] = { '.',      'MISMATCH' }    -- Any other character
+    { '[ \t]+', 'WHITESPACE' },  -- Skip over spaces and tabs
+    { "\n", 'NEWLINE' },  -- Line endings
+    { '.', 'MISMATCH' }   -- Any other character
   },
   actions = {
     --[[ 'lhs1, lhs2, lhs3' = function(span, literal) end
@@ -302,7 +304,7 @@ local function expected_terminals(r)
 end
 
 require 'lexer'
-local lex = lexer.new{tokens = token_spec, input = input}
+local lex = lexer.new{tokens = token_spec, input = input }
 local token_values = {}
 
 while true do
@@ -405,6 +407,9 @@ while true do
 
   end
 end
+
+print(got_json)
+os.exit()
 
 -- test
 local expected_json = string.gsub(input, ' ', '')

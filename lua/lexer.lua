@@ -1,5 +1,6 @@
 -- return iterator
 require 'printf_debugging';
+local rex = require 'rex_pcre'
 
 lexer = { }
 --[[
@@ -9,7 +10,7 @@ options
   input
     input string
 todo:
-  pattern
+  patterns
     lua
     pcre
   matching
@@ -29,6 +30,7 @@ function lexer.new (options)
 
   local token_spec = options.tokens
   local input = options.input
+  local patterns = options.patterns or 'pcre'
 
   local line   = 1
   local column = 1
@@ -37,7 +39,26 @@ function lexer.new (options)
   local token_length = 0
 
   -- set matcher
-  local matcher = lexer.lua_pattern_first_acceptable_token_match
+  local matcher
+  if patterns == 'lua' then
+    matcher = lexer.lua_pattern_first_acceptable_token_match
+  elseif patterns == 'pcre' then
+    local token_id = {}
+    local token_regex = {}
+    for _, triple in ipairs(token_spec) do
+      --pti (triple[2], triple[1])
+      token_id[triple[2]] = triple[3]
+      table.insert(token_regex, string.format("(?P<%s>%s)", triple[2], triple[1] ) )
+    end
+    lexer.token_regex = table.concat(token_regex, '|')
+    --pti(lexer.token_regex)
+    lexer.token_regex = rex.new(lexer.token_regex)
+    lexer.token_id = token_id
+    --pti(lexer.token_id)
+    matcher = lexer.pcre_first_acceptable_token_match
+  else
+    assert( false, 'patterns must be set to "lua" or "pcre" not ' .. '"' .. patterns .. '"')
+  end
 
   return function(expected_terminals)
 
@@ -107,3 +128,32 @@ function lexer.lua_pattern_first_acceptable_token_match(token_spec, expected_ter
   end
 end
 
+function lexer.pcre_first_acceptable_token_match(token_spec, expected_terminals, input, token_start)
+  local pattern
+  local token_symbol
+  local token_symbol_id
+  for _, triple in ipairs(token_spec) do
+    pattern         = triple[1]
+    token_symbol    = triple[2]
+    token_symbol_id = triple[3]
+    if expected_terminals[token_symbol] ~= nil then
+      -- pti(pattern .. ' @' .. token_start)
+      local re = rex.new( '(' .. pattern .. ')' )
+      local s, e, match = re:find(input, token_start)
+      if s ~= nil and s == token_start then
+        return match, token_symbol, token_symbol_id
+      end
+    end
+  end
+end
+
+function lexer.pcre_first_acceptable_token_match_slow(token_spec, expected_terminals, input, token_start)
+  local s, e, matches = lexer.token_regex:tfind(input, token_start)
+--  pi(s, e, matches)
+  for token_ix, match in ipairs(matches) do
+--    pi(token_ix, match)
+    if match then
+      return match, token_spec[token_ix][2], token_spec[token_ix][3]
+    end
+  end
+end

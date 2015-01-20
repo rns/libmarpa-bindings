@@ -22,6 +22,8 @@ Lua
 
     lua-cjson
     dkjson
+    penlight
+    lrexlib
 
 Python
 

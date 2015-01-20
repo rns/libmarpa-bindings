@@ -1,6 +1,11 @@
 -- archetypal Libmarpa application: JSON Parser
 require 'os'
 
+package.path = '?.lua;../lua/?.lua;' .. package.path
+
+--ProFi = require 'ProFi'
+--ProFi:start()
+
 -- libmarpa
 local lib   = require 'libmarpa'
 local C     = lib.C
@@ -160,87 +165,57 @@ if input == '' then
   input = '[ 1, "abc\ndef", -2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
 end
 
-local expected_json = input -- the lexer consumes input, so we preserved it for testing
-
 -- lexing
 local S_none = -1
 local token_spec = {
-  {'{',   'S_begin_object',     S_begin_object},
-  {'}',   'S_end_object',       S_end_object},
-  {'%[',  'S_begin_array',      S_begin_array}, -- % is escape char
-  {'%]',  'S_end_array',        S_end_array},
-  {',',   'S_value_separator',  S_value_separator},
-  {':',   'S_name_separator',   S_name_separator},
+  { [[\{]],   'S_begin_object',     S_begin_object},
+  { [[\}]],   'S_end_object',       S_end_object},
+  { [[\[]],  'S_begin_array',      S_begin_array},
+  { '\\]',  'S_end_array',        S_end_array},
+  { ',',   'S_value_separator',  S_value_separator},
+  { ':',   'S_name_separator',   S_name_separator},
 
-  {'"[^"]+"',         'S_string', S_string},
-  {'-?[%d]+[.%d+]*',  'S_number', S_number},
+  { [["(?:(?:[^"\\]|\\[\\"/bfnrt]|\\u\d{4})*)"]], 'S_string', S_string},
+  { [[-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?]],  'S_number', S_number},
 
-  {'true',  'S_true',   S_true},
-  {'false', 'S_false',  S_false},
-  {'null',  'S_null',   S_null},
+  { [[\btrue\b]],  'S_true',   S_true},
+  { [[\bfalse\b]], 'S_false',  S_false},
+  { [[\bnull\b]],  'S_null',   S_null},
 
   {'[ \t]+',  'SKIP',     S_none},  -- Skip over spaces and tabs
   {"\n",      'NEWLINE',  S_none},  -- Line endings
   {'.',       'MISMATCH', S_none},  -- Any other character
 }
 
-local line   = 1
-local column = 1
-
-local token_value  = ''
+require 'lexer'
+local lex = lexer.new{tokens = token_spec, input = input }
 local token_values = {}
-local token_start  = 1
-local token_length = 0
 
 while true do
 
-  local pattern
-  local token_symbol
-  local token_symbol_id
-  local match
+  local et = {}
+  local expected_terminals = {} for _, v in pairs(token_spec) do expected_terminals[v[2]] = 1 end
+  local token_symbol, token_symbol_id, token_start, token_length, line, column = lex(expected_terminals)
+  if token_symbol == nil then break end
 
-  for _, triple in ipairs(token_spec) do
-
-    pattern         = triple[1]
-    token_symbol    = triple[2]
-    token_symbol_id = triple[3]
-
-    match = string.match(input, "^" .. pattern)
-    if match ~= nil then
-      input = string.gsub(input, "^" .. pattern, "")
-      break
-    end
-
-  end
-
-  assert( token_symbol ~= 'MISMATCH', string.format("Invalid token: <%s>", match ) )
-
-  if token_symbol == 'NEWLINE' then
-    column = 1
-    line = line + 1
-    token_start = token_start + 1
-  elseif token_symbol == 'SKIP' then
-    column = column + string.len(match)
-    token_start = token_start + string.len(match)
-  else
---    print (token_symbol, token_symbol_id, match, '@', token_start, ';', line, ':', column)
-    token_length = string.len(match)
-    column = column + token_length
-    token_start = token_start + token_length
-    token_value = match
-
+  if token_symbol == 'MISMATCH' then
+    print(string.format("Invalid symbol '%s' at %d:%d", input:sub(token_start, token_start + token_length - 1), line, column ));
+  elseif token_symbol_id >= 0 then
     local status = C.marpa_r_alternative (r, token_symbol_id, token_start, 1)
     if status ~= C.MARPA_ERR_NONE then
-      lib.assert( status, 'marpa_r_alternative', g )
+--      lib.assert( status, 'marpa_r_alternative', g )
+      print("marpa_r_alternative returned error: ", status)
+      os.exit(1)
     end
-
     status = C.marpa_r_earleme_complete (r)
-    lib.assert( status, 'marpa_r_earleme_complete', g )
-
-    -- save token value for evaluation
-    token_values[token_start] = token_value
+    -- lib.assert( status, 'marpa_r_earleme_complete', g )
+    if status == -2 then
+      print("marpa_r_earleme_complete failed")
+      os.exit(1)
+    end
+    token_values[tostring(token_start)] = input:sub(token_start, token_start + token_length - 1)
   end
-  if input == '' then break end
+
 end
 
 -- for k, v in pairs(token_values) do print (k, v) end
@@ -302,13 +277,20 @@ while true do
       column = column + 1
     elseif token == S_number then
       local start_of_number = value.t_token_value
-      io.write( token_values[start_of_number] )
-      column = column + 1
+      local number = token_values[tostring(start_of_number)]
+      io.write( number )
+      column = column + string.len(number)
     elseif token == S_string then
       local start_of_string = value.t_token_value
-      io.write( token_values[start_of_string] )
+      local string = token_values[tostring(start_of_string)]
+      io.write( string )
+      column = column + string.len(string)
     end
   end
 end
 
 io.write("\n")
+
+
+--    ProFi:stop()
+--    ProFi:writeReport( 'MyProfilingReport.txt' )
