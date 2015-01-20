@@ -403,12 +403,15 @@ while true do
     local token_start = token_value
     local token_end = token_start + token_values[token_start .. ""] - 1
     local token = input:sub(token_start, token_end)
-    got_json = got_json .. token
+    -- got_json = got_json .. token
+    column = column + string.len(token)
+    if column > 60 then column = 0 io.write("\n") end
+    io.write(token)
 
   end
 end
 
-print(got_json)
+io.write("\n")
 os.exit()
 
 -- test

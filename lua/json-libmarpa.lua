@@ -3,9 +3,6 @@ require 'os'
 
 package.path = '?.lua;../lua/?.lua;' .. package.path
 
---ProFi = require 'ProFi'
---ProFi:start()
-
 -- libmarpa
 local lib   = require 'libmarpa'
 local C     = lib.C
@@ -193,7 +190,6 @@ local token_values = {}
 
 while true do
 
-  local et = {}
   local expected_terminals = {} for _, v in pairs(token_spec) do expected_terminals[v[2]] = 1 end
   local token_symbol, token_symbol_id, token_start, token_length, line, column = lex(expected_terminals)
   if token_symbol == nil then break end
@@ -290,7 +286,3 @@ while true do
 end
 
 io.write("\n")
-
-
---    ProFi:stop()
---    ProFi:writeReport( 'MyProfilingReport.txt' )
