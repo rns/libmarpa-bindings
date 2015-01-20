@@ -188,7 +188,7 @@ require 'lexer'
 local lex = lexer.new{tokens = token_spec, input = input }
 local token_values = {}
 
-local expected_terminals = {} for _, v in pairs(token_spec) do expected_terminals[v[2]] = 1 end
+local expected_terminals = {}
 
 while true do
 
