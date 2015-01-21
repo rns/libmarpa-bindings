@@ -977,6 +977,29 @@ local function assert_result(result, func, object)
   return result
 end
 
+-- yes, that's function references used as table keys
+-- strange, don't work in table constructor
+-- http://stackoverflow.com/questions/14563773/can-lua-function-references-be-used-as-table-keys
+-- one less argument to assert_result()
+local name_by_func_ref = { }
+name_by_func_ref[C.marpa_g_error] = 'marpa_g_error'
+
+--[[ C prefixes to Lua namespaces
+  marpa_(?)_rule_new -> Marpa.\1.rule_new
+  those can be a wrappers or, if if an extra function call slows things down, like
+  earleme_complete() marpa_r_alternative()
+  e.g.:
+    https://metacpan.org/pod/distribution/Marpa-R2/pod/Advanced/Thin.pod#g-throw_set
+    http://code.google.com/p/gosqlite/source/browse/sqlite/sqlite.go
+  marpa_g -> g
+    marpa_g_rule_new -> Marpa.g.rule_new
+  marpa_r_new -> r.new
+  marpa_b
+  marpa_o
+  marpa_t
+  marpa_v
+]]--
+
 return {
   C = C,
   ffi = ffi,
