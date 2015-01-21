@@ -2,7 +2,10 @@ set time=c:\cygwin\bin\time.exe
 set output=timings.win.out
 
 date /T >%output%
+time /T >>%output%
+
 ver >> %output%
+
 echo ============================================ >> %output%
 echo DESCRIPTION     SYST  USER  REAL    MAXRES   >> %output%
 echo -----------     ----  ----  ----  ---------- >> %output%
