@@ -27,7 +27,7 @@ Lua
 
   Sample [JSON Parser](https://github.com/rns/libmarpa-bindings/blob/master/lua/json-libmarpa.lua), 
   mostly a port of [json.c](https://github.com/jeffreykegler/libmarpa/blob/master/test/json.c)
-  with libmarpa bindings and with a very basic handwritten lexer based on Lua patterns.
+  with libmarpa bindings and with a very basic handwritten lexer based on pcre regexes.
 
   An interface (grammar, recognizer/lexer, valuator) is being written.
   
