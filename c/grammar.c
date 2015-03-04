@@ -262,6 +262,12 @@ marpa_sg_new(Marpa_SG_Rule *rules[], int count)
 {
   int rule_ix, symbol_ix;
   for (rule_ix = 0; rule_ix < count; rule_ix++){
+    if ( rules[rule_ix]->length == 4
+       && ( ( strcmp(rules[rule_ix]->symbols[3], "0") == 0 )
+            || ( strcmp(rules[rule_ix]->symbols[3], "1") ) == 0 ) )
+    {
+      fprintf(stderr, "Sequence ");
+    }
     fprintf(stderr, "Rule %d of %d, %d symbols:\n", rule_ix, count, rules[rule_ix]->length );
   }
   return grammar_new();
