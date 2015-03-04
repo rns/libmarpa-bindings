@@ -56,15 +56,8 @@ main (int argc, char *argv[])
   };
   Marpa_SG_Grammar *sg = marpa_sg_new(rules, sizeof(rules) / sizeof(Marpa_SG_Rule *));
 
-  int i;
-  Marpa_Symbol_ID S_highest = marpa_g_highest_symbol_id(sg->g);
-  for (i = 0; i <= S_highest; i++)
-  {
-    char *name = marpa_sg_symbol(sg, i);
-    Marpa_Symbol_ID id = marpa_sg_symbol_id(sg, name);
-    fprintf(stderr, "S%d: %s of %d\n", i, name, S_highest+1);
-  }
-  marpa_sg_show(sg);
+  marpa_sg_show_symbols(sg);
+  marpa_sg_show_rules(sg);
 
   S_begin_array = marpa_sg_symbol_id(sg, "S_begin_array");
   S_begin_object = marpa_sg_symbol_id(sg, "S_begin_object");
