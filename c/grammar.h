@@ -69,6 +69,7 @@ typedef struct marpa_sg_symbol_table_entry Marpa_SG_Symbol_Table_Entry;
 
 struct marpa_sg_grammar {
   Marpa_Grammar g;
+  int symbol_table_length;
   Marpa_SG_Symbol_Table_Entry *st;
 };
 typedef struct marpa_sg_grammar Marpa_SG_Grammar;
