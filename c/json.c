@@ -54,13 +54,14 @@ main (int argc, char *argv[])
 
     marpa_sg_rule_new( "S_member", "S_string", "S_name_separator", "S_value" ),
   };
-  Marpa_Grammar g = marpa_sg_new(rules, sizeof(rules) / sizeof(Marpa_SG_Rule *));
+  Marpa_SG_Grammar *sg = marpa_sg_new(rules, sizeof(rules) / sizeof(Marpa_SG_Rule *));
 
   Input json = input_new(argv[1]);
-  Marpa_Recognizer r = recognize(json, g);
-  valuate(json, r, g);
+  Marpa_Recognizer r = recognize(json, sg->g);
+  valuate(json, r, sg->g);
 
-  marpa_sg_free(rules, sizeof(rules) / sizeof(Marpa_SG_Rule *));
+  marpa_sg_rules_free(rules, sizeof(rules) / sizeof(Marpa_SG_Rule *));
+  marpa_sg_free(sg);
 
   return 0;
 }

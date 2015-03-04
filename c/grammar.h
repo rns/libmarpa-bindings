@@ -59,15 +59,27 @@ struct marpa_sg_rule {
   int length;
   char **symbols;
 };
-
 typedef struct marpa_sg_rule Marpa_SG_Rule;
+
+struct marpa_sg_symbol_table_entry {
+  Marpa_Symbol_ID id;
+  char *name;
+};
+typedef struct marpa_sg_symbol_table_entry Marpa_SG_Symbol_Table_Entry;
+
+struct marpa_sg_grammar {
+  Marpa_Grammar g;
+  Marpa_SG_Symbol_Table_Entry *st;
+};
+typedef struct marpa_sg_grammar Marpa_SG_Grammar;
 
 #define marpa_sg_rule_new(lhs, ...) marpa_sg_rule_new_func(lhs, ##__VA_ARGS__, (NULL))
 Marpa_SG_Rule *marpa_sg_rule_new_func(char* lhs, ...);
 
-Marpa_Grammar marpa_sg_new(Marpa_SG_Rule *rules[], int count);
-int marpa_sg_free(Marpa_SG_Rule *rules[], int count);
+Marpa_SG_Grammar *marpa_sg_new(Marpa_SG_Rule *rules[], int count);
+int marpa_sg_free(Marpa_SG_Grammar *);
 
+int marpa_sg_rules_free(Marpa_SG_Rule *rules[], int count);
 int marpa_sg_rule_free(Marpa_SG_Rule *rule);
 
 #endif
