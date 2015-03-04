@@ -215,20 +215,22 @@ void *check_ptr(void *ptr)
   return ptr;
 }
 
-Marpa_SG_Rule
+Marpa_SG_Rule *
 marpa_sg_rule_new_func(char* lhs, ...)
 {
   int ix;
   char *symbol;
-  Marpa_SG_Rule rule;
+  Marpa_SG_Rule *rule;
 
   va_list args;
   va_start(args, lhs);
 
   fprintf(stderr, "%s ", lhs);
 
-  rule.symbols = check_ptr( malloc(sizeof(char *)) );
-  rule.symbols[0] = lhs;
+  rule = check_ptr( malloc(sizeof(Marpa_SG_Rule)) );
+
+  rule->symbols = check_ptr( malloc(sizeof(char *)) );
+  rule->symbols[0] = lhs;
 
   for (ix = 1; ix < 1000; ix++)
   {
@@ -236,40 +238,41 @@ marpa_sg_rule_new_func(char* lhs, ...)
     if (symbol == NULL)
       break;
 
-    rule.symbols = check_ptr( realloc( rule.symbols, ( ix + 1 ) * sizeof(char *)) );
-    rule.symbols[ix] = symbol;
+    rule->symbols = check_ptr( realloc( rule->symbols, ( ix + 1 ) * sizeof(char *)) );
+    rule->symbols[ix] = symbol;
 
     fprintf(stderr, "%s ", symbol);
   }
   fprintf(stderr, "\n");
   va_end(args);
 
-  rule.length = ix;
+  rule->length = ix;
 
   return rule;
 }
 
 int
-marpa_sg_rule_free(Marpa_SG_Rule rule)
+marpa_sg_rule_free(Marpa_SG_Rule *rule)
 {
-  free(rule.symbols);
+  free(rule->symbols);
 }
 
 Marpa_Grammar
-marpa_sg_new(Marpa_SG_Rule rules[], int count)
+marpa_sg_new(Marpa_SG_Rule *rules[], int count)
 {
   int rule_ix, symbol_ix;
   for (rule_ix = 0; rule_ix < count; rule_ix++){
-    fprintf(stderr, "Rule %d of %d, %d symbols:\n", rule_ix, count, rules[rule_ix].length );
+    fprintf(stderr, "Rule %d of %d, %d symbols:\n", rule_ix, count, rules[rule_ix]->length );
   }
   return grammar_new();
 }
 
 int
-marpa_sg_free(Marpa_SG_Rule rules[], int count)
+marpa_sg_free(Marpa_SG_Rule *rules[], int count)
 {
   int rule_ix;
   for (rule_ix = 0; rule_ix < count; rule_ix++){
     marpa_sg_rule_free (rules[rule_ix]);
   }
+  return 0;
 }

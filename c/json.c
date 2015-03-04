@@ -33,11 +33,11 @@
 #include "recognizer.h"
 #include "valuator.h"
 
-#define MAX_RULES 15
+#define MAX_RULES 12
 int
 main (int argc, char *argv[])
 {
-  Marpa_SG_Rule rules[MAX_RULES] = {
+  Marpa_SG_Rule *rules[] = {
     marpa_sg_rule_new( "S_value", "S_null" ),
     marpa_sg_rule_new( "S_value", "S_false" ),
     marpa_sg_rule_new( "S_value", "S_true" ),
@@ -54,14 +54,13 @@ main (int argc, char *argv[])
 
     marpa_sg_rule_new( "S_member", "S_string", "S_name_separator", "S_value" ),
   };
-
-  Marpa_Grammar g = marpa_sg_new(rules, MAX_RULES);
+  Marpa_Grammar g = marpa_sg_new(rules, sizeof(rules) / sizeof(Marpa_SG_Rule *));
 
   Input json = input_new(argv[1]);
   Marpa_Recognizer r = recognize(json, g);
   valuate(json, r, g);
 
-  marpa_sg_free(rules, MAX_RULES);
+  marpa_sg_free(rules, sizeof(rules) / sizeof(Marpa_SG_Rule *));
 
   return 0;
 }

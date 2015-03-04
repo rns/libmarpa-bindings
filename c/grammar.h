@@ -62,13 +62,12 @@ struct marpa_sg_rule {
 
 typedef struct marpa_sg_rule Marpa_SG_Rule;
 
-#define MAX_SYMBOLS 100
-
 #define marpa_sg_rule_new(lhs, ...) marpa_sg_rule_new_func(lhs, ##__VA_ARGS__, (NULL))
-Marpa_SG_Rule marpa_sg_rule_new_func(char* lhs, ...);
+Marpa_SG_Rule *marpa_sg_rule_new_func(char* lhs, ...);
 
-Marpa_Grammar marpa_sg_new(Marpa_SG_Rule *rules, int count);
+Marpa_Grammar marpa_sg_new(Marpa_SG_Rule *rules[], int count);
+int marpa_sg_free(Marpa_SG_Rule *rules[], int count);
 
-int marpa_sg_rule_free(Marpa_SG_Rule rule);
+int marpa_sg_rule_free(Marpa_SG_Rule *rule);
 
 #endif
