@@ -99,7 +99,7 @@ symbol_name (Marpa_Symbol_ID id)
   return error_buffer;
 };
 
-Marpa_Grammar
+static Marpa_Grammar
 grammar_new()
 {
   Marpa_Config marpa_configuration;
@@ -203,4 +203,10 @@ grammar_new()
     }
 
   return g;
+}
+
+Marpa_Grammar
+marpa_sg_new(const char**rules)
+{
+  return grammar_new();
 }

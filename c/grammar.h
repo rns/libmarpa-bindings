@@ -59,6 +59,6 @@ extern char error_buffer[80];
 
 char *symbol_name (Marpa_Symbol_ID id);
 
-Marpa_Grammar grammar_new();
+Marpa_Grammar marpa_sg_new(const char **rules);
 
 #endif

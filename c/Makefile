@@ -2,7 +2,9 @@
 	./json.exe expected.json > got.json
 	git diff -w got.json expected.json
 
-FILES=json.c grammar.c recognizer.c valuator.c
-json.exe: $(FILES)
-	gcc $(FILES) -lmarpa -ojson
+C_FILES=json.c grammar.c recognizer.c valuator.c
+C_FLAGS= # -std=c99 -pedantic -Wall -Wextra 
+
+json.exe: $(C_FILES)
+	gcc $(C_FLAGS) $(C_FILES) -lmarpa -ojson
 
