@@ -38,8 +38,8 @@ int
 main (int argc, char *argv[])
 {
   Marpa_SG_Rule *rules[] = {
-    marpa_sg_rule_new( "S_value", "S_null" ),
     marpa_sg_rule_new( "S_value", "S_false" ),
+    marpa_sg_rule_new( "S_value", "S_null" ),
     marpa_sg_rule_new( "S_value", "S_true" ),
     marpa_sg_rule_new( "S_value", "S_object" ),
     marpa_sg_rule_new( "S_value", "S_array" ),
@@ -55,6 +55,32 @@ main (int argc, char *argv[])
     marpa_sg_rule_new( "S_member", "S_string", "S_name_separator", "S_value" ),
   };
   Marpa_SG_Grammar *sg = marpa_sg_new(rules, sizeof(rules) / sizeof(Marpa_SG_Rule *));
+
+  int i;
+  Marpa_Symbol_ID S_highest = marpa_g_highest_symbol_id(sg->g);
+  for (i = 0; i <= S_highest; i++)
+  {
+    char *name = marpa_sg_symbol(sg, i);
+    Marpa_Symbol_ID id = marpa_sg_symbol_id(sg, name);
+    fprintf(stderr, "S%d: %s of %d\n", i, name, S_highest+1);
+  }
+  marpa_sg_show(sg);
+
+  S_begin_array = marpa_sg_symbol_id(sg, "S_begin_array");
+  S_begin_object = marpa_sg_symbol_id(sg, "S_begin_object");
+  S_end_array = marpa_sg_symbol_id(sg, "S_end_array");
+  S_end_object = marpa_sg_symbol_id(sg, "S_end_object");
+  S_name_separator = marpa_sg_symbol_id(sg, "S_name_separator");
+  S_value_separator = marpa_sg_symbol_id(sg, "S_value_separator");
+  S_member = marpa_sg_symbol_id(sg, "S_member");
+  S_value = marpa_sg_symbol_id(sg, "S_value");
+  S_false = marpa_sg_symbol_id(sg, "S_false");
+  S_null = marpa_sg_symbol_id(sg, "S_null");
+  S_true = marpa_sg_symbol_id(sg, "S_true");
+  S_object = marpa_sg_symbol_id(sg, "S_object");
+  S_array = marpa_sg_symbol_id(sg, "S_array");
+  S_number = marpa_sg_symbol_id(sg, "S_number");
+  S_string = marpa_sg_symbol_id(sg, "S_string");
 
   Input json = input_new(argv[1]);
   Marpa_Recognizer r = recognize(json, sg->g);

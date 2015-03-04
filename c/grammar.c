@@ -278,10 +278,37 @@ marpa_sg_symbol_id(Marpa_SG_Grammar *sg, const char *name)
   return -1;
 }
 
+int
+marpa_sg_show(Marpa_SG_Grammar *sg)
+{
+  Marpa_Rule_ID R_current;
+  Marpa_Rule_ID R_highest = marpa_g_highest_rule_id(sg->g);
+  for (R_current = 0; R_current <= R_highest; R_current++)
+  {
+    Marpa_Symbol_ID S_id = marpa_g_rule_lhs(sg->g, R_current);
+    fprintf(stderr, "%s ::= ", marpa_sg_symbol(sg, S_id));
+    int sequence_min = marpa_g_sequence_min(sg->g, R_current);
+    int length = marpa_g_rule_length(sg->g, R_current);
+    int i;
+    for (i = 0; i < length; i++)
+    {
+      fprintf(stderr, "%s ", marpa_sg_symbol(sg, marpa_g_rule_rhs(sg->g, R_current, i)));
+    }
+    if (sequence_min != -1)
+    {
+      fprintf(stderr, "min: %d, proper: %d, separator: %s", sequence_min,
+      marpa_g_rule_is_proper_separation(sg->g, R_current),
+      marpa_sg_symbol(sg, marpa_g_sequence_separator(sg->g, R_current)) );
+    }
+    fprintf(stderr, "\n");
+  }
+}
+
 char *
 marpa_sg_symbol(Marpa_SG_Grammar *sg, Marpa_Symbol_ID S_id)
 {
   int i;
+//  fprintf(stderr, "st length:%d\n", sg->symbol_table_length);
   for (i = 0; i < sg->symbol_table_length; i++)
   {
     if (sg->st[i].id == S_id)
@@ -309,6 +336,7 @@ marpa_sg_symbol_new(Marpa_SG_Grammar *sg, char *name)
       sg->st = check_ptr(realloc(sg->st, sg->symbol_table_length * sizeof(Marpa_SG_Symbol_Table_Entry)));
     }
     sg->st[sg->symbol_table_length - 1].name = name;
+    sg->st[sg->symbol_table_length - 1].id = S_id;
   }
   return S_id;
 }
@@ -338,25 +366,51 @@ marpa_sg_new(Marpa_SG_Rule *rules[], int count)
   for (rule_ix = 0; rule_ix < count; rule_ix++)
   {
     Marpa_SG_Rule *rule = rules[rule_ix];
+
     int rule_is_sequence = marpa_sg_rule_is_sequence (rule);
+
     int symbol_count = rule_is_sequence ? rule->length - 1 : rule->length;
     int symbol_ix;
     for (symbol_ix = 0; symbol_ix < symbol_count; symbol_ix++)
     {
-      marpa_sg_symbol_new(sg, rule->symbols[symbol_ix]);
+      Marpa_Symbol_ID S_id = marpa_sg_symbol_new(sg, rule->symbols[symbol_ix]);
+//      fprintf(stderr, "Adding symbol %d: %s:%d.\n", symbol_ix, marpa_sg_symbol(sg, S_id), S_id);
     }
 
     if ( rule_is_sequence )
     {
+      int sequence_min = rule->symbols[3][0] == '0' ? 0 : 1;
+      (marpa_g_sequence_new (g,
+         marpa_sg_symbol_id(sg, rule->symbols[0]),
+         marpa_sg_symbol_id(sg, rule->symbols[1]),
+         marpa_sg_symbol_id(sg, rule->symbols[2]),
+         sequence_min,
+         MARPA_PROPER_SEPARATION) >= 0) || fail ("marpa_g_sequence_new", g);
+
       fprintf(stderr, "Sequence ");
     }
     else
     {
-
+      Marpa_Symbol_ID *rhs = check_ptr(malloc((symbol_count - 1) * sizeof(Marpa_Symbol_ID)));
+      for (symbol_ix = 1; symbol_ix < symbol_count; symbol_ix++)
+      {
+        rhs[symbol_ix - 1] = marpa_sg_symbol_id(sg, rule->symbols[symbol_ix]);
+      }
+      (marpa_g_rule_new (g, marpa_sg_symbol_id(sg, rule->symbols[0]), rhs, symbol_count - 1) >= 0)
+        || fail ("marpa_g_rule_new", g);
+      free(rhs);
     }
     fprintf(stderr, "Rule %d of %d, %d symbols:\n", rule_ix, count, rules[rule_ix]->length );
   }
-  sg->g = grammar_new();
+
+  (marpa_g_start_symbol_set (g, marpa_sg_symbol_id(sg, "S_value")) >= 0)
+    || fail ("marpa_g_start_symbol_set", g);
+  if (marpa_g_precompute (g) < 0)
+    {
+      fail("marpa_g_precompute", g);
+    }
+
+//  sg->g = grammar_new();
   return sg;
 }
 

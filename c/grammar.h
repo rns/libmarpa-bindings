@@ -80,7 +80,12 @@ Marpa_SG_Rule *marpa_sg_rule_new_func(char* lhs, ...);
 Marpa_SG_Grammar *marpa_sg_new(Marpa_SG_Rule *rules[], int count);
 int marpa_sg_free(Marpa_SG_Grammar *);
 
+char *marpa_sg_symbol(Marpa_SG_Grammar *sg, Marpa_Symbol_ID S_id);
+Marpa_Symbol_ID marpa_sg_symbol_new(Marpa_SG_Grammar *sg, char *name);
+
 int marpa_sg_rules_free(Marpa_SG_Rule *rules[], int count);
 int marpa_sg_rule_free(Marpa_SG_Rule *rule);
+
+int marpa_sg_show(Marpa_SG_Grammar *sg);
 
 #endif
