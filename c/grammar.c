@@ -264,7 +264,7 @@ int marpa_sg_rule_is_sequence(Marpa_SG_Rule *rule)
             || ( strcmp(rule->symbols[3], "1") ) == 0 ) );
 }
 
-int
+Marpa_Symbol_ID
 marpa_sg_symbol_id(Marpa_SG_Grammar *sg, const char *name)
 {
   int i;
@@ -278,14 +278,36 @@ marpa_sg_symbol_id(Marpa_SG_Grammar *sg, const char *name)
   return -1;
 }
 
+char *
+marpa_sg_symbol(Marpa_SG_Grammar *sg, Marpa_Symbol_ID S_id)
+{
+  int i;
+  for (i = 0; i < sg->symbol_table_length; i++)
+  {
+    if (sg->st[i].id == S_id)
+    {
+      return sg->st[i].name;
+    }
+  }
+  return NULL;
+}
+
 Marpa_Symbol_ID
-marpa_sg_symbol_new(Marpa_SG_Grammar *sg, const char *name)
+marpa_sg_symbol_new(Marpa_SG_Grammar *sg, char *name)
 {
   Marpa_Symbol_ID S_id = marpa_sg_symbol_id(sg, name);
   if (S_id < 0)
   {
     ((S_id = marpa_g_symbol_new(sg->g)) >= 0) || fail ("marpa_g_symbol_new", sg->g);
-    sg->st = check_ptr(realloc(sg->st, sg->symbol_table_length++));
+    sg->symbol_table_length++;
+    if (sg->symbol_table_length == 1)
+    {
+      sg->st = check_ptr(malloc(sg->symbol_table_length * sizeof(Marpa_SG_Symbol_Table_Entry)));
+    }
+    else
+    {
+      sg->st = check_ptr(realloc(sg->st, sg->symbol_table_length * sizeof(Marpa_SG_Symbol_Table_Entry)));
+    }
     sg->st[sg->symbol_table_length - 1].name = name;
   }
   return S_id;
@@ -294,14 +316,37 @@ marpa_sg_symbol_new(Marpa_SG_Grammar *sg, const char *name)
 Marpa_SG_Grammar *
 marpa_sg_new(Marpa_SG_Rule *rules[], int count)
 {
-  int rule_ix, symbol_ix;
+  int rule_ix;
+
+  Marpa_Config marpa_configuration;
+  Marpa_Grammar g;
+
   Marpa_SG_Grammar *sg = check_ptr(malloc(sizeof(Marpa_SG_Grammar)));
   sg->symbol_table_length = 0;
+
+  marpa_c_init (&marpa_configuration);
+  g = marpa_g_new (&marpa_configuration);
+  if (!g)
+    {
+      Marpa_Error_Code errcode =
+        marpa_c_error (&marpa_configuration, NULL);
+      printf ("marpa_g_new returned %d: %s", errcode);
+      exit (1);
+    }
+  sg->g = g;
 
   for (rule_ix = 0; rule_ix < count; rule_ix++)
   {
     Marpa_SG_Rule *rule = rules[rule_ix];
-    if ( marpa_sg_rule_is_sequence (rule) )
+    int rule_is_sequence = marpa_sg_rule_is_sequence (rule);
+    int symbol_count = rule_is_sequence ? rule->length - 1 : rule->length;
+    int symbol_ix;
+    for (symbol_ix = 0; symbol_ix < symbol_count; symbol_ix++)
+    {
+      marpa_sg_symbol_new(sg, rule->symbols[symbol_ix]);
+    }
+
+    if ( rule_is_sequence )
     {
       fprintf(stderr, "Sequence ");
     }
@@ -318,7 +363,7 @@ marpa_sg_new(Marpa_SG_Rule *rules[], int count)
 int
 marpa_sg_free(Marpa_SG_Grammar *sg)
 {
-  free(sg.st);
+  free(sg->st);
   free(sg);
 }
 
