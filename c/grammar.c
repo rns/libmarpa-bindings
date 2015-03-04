@@ -318,6 +318,7 @@ marpa_sg_new(Marpa_SG_Rule *rules[], int count)
 int
 marpa_sg_free(Marpa_SG_Grammar *sg)
 {
+  free(sg.st);
   free(sg);
 }
 
