@@ -257,14 +257,19 @@ marpa_sg_rule_free(Marpa_SG_Rule *rule)
   free(rule->symbols);
 }
 
+int marpa_sg_rule_is_sequence(Marpa_SG_Rule *rule)
+{
+  return ( rule->length == 4
+       && ( ( strcmp(rule->symbols[3], "0") == 0 )
+            || ( strcmp(rule->symbols[3], "1") ) == 0 ) );
+}
+
 Marpa_Grammar
 marpa_sg_new(Marpa_SG_Rule *rules[], int count)
 {
   int rule_ix, symbol_ix;
   for (rule_ix = 0; rule_ix < count; rule_ix++){
-    if ( rules[rule_ix]->length == 4
-       && ( ( strcmp(rules[rule_ix]->symbols[3], "0") == 0 )
-            || ( strcmp(rules[rule_ix]->symbols[3], "1") ) == 0 ) )
+    if ( marpa_sg_rule_is_sequence (rules[rule_ix]) )
     {
       fprintf(stderr, "Sequence ");
     }
