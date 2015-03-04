@@ -14,7 +14,7 @@ profile_lexer.lua
 *.exe.stackdump
 
 # exe files
-c#/*.exe
+*.exe
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
