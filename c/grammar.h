@@ -22,13 +22,9 @@
 #ifndef GRAMMAR_H
 #define GRAMMAR_H 1
 
-#include <stdlib.h>
-#include <unistd.h>
+#include <stdarg.h>
 #include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/mman.h>
+
 #include "marpa.h"
 
 int fail (const char *s, Marpa_Grammar g);
@@ -59,6 +55,20 @@ extern char error_buffer[80];
 
 char *symbol_name (Marpa_Symbol_ID id);
 
-Marpa_Grammar marpa_sg_new(const char **rules);
+struct marpa_sg_rule {
+  int length;
+  char **symbols;
+};
+
+typedef struct marpa_sg_rule Marpa_SG_Rule;
+
+#define MAX_SYMBOLS 100
+
+#define marpa_sg_rule_new(lhs, ...) marpa_sg_rule_new_func(lhs, ##__VA_ARGS__, (NULL))
+Marpa_SG_Rule marpa_sg_rule_new_func(char* lhs, ...);
+
+Marpa_Grammar marpa_sg_new(Marpa_SG_Rule *rules, int count);
+
+int marpa_sg_rule_free(Marpa_SG_Rule rule);
 
 #endif

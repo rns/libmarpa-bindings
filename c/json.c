@@ -33,31 +33,35 @@
 #include "recognizer.h"
 #include "valuator.h"
 
-
+#define MAX_RULES 15
 int
 main (int argc, char *argv[])
 {
-  const char* rules[][5] = {
-    { "S_value", "S_false" },
-    { "S_value", "S_null" },
-    { "S_value", "S_true" },
-    { "S_value", "S_object" },
-    { "S_value", "S_array" },
-    { "S_value", "S_number" },
-    { "S_value", "S_string" },
+  Marpa_SG_Rule rules[MAX_RULES] = {
+    marpa_sg_rule_new( "S_value", "S_null" ),
+    marpa_sg_rule_new( "S_value", "S_false" ),
+    marpa_sg_rule_new( "S_value", "S_true" ),
+    marpa_sg_rule_new( "S_value", "S_object" ),
+    marpa_sg_rule_new( "S_value", "S_array" ),
+    marpa_sg_rule_new( "S_value", "S_number" ),
+    marpa_sg_rule_new( "S_value", "S_string" ),
 
-    { "S_array", "S_begin_array", "S_array_contents", "S_end_array" },
-    { "S_object", "S_begin_object", "S_object_contents", "S_end_object" },
+    marpa_sg_rule_new( "S_array", "S_begin_array", "S_array_contents", "S_end_array" ),
+    marpa_sg_rule_new( "S_object", "S_begin_object", "S_object_contents", "S_end_object" ),
 
-    { "S_array_contents", "S_value", "S_value_separator", "0" },
-    { "S_object_contents", "S_member", "S_value_separator", "0," },
+    marpa_sg_rule_new( "S_array_contents", "S_value", "S_value_separator", "0" ),
+    marpa_sg_rule_new( "S_object_contents", "S_member", "S_value_separator", "0" ),
 
-    { "S_member", "S_string", "S_name_separator", "S_value" },
+    marpa_sg_rule_new( "S_member", "S_string", "S_name_separator", "S_value" ),
   };
 
+  Marpa_Grammar g = marpa_sg_new(rules, MAX_RULES);
+
   Input json = input_new(argv[1]);
-  Marpa_Grammar g = marpa_sg_new(rules);
   Marpa_Recognizer r = recognize(json, g);
   valuate(json, r, g);
+
+  marpa_sg_free(rules, MAX_RULES);
+
   return 0;
 }
