@@ -19,12 +19,28 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef VALUATOR_H
-#define VALUATOR_H 1
+#ifndef LEXER_H
+#define LEXER_H 1
 
-#include "marpa.h"
-#include "recognizer.h" /* scan_number and scan_string */
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 
-int valuate(Input i, Marpa_Recognizer r, Marpa_Grammar g);
+const unsigned char *scan_number (const unsigned char *s, const unsigned char *end);
+const unsigned char *scan_string (const unsigned char *s, const unsigned char *end);
+const unsigned char *scan_constant
+  (const unsigned char *target, const unsigned char *s, const unsigned char *end);
+
+struct input {
+  unsigned char *name, *p, *eof;
+  struct stat sb;
+};
+typedef struct input Input;
+
+Input input_new(const char *filename);
 
 #endif

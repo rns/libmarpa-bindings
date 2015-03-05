@@ -32,12 +32,12 @@
 #include "valuator.h"
 
 int
-valuate(Input in, Marpa_Recognizer r, Marpa_Grammar g)
+valuate(Input i, Marpa_Recognizer r, Marpa_Grammar g)
 {
   unsigned char *p, *eof;
 
-  p = in.p;
-  eof = in.eof;
+  p = i.p;
+  eof = i.eof;
 
   {
     Marpa_Bocage bocage;

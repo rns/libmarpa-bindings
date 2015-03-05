@@ -32,17 +32,8 @@
 #include "marpa.h"
 
 #include "grammar.h"
+#include "lexer.h"
 
-struct input {
-  unsigned char *name, *p, *eof;
-  struct stat sb;
-};
-typedef struct input Input;
-
-const unsigned char *scan_number (const unsigned char *s, const unsigned char *end);
-const unsigned char *scan_string (const unsigned char *s, const unsigned char *end);
-
-Input input_new(const char *filename);
 Marpa_Recognizer recognize(Input input, Marpa_Grammar g);
 
 #endif
