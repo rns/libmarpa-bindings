@@ -50,10 +50,9 @@ recognize(Input input, Marpa_Grammar g)
   Marpa_Recognizer r = recognizer_new(g);
 
   p = input.p;
-  eof = input.eof;
   sb = input.sb;
-  i = 0;
 
+  i = 0;
   eof = p + sb.st_size;
   while (p + i < eof)
   {
