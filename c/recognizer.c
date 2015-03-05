@@ -41,7 +41,7 @@ recognizer_new (Marpa_Grammar g)
 }
 
 Marpa_Recognizer
-recognize(Input input, Marpa_Grammar g)
+recognize(Input in, Marpa_Grammar g)
 {
   int i;
   unsigned char *p, *eof;
@@ -49,8 +49,9 @@ recognize(Input input, Marpa_Grammar g)
 
   Marpa_Recognizer r = recognizer_new(g);
 
-  p = input.p;
-  sb = input.sb;
+  p = in.p;
+  sb = in.sb;
+  eof = in.eof;
 
   i = 0;
   eof = p + sb.st_size;
@@ -131,10 +132,10 @@ recognize(Input input, Marpa_Grammar g)
       int count_of_expected = marpa_r_terminals_expected (r, expected);
       int i;
       for (i = 0; i < count_of_expected; i++)
-        {
-          fprintf (stderr, "expecting symbol %ld, %s\n",
-             (long) i, symbol_name (expected[i]));
-        }
+      {
+        fprintf (stderr, "expecting symbol %ld, %s\n",
+           (long) i, symbol_name (expected[i]));
+      }
       marpa_g_error (g, NULL);
       fprintf (stderr,
          "marpa_alternative(%p,%ld,%s,%ld,1) returned %d", r,
@@ -149,6 +150,9 @@ recognize(Input input, Marpa_Grammar g)
     }
     NEXT_TOKEN:;
   }
+
+  in.p = p;
+  in.eof = eof;
 
   return r;
 }

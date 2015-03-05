@@ -22,13 +22,6 @@
 #ifndef RECOGNIZER_H
 #define RECOGNIZER_H 1
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/mman.h>
 #include "marpa.h"
 
 #include "grammar.h"

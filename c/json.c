@@ -20,13 +20,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <stdlib.h>
-#include <unistd.h>
 #include <stdio.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/mman.h>
 #include "marpa.h"
 
 #include "grammar.h"
