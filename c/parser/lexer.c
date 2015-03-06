@@ -146,6 +146,7 @@ Input input_new(const char *filename)
       perror ("mmap");
       exit(1);
     }
+  eof = p + sb.st_size;
 
   json.p = p;
   json.eof = eof;
@@ -153,3 +154,81 @@ Input input_new(const char *filename)
   return json;
 }
 
+Marpa_Symbol_ID
+lex(Input in)
+{
+  int i;
+  unsigned char *p, *eof;
+  struct stat sb;
+
+  p = in.p;
+  sb = in.sb;
+  eof = in.eof;
+
+  i = 0;
+  eof = p + sb.st_size;
+
+  Marpa_Symbol_ID token;
+  const int start_of_token = i;
+
+  switch (p[i])
+  {
+    case '-':
+    case '+':
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+      i = scan_number (p + i, eof) - p;
+      token = S_number;
+      break;
+    case '"':
+      i = scan_string (p + i, eof) - p;
+      token = S_string;
+      break;
+    case '[':
+      token = S_begin_array;
+      i++;
+      break;
+    case ']':
+      token = S_end_array;
+      i++;
+      break;
+    case '{':
+      token = S_begin_object;
+      i++;
+      break;
+    case '}':
+      token = S_end_object;
+      i++;
+      break;
+    case ',':
+      token = S_value_separator;
+      i++;
+      break;
+    case ':':
+      token = S_name_separator;
+      i++;
+      break;
+    case 'n':
+      i = scan_constant ("null", (p + i), eof) - p;
+      token = S_null;
+      break;
+    case ' ':
+    case 0x09:
+    case 0x0A:
+    case 0x0D:
+      i++;
+//      goto NEXT_TOKEN;
+    default:
+      printf ("lexer failed at char %d: '%c'", i, p[i]);
+      exit (1);
+  }
+  return token;
+}

@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include "grammar.h"
 
 const unsigned char *scan_number (const unsigned char *s, const unsigned char *end);
 const unsigned char *scan_string (const unsigned char *s, const unsigned char *end);

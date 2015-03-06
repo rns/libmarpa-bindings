@@ -124,8 +124,8 @@ recognize(Input in, Marpa_Grammar g)
     if (0)
       fprintf (stderr, "reading token %ld, %s\n",
          (long) token, symbol_name (token));
-          int status = marpa_r_alternative (r, token, start_of_token + 1, 1);
 
+    int status = marpa_r_alternative (r, token, start_of_token + 1, 1);
     if (status != MARPA_ERR_NONE)
     {
       Marpa_Symbol_ID expected[20];
@@ -143,6 +143,7 @@ recognize(Input in, Marpa_Grammar g)
          (long) (start_of_token + 1), status);
       exit (1);
     }
+
     status = marpa_r_earleme_complete (r);
     if (status < 0)
     {
