@@ -9,7 +9,7 @@
 
 /* Scan to location past a rigth quoting char.
  * Assumes we are pointing an initial left quoting char.
- * */
+ */
 static const unsigned char *
 scan_quote (const unsigned char *s, const unsigned char q, const unsigned char *end)
 {
@@ -37,74 +37,60 @@ static int
 fail (const char *s, Marpa_Grammar g)
 {
   const char *error_string;
-  Marpa_Error_Code errcode = marpa_g_error (g, &error_string);
-  printf ("%s returned %d: %s", s, errcode, error_string);
+  Marpa_Error_Code errcode = marpa_g_error (g, NULL);
+  fprintf (stderr, "%s returned %d.\n", s, errcode);
   exit (1);
 }
 
+/*
 
-  /* From RFC 7159 */
-Marpa_Symbol_ID S_begin_array;
-Marpa_Symbol_ID S_begin_object;
-Marpa_Symbol_ID S_end_array;
-Marpa_Symbol_ID S_end_object;
-Marpa_Symbol_ID S_name_separator;
-Marpa_Symbol_ID S_value_separator;
-Marpa_Symbol_ID S_member;
-Marpa_Symbol_ID S_value;
-Marpa_Symbol_ID S_false;
-Marpa_Symbol_ID S_null;
-Marpa_Symbol_ID S_true;
-Marpa_Symbol_ID S_object;
-Marpa_Symbol_ID S_array;
-Marpa_Symbol_ID S_number;
-Marpa_Symbol_ID S_string;
+ <bnf>            ::= <rule>+ separator = S_rule_separator
 
-  /* Additional */
-Marpa_Symbol_ID S_object_contents;
-Marpa_Symbol_ID S_array_contents;
+ <rule>           ::= <rule-name> "::=" <expression>
+
+ <expression>     ::= <list>+ separator = "|"
+
+ <list>           ::= <term>+ separator = S_term_separator
+
+ <term>           ::= <literal> | <rule-name>
+
+ <literal>        ::= '"' <text> '"'
+ <literal>        ::= "'" <text> "'"
+
+ <rule-name>      ::= '<' <text> '>'
+
+*/
+
+/* http://en.wikipedia.org/wiki/Backus–Naur_Form */
+Marpa_Symbol_ID S_bnf;
+Marpa_Symbol_ID S_rule;
+Marpa_Symbol_ID S_rule_separator;
+Marpa_Symbol_ID S_rule_name;
+Marpa_Symbol_ID S_op_declare; // "::="
+Marpa_Symbol_ID S_expression;
+Marpa_Symbol_ID S_list;
+Marpa_Symbol_ID S_list_separator; // "|"
+Marpa_Symbol_ID S_term;
+Marpa_Symbol_ID S_term_separator;
+Marpa_Symbol_ID S_literal;
 
 /* For fatal error messages */
 char error_buffer[80];
 
-/* Names follow RFC 7159 as much as possible */
 char *
 symbol_name (Marpa_Symbol_ID id)
 {
-  if (id == S_begin_array)
-    return "begin_array";
-  if (id == S_begin_object)
-    return "begin_object";
-  if (id == S_end_array)
-    return "end_array";
-  if (id == S_end_object)
-    return "end_object";
-  if (id == S_name_separator)
-    return "name_separator";
-  if (id == S_value_separator)
-    return "value_separator";
-  if (id == S_member)
-    return "member";
-  if (id == S_value)
-    return "value";
-  if (id == S_false)
-    return "false";
-  if (id == S_null)
-    return "null";
-  if (id == S_true)
-    return "true";
-  if (id == S_object)
-    return "object";
-  if (id == S_array)
-    return "array";
-  if (id == S_number)
-    return "number";
-  if (id == S_string)
-    return "string";
-  if (id == S_object_contents)
-    return "object_contents";
-  if (id == S_array_contents)
-    return "array_contents";
+  if (id == S_bnf) return "bnf";
+  if (id == S_rule) return "rule";
+  if (id == S_rule_separator) return "rule_separator";
+  if (id == S_rule_name) return "rule_name";
+  if (id == S_op_declare) return "op_declare";
+  if (id == S_expression) return "expression";
+  if (id == S_list) return "list";
+  if (id == S_list_separator) return "list_separator";
+  if (id == S_term) return "term";
+  if (id == S_term_separator) return "term_separator";
+  if (id == S_literal) return "literal";
   sprintf (error_buffer, "no such symbol: %d", id);
   return error_buffer;
 };
@@ -149,6 +135,33 @@ main (int argc, char *argv[])
       printf ("marpa_g_new returned %d: %s", errcode, error_string);
       exit (1);
     }
+
+  ((S_bnf = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_rule = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_rule_separator = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_rule_name = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_op_declare = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_expression = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_list = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_list_separator = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_term = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_term_separator = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+  ((S_literal = marpa_g_symbol_new (g)) >= 0)
+    || fail ("marpa_g_symbol_new", g);
+
+
+
+
 
   ((S_begin_array = marpa_g_symbol_new (g)) >= 0)
     || fail ("marpa_g_symbol_new", g);
