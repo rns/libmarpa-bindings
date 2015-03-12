@@ -22,9 +22,6 @@
 #ifndef GRAMMAR_H
 #define GRAMMAR_H 1
 
-#include <stdarg.h>
-#include <stdio.h>
-
 #include "marpa.h"
 
 int fail (const char *s, Marpa_Grammar g);
@@ -55,38 +52,38 @@ extern char error_buffer[80];
 
 char *symbol_name (Marpa_Symbol_ID id);
 
-struct marpa_sg_rule {
+struct marpax_sg_rule {
   int length;
   char **symbols;
 };
-typedef struct marpa_sg_rule Marpa_SG_Rule;
+typedef struct marpax_sg_rule MarpaX_SG_Rule;
 
-struct marpa_sg_symbol_table_entry {
+struct marpax_sg_symbol_table_entry {
   Marpa_Symbol_ID id;
   char *name;
 };
-typedef struct marpa_sg_symbol_table_entry Marpa_SG_Symbol_Table_Entry;
+typedef struct marpax_sg_symbol_table_entry MarpaX_SG_Symbol_Table_Entry;
 
-struct marpa_sg_grammar {
+struct marpax_sg_grammar {
   Marpa_Grammar g;
   int symbol_table_length;
-  Marpa_SG_Symbol_Table_Entry *st;
+  MarpaX_SG_Symbol_Table_Entry *st;
 };
-typedef struct marpa_sg_grammar Marpa_SG_Grammar;
+typedef struct marpax_sg_grammar MarpaX_SG_Grammar;
 
-#define marpa_sg_rule_new(lhs, ...) marpa_sg_rule_new_func(lhs, ##__VA_ARGS__, (NULL))
-Marpa_SG_Rule *marpa_sg_rule_new_func(char* lhs, ...);
+#define marpax_sg_rule_new(lhs, ...) marpax_sg_rule_new_func(lhs, ##__VA_ARGS__, (NULL))
+MarpaX_SG_Rule *marpax_sg_rule_new_func(char* lhs, ...);
 
-Marpa_SG_Grammar *marpa_sg_new(Marpa_SG_Rule *rules[], int count);
-int marpa_sg_free(Marpa_SG_Grammar *);
+MarpaX_SG_Grammar *marpax_sg_new(MarpaX_SG_Rule *rules[], int count);
+int marpax_sg_free(MarpaX_SG_Grammar *);
 
-char *marpa_sg_symbol(Marpa_SG_Grammar *sg, Marpa_Symbol_ID S_id);
-Marpa_Symbol_ID marpa_sg_symbol_new(Marpa_SG_Grammar *sg, char *name);
+char *marpax_sg_symbol(MarpaX_SG_Grammar *sg, Marpa_Symbol_ID S_id);
+Marpa_Symbol_ID marpax_sg_symbol_new(MarpaX_SG_Grammar *sg, char *name);
 
-int marpa_sg_rules_free(Marpa_SG_Rule *rules[], int count);
-int marpa_sg_rule_free(Marpa_SG_Rule *rule);
+int marpax_sg_rules_free(MarpaX_SG_Rule *rules[], int count);
+int marpax_sg_rule_free(MarpaX_SG_Rule *rule);
 
-int marpa_sg_show_rules(Marpa_SG_Grammar *sg);
-int marpa_sg_show_symbols(Marpa_SG_Grammar *sg);
+int marpax_sg_show_rules(MarpaX_SG_Grammar *sg);
+int marpax_sg_show_symbols(MarpaX_SG_Grammar *sg);
 
 #endif
