@@ -15,6 +15,7 @@ profile_lexer.lua
 
 # exe files
 *.exe
+*.obj
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
