@@ -1,6 +1,4 @@
-/* Based on https://github.com/jeffreykegler/libmarpa/blob/master/test/json/json.c
- * Here is the copyright notice from that file:
- * Copyright 2015 Jeffrey Kegler
+/* Copyright 2015 Ruslan Shvedov
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -32,6 +30,8 @@
 
 #include "marpa.h"
 
+#include "sgrammar.h"
+
 /* Grammar */
 
 /* From RFC 7159 */
@@ -55,9 +55,7 @@ extern Marpa_Symbol_ID S_string;
 extern Marpa_Symbol_ID S_object_contents;
 extern Marpa_Symbol_ID S_array_contents;
 
-extern char error_buffer[80]; /* For fatal error messages */
-
-char *symbol_name (Marpa_Symbol_ID id);
+extern MarpaX_SG_Grammar *sg_json;
 
 /* Lexer */
 const unsigned char *scan_number (const unsigned char *s, const unsigned char *end);

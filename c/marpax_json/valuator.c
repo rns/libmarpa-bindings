@@ -262,7 +262,7 @@ valuate(Input i, Marpa_Recognizer r, Marpa_Grammar g)
               continue;
             }
                 fprintf (stderr, "Unknown symbol %s at %d",
-                   symbol_name (token), marpa_v_token_value (value) - 1);
+                   marpax_sg_symbol (sg_json, token), marpa_v_token_value (value) - 1);
                 exit (1);
               }
           }

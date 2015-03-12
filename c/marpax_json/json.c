@@ -1,6 +1,4 @@
-/* Based on https://github.com/jeffreykegler/libmarpa/blob/master/test/json/json.c
- * Here is the copyright notice from that file:
- * Copyright 2015 Jeffrey Kegler
+/* Copyright 2015 Ruslan Shvedov
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
@@ -22,7 +20,6 @@
 
 #include <stdio.h>
 #include "marpa.h"
-#include "sgrammar.h"
 #include "json.h"
 
 /* From RFC 7159 */
@@ -46,50 +43,7 @@ Marpa_Symbol_ID S_string;
 Marpa_Symbol_ID S_object_contents;
 Marpa_Symbol_ID S_array_contents;
 
-/* For fatal error messages */
-char error_buffer[80];
-
-/* Names follow RFC 7159 as much as possible */
-char *
-symbol_name (Marpa_Symbol_ID id)
-{
-  if (id == S_begin_array)
-    return "begin_array";
-  if (id == S_begin_object)
-    return "begin_object";
-  if (id == S_end_array)
-    return "end_array";
-  if (id == S_end_object)
-    return "end_object";
-  if (id == S_name_separator)
-    return "name_separator";
-  if (id == S_value_separator)
-    return "value_separator";
-  if (id == S_member)
-    return "member";
-  if (id == S_value)
-    return "value";
-  if (id == S_false)
-    return "false";
-  if (id == S_null)
-    return "null";
-  if (id == S_true)
-    return "true";
-  if (id == S_object)
-    return "object";
-  if (id == S_array)
-    return "array";
-  if (id == S_number)
-    return "number";
-  if (id == S_string)
-    return "string";
-  if (id == S_object_contents)
-    return "object_contents";
-  if (id == S_array_contents)
-    return "array_contents";
-  sprintf (error_buffer, "no such symbol: %d", id);
-  return error_buffer;
-};
+MarpaX_SG_Grammar *sg_json;
 
 #define MAX_RULES 12
 int
@@ -112,33 +66,33 @@ main (int argc, char *argv[])
 
     marpax_sg_rule_new( "S_member", "S_string", "S_name_separator", "S_value" ),
   };
-  MarpaX_SG_Grammar *sg = marpax_sg_new(rules, sizeof(rules) / sizeof(MarpaX_SG_Rule *));
+  MarpaX_SG_Grammar *sg_json = marpax_sg_new(rules, sizeof(rules) / sizeof(MarpaX_SG_Rule *));
 
-  marpax_sg_show_symbols(sg);
-  marpax_sg_show_rules(sg);
+  marpax_sg_show_symbols(sg_json);
+  marpax_sg_show_rules(sg_json);
 
-  S_begin_array = marpax_sg_symbol_id(sg, "S_begin_array");
-  S_begin_object = marpax_sg_symbol_id(sg, "S_begin_object");
-  S_end_array = marpax_sg_symbol_id(sg, "S_end_array");
-  S_end_object = marpax_sg_symbol_id(sg, "S_end_object");
-  S_name_separator = marpax_sg_symbol_id(sg, "S_name_separator");
-  S_value_separator = marpax_sg_symbol_id(sg, "S_value_separator");
-  S_member = marpax_sg_symbol_id(sg, "S_member");
-  S_value = marpax_sg_symbol_id(sg, "S_value");
-  S_false = marpax_sg_symbol_id(sg, "S_false");
-  S_null = marpax_sg_symbol_id(sg, "S_null");
-  S_true = marpax_sg_symbol_id(sg, "S_true");
-  S_object = marpax_sg_symbol_id(sg, "S_object");
-  S_array = marpax_sg_symbol_id(sg, "S_array");
-  S_number = marpax_sg_symbol_id(sg, "S_number");
-  S_string = marpax_sg_symbol_id(sg, "S_string");
+  S_begin_array = marpax_sg_symbol_id(sg_json, "S_begin_array");
+  S_begin_object = marpax_sg_symbol_id(sg_json, "S_begin_object");
+  S_end_array = marpax_sg_symbol_id(sg_json, "S_end_array");
+  S_end_object = marpax_sg_symbol_id(sg_json, "S_end_object");
+  S_name_separator = marpax_sg_symbol_id(sg_json, "S_name_separator");
+  S_value_separator = marpax_sg_symbol_id(sg_json, "S_value_separator");
+  S_member = marpax_sg_symbol_id(sg_json, "S_member");
+  S_value = marpax_sg_symbol_id(sg_json, "S_value");
+  S_false = marpax_sg_symbol_id(sg_json, "S_false");
+  S_null = marpax_sg_symbol_id(sg_json, "S_null");
+  S_true = marpax_sg_symbol_id(sg_json, "S_true");
+  S_object = marpax_sg_symbol_id(sg_json, "S_object");
+  S_array = marpax_sg_symbol_id(sg_json, "S_array");
+  S_number = marpax_sg_symbol_id(sg_json, "S_number");
+  S_string = marpax_sg_symbol_id(sg_json, "S_string");
 
-  Input json = input_new(argv[1]);
-  Marpa_Recognizer r = recognize(json, sg->g);
-  valuate(json, r, sg->g);
+  Input in = input_new(argv[1]);
+  Marpa_Recognizer r = recognize(in, sg_json->g);
+  valuate(in, r, sg_json->g);
 
   marpax_sg_rules_free(rules, sizeof(rules) / sizeof(MarpaX_SG_Rule *));
-  marpax_sg_free(sg);
+  marpax_sg_free(sg_json);
 
   return 0;
 }

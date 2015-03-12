@@ -124,7 +124,7 @@ recognize(Input in, Marpa_Grammar g)
     /* Token value of zero is not allowed, so we add one */
     if (0)
       fprintf (stderr, "reading token %ld, %s\n",
-         (long) token, symbol_name (token));
+         (long) token, marpax_sg_symbol (sg_json, token));
 
     int status = marpa_r_alternative (r, token, start_of_token + 1, 1);
     if (status != MARPA_ERR_NONE)
@@ -135,12 +135,12 @@ recognize(Input in, Marpa_Grammar g)
       for (i = 0; i < count_of_expected; i++)
       {
         fprintf (stderr, "expecting symbol %ld, %s\n",
-           (long) i, symbol_name (expected[i]));
+           (long) i, marpax_sg_symbol (sg_json, expected[i]));
       }
       marpa_g_error (g, NULL);
       fprintf (stderr,
          "marpa_alternative(%p,%ld,%s,%ld,1) returned %d", r,
-         (long) token, symbol_name (token),
+         (long) token, marpax_sg_symbol (sg_json, token),
          (long) (start_of_token + 1), status);
       exit (1);
     }
