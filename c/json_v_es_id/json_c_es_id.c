@@ -445,7 +445,9 @@ main (int argc, char *argv[])
 
       if (token == S_number || token == S_string )
         {
-          marpa_r_latest_earley_set_value_set(r, i);
+//          marpa_r_latest_earley_set_value_set(r, i);
+//          fprintf (stderr, "BEFORE marpa_r_earleme_complete(): current ERL: %d, latest ES: %d\n",
+//            marpa_r_current_earleme(r), marpa_r_latest_earley_set(r) );
         }
 
       status = marpa_r_earleme_complete (r);
@@ -456,6 +458,14 @@ main (int argc, char *argv[])
                   error_string);
           exit (1);
         }
+
+      if (token == S_number || token == S_string )
+        {
+          marpa_r_latest_earley_set_value_set(r, i);
+//          fprintf (stderr, "AFTER  marpa_r_earleme_complete(): current ERL: %d, latest ES: %d\n",
+//            marpa_r_current_earleme(r), marpa_r_latest_earley_set(r) );
+        }
+
     NEXT_TOKEN:;
     }
 
@@ -591,7 +601,8 @@ main (int argc, char *argv[])
                   int i;
                   const int start_of_number = marpa_v_token_value (value) - 1;
                   const int end_of_number =
-                    marpa_r_earley_set_value (r, marpa_v_token_start_es_id(value));
+                    marpa_r_earley_set_value (r, marpa_v_es_id(value));
+//                  fprintf(stderr, "Token %d: %d-%d\n", token, marpa_v_token_start_es_id(value), marpa_v_es_id(value));
                   column += 2 + (end_of_number - start_of_number);
 
                   /* We output numbers as Perl strings */
@@ -613,7 +624,7 @@ main (int argc, char *argv[])
                   const int start_of_string = marpa_v_token_value (value);
                   /* Subtract one for the final double quote */
                   const int end_of_string =
-                    marpa_r_earley_set_value (r, marpa_v_token_start_es_id(value));
+                    marpa_r_earley_set_value (r, marpa_v_es_id(value));
 
                   /* We add back the inital and final double quotes,
                    * and increment the column accordingly.
