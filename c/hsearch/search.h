@@ -28,26 +28,6 @@
 
 __BEGIN_DECLS
 
-#if defined(__USE_SVID) || defined(__USE_XOPEN_EXTENDED)
-/* Prototype structure for a linked-list data structure.
-   This is the type used by the `insque' and `remque' functions.  */
-
-struct qelem
-  {
-    struct qelem *q_forw;
-    struct qelem *q_back;
-    char q_data[1];
-  };
-
-
-/* Insert ELEM into a doubly-linked list, after PREV.  */
-extern void insque __P ((void *__elem, void *__prev));
-
-/* Unlink ELEM from the doubly-linked list that it is in.  */
-extern void remque __P ((void *__elem));
-#endif
-
-
 /* For use with hsearch(3).  */
 #ifndef __COMPAR_FN_T
 #define __COMPAR_FN_T

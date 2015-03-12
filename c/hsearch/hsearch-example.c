@@ -18,10 +18,10 @@ main(void)
    hcreate(30);
 
    for (i = 0; i < 24; i++) {
-       e.key = data[i];
-       /* data is just an integer, instead of a
+       /* key is just an integer, instead of a
           pointer to something */
-       e.data = (void *) i;
+       e.key = (void *) &i;
+       e.data = data[i];
        ep = hsearch(e, ENTER);
        /* there should be no failures */
        if (ep == NULL) {
@@ -33,10 +33,9 @@ main(void)
    for (i = 22; i < 26; i++) {
        /* print two entries from the table, and
           show that two are not in the table */
-       e.key = data[i];
+       e.key = (void *) &i;
        ep = hsearch(e, FIND);
-       printf("%9.9s -> %9.9s:%d\n", e.key,
-              ep ? ep->key : "NULL", ep ? (int)(ep->data) : 0);
+       printf("%d -> %9.9s\n", i, ep ? ep->data : "NULL");
    }
    hdestroy();
    exit(EXIT_SUCCESS);
