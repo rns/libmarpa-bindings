@@ -19,12 +19,45 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef VALUATOR_H
-#define VALUATOR_H 1
+#ifndef GRAMMAR_H
+#define GRAMMAR_H 1
 
 #include "marpa.h"
-#include "recognizer.h" /* scan_number and scan_string */
 
-int valuate(Input i, Marpa_Recognizer r, Marpa_Grammar g);
+int fail (const char *s, Marpa_Grammar g);
+
+struct marpax_sg_rule {
+  int length;
+  char **symbols;
+};
+typedef struct marpax_sg_rule MarpaX_SG_Rule;
+
+struct marpax_sg_symbol_table_entry {
+  Marpa_Symbol_ID id;
+  char *name;
+};
+typedef struct marpax_sg_symbol_table_entry MarpaX_SG_Symbol_Table_Entry;
+
+struct marpax_sg_grammar {
+  Marpa_Grammar g;
+  int symbol_table_length;
+  MarpaX_SG_Symbol_Table_Entry *st;
+};
+typedef struct marpax_sg_grammar MarpaX_SG_Grammar;
+
+#define marpax_sg_rule_new(lhs, ...) marpax_sg_rule_new_func(lhs, ##__VA_ARGS__, (NULL))
+MarpaX_SG_Rule *marpax_sg_rule_new_func(char* lhs, ...);
+
+MarpaX_SG_Grammar *marpax_sg_new(MarpaX_SG_Rule *rules[], int count);
+int marpax_sg_free(MarpaX_SG_Grammar *);
+
+char *marpax_sg_symbol(MarpaX_SG_Grammar *sg, Marpa_Symbol_ID S_id);
+Marpa_Symbol_ID marpax_sg_symbol_new(MarpaX_SG_Grammar *sg, char *name);
+
+int marpax_sg_rules_free(MarpaX_SG_Rule *rules[], int count);
+int marpax_sg_rule_free(MarpaX_SG_Rule *rule);
+
+int marpax_sg_show_rules(MarpaX_SG_Grammar *sg);
+int marpax_sg_show_symbols(MarpaX_SG_Grammar *sg);
 
 #endif

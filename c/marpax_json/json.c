@@ -22,10 +22,74 @@
 
 #include <stdio.h>
 #include "marpa.h"
+#include "sgrammar.h"
+#include "json.h"
 
-#include "grammar.h"
-#include "recognizer.h"
-#include "valuator.h"
+/* From RFC 7159 */
+Marpa_Symbol_ID S_begin_array;
+Marpa_Symbol_ID S_begin_object;
+Marpa_Symbol_ID S_end_array;
+Marpa_Symbol_ID S_end_object;
+Marpa_Symbol_ID S_name_separator;
+Marpa_Symbol_ID S_value_separator;
+Marpa_Symbol_ID S_member;
+Marpa_Symbol_ID S_value;
+Marpa_Symbol_ID S_false;
+Marpa_Symbol_ID S_null;
+Marpa_Symbol_ID S_true;
+Marpa_Symbol_ID S_object;
+Marpa_Symbol_ID S_array;
+Marpa_Symbol_ID S_number;
+Marpa_Symbol_ID S_string;
+
+/* Additional */
+Marpa_Symbol_ID S_object_contents;
+Marpa_Symbol_ID S_array_contents;
+
+/* For fatal error messages */
+char error_buffer[80];
+
+/* Names follow RFC 7159 as much as possible */
+char *
+symbol_name (Marpa_Symbol_ID id)
+{
+  if (id == S_begin_array)
+    return "begin_array";
+  if (id == S_begin_object)
+    return "begin_object";
+  if (id == S_end_array)
+    return "end_array";
+  if (id == S_end_object)
+    return "end_object";
+  if (id == S_name_separator)
+    return "name_separator";
+  if (id == S_value_separator)
+    return "value_separator";
+  if (id == S_member)
+    return "member";
+  if (id == S_value)
+    return "value";
+  if (id == S_false)
+    return "false";
+  if (id == S_null)
+    return "null";
+  if (id == S_true)
+    return "true";
+  if (id == S_object)
+    return "object";
+  if (id == S_array)
+    return "array";
+  if (id == S_number)
+    return "number";
+  if (id == S_string)
+    return "string";
+  if (id == S_object_contents)
+    return "object_contents";
+  if (id == S_array_contents)
+    return "array_contents";
+  sprintf (error_buffer, "no such symbol: %d", id);
+  return error_buffer;
+};
 
 #define MAX_RULES 12
 int

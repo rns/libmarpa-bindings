@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include "marpa.h"
 
-#include "valuator.h"
+#include "json.h"
 
 int
 valuate(Input i, Marpa_Recognizer r, Marpa_Grammar g)

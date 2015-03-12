@@ -20,7 +20,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "lexer.h"
+#include "json.h"
 
 /* Scan to the location  past a JSON number.
  * */

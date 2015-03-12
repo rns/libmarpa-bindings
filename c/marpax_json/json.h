@@ -19,8 +19,8 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef LEXER_H
-#define LEXER_H 1
+#ifndef JSON_H
+#define JSON_H 1
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,8 +29,37 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include "grammar.h"
 
+#include "marpa.h"
+
+/* Grammar */
+
+/* From RFC 7159 */
+extern Marpa_Symbol_ID S_begin_array;
+extern Marpa_Symbol_ID S_begin_object;
+extern Marpa_Symbol_ID S_end_array;
+extern Marpa_Symbol_ID S_end_object;
+extern Marpa_Symbol_ID S_name_separator;
+extern Marpa_Symbol_ID S_value_separator;
+extern Marpa_Symbol_ID S_member;
+extern Marpa_Symbol_ID S_value;
+extern Marpa_Symbol_ID S_false;
+extern Marpa_Symbol_ID S_null;
+extern Marpa_Symbol_ID S_true;
+extern Marpa_Symbol_ID S_object;
+extern Marpa_Symbol_ID S_array;
+extern Marpa_Symbol_ID S_number;
+extern Marpa_Symbol_ID S_string;
+
+/* Additional */
+extern Marpa_Symbol_ID S_object_contents;
+extern Marpa_Symbol_ID S_array_contents;
+
+extern char error_buffer[80]; /* For fatal error messages */
+
+char *symbol_name (Marpa_Symbol_ID id);
+
+/* Lexer */
 const unsigned char *scan_number (const unsigned char *s, const unsigned char *end);
 const unsigned char *scan_string (const unsigned char *s, const unsigned char *end);
 const unsigned char *scan_constant
@@ -43,5 +72,11 @@ struct input {
 typedef struct input Input;
 
 Input input_new(const char *filename);
+
+/* Recognizer */
+Marpa_Recognizer recognize(Input input, Marpa_Grammar g);
+
+/* Valuator */
+int valuate(Input i, Marpa_Recognizer r, Marpa_Grammar g);
 
 #endif

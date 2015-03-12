@@ -20,7 +20,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "recognizer.h"
+#include "json.h"
+#include "sgrammar.h"
 
 static Marpa_Recognizer
 recognizer_new (Marpa_Grammar g)
