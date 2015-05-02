@@ -13,14 +13,15 @@ int
 main(void)
 {
    ENTRY e, *ep;
-   int i;
+   int i, key;
 
    hcreate(30);
 
    for (i = 0; i < 24; i++) {
+       key = i + 100024;
        /* key is just an integer, instead of a
           pointer to something */
-       e.key = (void *) &i;
+       e.key = (void *) &key;
        e.data = data[i];
        ep = hsearch(e, ENTER);
        /* there should be no failures */
@@ -30,12 +31,13 @@ main(void)
        }
    }
 
+   /* print two entries from the table, and
+      show that two are not in the table */
    for (i = 22; i < 26; i++) {
-       /* print two entries from the table, and
-          show that two are not in the table */
-       e.key = (void *) &i;
+       key = i + 100024;
+       e.key = (void *) &key;
        ep = hsearch(e, FIND);
-       printf("%d -> %9.9s\n", i, ep ? ep->data : "NULL");
+       printf("%d -> %9.9s\n", key, ep ? ep->data : "NULL");
    }
    hdestroy();
    exit(EXIT_SUCCESS);
