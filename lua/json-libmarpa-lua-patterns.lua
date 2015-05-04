@@ -156,9 +156,12 @@ if table.getn(arg) > 0 then
     io.close(f)
   end
 end
+local do_test = false
 if input == '' then
   input = '[ 1, "abc\ndef", -2.3, null, [], true, false, [1,2,3], {}, {"a":1,"b":2} ]'
+  do_test = true
 end
+
 
 local expected_json = input -- the lexer consumes input, so we preserved it for testing
 
@@ -302,10 +305,12 @@ end
 
 -- test
 expected_json, _ = expected_json:gsub(' ', '') -- remove spaces, the lexer discards them
-if expected_json == got_json then
-  print("json parsed ok")
-else
-  print("json parsed not ok:")
-  print("expected: ", expected_json)
-  print("got     : ", got_json)
+if do_test then
+  if expected_json == got_json then
+    print("json parsed ok")
+  else
+    print("json parsed not ok:")
+    print("expected: ", expected_json)
+    print("got     : ", got_json)
+  end
 end
