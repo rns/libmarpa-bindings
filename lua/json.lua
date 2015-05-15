@@ -39,7 +39,7 @@ assert( C.marpa_c_error(config, msg) == C.MARPA_ERR_NONE, msg )
   this is arguably not for "racing car" programs as efficiency can
   potentially be gained by not-caring about values of some symbols
   e.g. array/objects' begin's/end's, separators, etc.
-]]--
+--]]
 lib.assert( C.marpa_g_force_valued(g), "marpa_g_force_valued", g )
 
 -- JSON grammar specification
@@ -55,7 +55,7 @@ lib.assert( C.marpa_g_force_valued(g), "marpa_g_force_valued", g )
     completed
     expected
     nulled
-]]--
+--]]
 
 --[[
   JSON LUIF grammar for Kollos,
@@ -78,7 +78,7 @@ lib.assert( C.marpa_g_force_valued(g), "marpa_g_force_valued", g )
                    | [lsquare] elements [rsquare]
     elements     ::= value+ % comma
     string       ::= lstring
-]]--
+--]]
 
 local jg = {
   parser = {
@@ -136,7 +136,7 @@ local jg = {
   },
   actions = {
     --[[ 'lhs1, lhs2, lhs3' = function(span, literal) end
-    ]]--
+    --]]
   }
 }
 
@@ -265,7 +265,7 @@ todo: more specific error handling/sanity check
 
 marpa_g_is_precomputed()
 
-]]--
+--]]
 
 local r = ffi.gc( C.marpa_r_new(g), C.marpa_r_unref )
 lib.assert( r, "marpa_r_new", g )
@@ -335,7 +335,7 @@ while true do
         MARPA_ERR_INACCESSIBLE_TOKEN also leave the recognizer in a fully recoverable state, and may
         also be useable for the Ruby Slippers or similar techniques. At this writing, the author
         knows of no applications which attempt to recover from these errors.
-      ]]--
+      --]]
     end
     status = C.marpa_r_earleme_complete (r)
     lib.assert( status, 'marpa_r_earleme_complete', g )
@@ -353,7 +353,7 @@ end
     tree
       value
         steps(value)
-]]--
+--]]
 local bocage = ffi.gc( C.marpa_b_new (r, -1), C.marpa_b_unref )
 lib.assert( bocage, "marpa_b_new", g )
 
@@ -372,7 +372,7 @@ lib.assert( value, "marpa_v_new", g )
 --[[
   todo:
     build the json tree
-]]--
+--]]
 
 local stack = {}
 local got_json = ''
