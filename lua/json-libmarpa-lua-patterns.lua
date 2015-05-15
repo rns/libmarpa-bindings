@@ -52,7 +52,7 @@ assert( C.marpa_c_error(config, msg) == C.MARPA_ERR_NONE, msg )
 
 --[[ this is arguably not for "racing car" programs as efficiency can
   potentially be gained by not-caring about values of some symbols
-  e.g. array/objects' begin's/end's, separators, etc. ]]--
+  e.g. array/objects' begin's/end's, separators, etc. --]]
 assert_result( C.marpa_g_force_valued(g), "marpa_g_force_valued", g )
 
 -- grammar symbols from RFC 7159
