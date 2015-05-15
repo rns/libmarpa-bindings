@@ -15,46 +15,7 @@ package.cpath =
 local kollos_external = require "kollos"
 local _klol = kollos_external._klol
 
-local d = require 'printf_debugging'
-os.exit()
-
--- libmarpa binding
-local lib   = require 'libmarpa'
-local C     = lib.C
-local ffi   = lib.ffi
-
--- print platform versions
-print(
-  "os:",
-  table.concat( { ffi.os, ffi.arch, ffi.abi('win') and "Windows variant" or "" }, '/' )
-)
-
-local ver = ffi.new("int [3]")
-C.marpa_version(ver)
-print(string.format("libmarpa version: %1d.%1d.%1d", ver[0], ver[1], ver[2]))
-
-print("LuaJIT version:", jit.version )
-print(string.rep('-', 28))
-
--- Marpa configurarion
-local config = ffi.new("Marpa_Config")
-C.marpa_c_init(config) -- always succeeds
-
--- grammar
-local g = ffi.gc(C.marpa_g_new(config), C.marpa_g_unref)
-local msg = ffi.new("const char **")
-assert( C.marpa_c_error(config, msg) == C.MARPA_ERR_NONE, msg )
-
---[[
-
-  "It is recommended that this call be made immediately after the grammar constructor.
-  It turns off a deprecated feature."
-
-  this is arguably not for "racing car" programs as efficiency can
-  potentially be gained by not-caring about values of some symbols
-  e.g. array/objects' begin's/end's, separators, etc.
---]]
-lib.assert( C.marpa_g_force_valued(g), "marpa_g_force_valued", g )
+local dumper = require 'dumper'
 
 -- JSON grammar specification
 -- only symbols in quotes: no literals or regexes
@@ -159,11 +120,11 @@ local symbols = {} -- symbol table
 -- if symbol exists, return its id
 local function symbol_new(s, g)
   assert(type(s) == "string", "symbol must be a string")
-  assert(type(g) == "cdata", "grammar must be cdata")
+  assert(type(g) == "table", "grammar must be table")
   local s_id = symbols[s]
   if s_id == nil then
-    s_id = C.marpa_g_symbol_new (g)
-    lib.assert(s_id, "marpa_g_symbol_new", g)
+    s_id = g:symbol_new (g)
+    assert(s_id >= 0, "symbol_new failed: " .. s)
     symbols[tostring(s_id)] = s
     symbols[s]    = s_id
   else
@@ -171,6 +132,8 @@ local function symbol_new(s, g)
   end
   return s_id
 end
+
+g = _klol.grammar()
 
 -- parser rules
 assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "parser" key]])
