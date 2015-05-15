@@ -91,28 +91,21 @@ local jg = {
   },
   -- lexer rules (order is important)
   lexer = {
-    { [[\{]], "lcurly" },
-    { [[\}]], "rcurly" },
-    { [[\[]], "lsquare" },
-    { '\\]',  "rsquare" },
-    { ',',    "comma" },
-    { ':',    "colon" },
-
-    { [["(?:(?:[^"\\]|\\[\\"/bfnrt]|\\u\d{4})*)"]],     "string", 8 },
-    { [[-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?]],  "number", 9 },
-
-    { [[\btrue\b]],  "true" },
-    { [[\bfalse\b]], "false" },
-    { [[\bnull\b]],  "null" },
-
+    { "{", "lcurly" },
+    { "}", "rcurly" },
+    { "%[", "lsquare" },
+    { "%]", "rsquare" },
+    { ",", "comma" },
+    { ":", "colon" },
+    { '"[^"]+"', "string" },
+    { "-?[%d]+[.%d+]*", "number" },
+    { "true", "true" },
+    { "false", "false" },
+    { "null", "null" },
     { '[ \t]+', 'WHITESPACE' },  -- Skip over spaces and tabs
-    { "\n", 'NEWLINE' },  -- Line endings
-    { '.', 'MISMATCH' }   -- Any other character
+    { "\n", 'NEWLINE', },  -- Line endings
+    { '.', 'MISMATCH', }   -- Any other character
   },
-  actions = {
-    --[[ 'lhs1, lhs2, lhs3' = function(span, literal) end
-    --]]
-  }
 }
 
 local symbols = {} -- symbol table
@@ -136,12 +129,12 @@ end
 g = _klol.grammar()
 
 -- parser rules
-assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "parser" key]])
+assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "lexer" key]])
 for lhs, rhs in pairs(jg["parser"]) do
   -- handle start symbol
   if lhs == '_start_symbol' then
     local S_start = symbol_new(rhs, g)
-    lib.assert( C.marpa_g_start_symbol_set(g, S_start), "marpa_g_start_symbol_set", g )
+    g:start_symbol_set(S_start)
   else
     -- d.pt(lhs, ':=', d.s(rhs))
     -- add lhs symbol to the grammar
@@ -177,24 +170,22 @@ for lhs, rhs in pairs(jg["parser"]) do
           assert( #rhs_alternative == 1, "sequence rule must have only 1 symbol on its RHS" )
           local S_item = S_rhs_symbol[1]
           -- d.pt(d.i(S_separator, S_item))
-          lib.assert(
-            C.marpa_g_sequence_new (
-              g, S_lhs, S_item, S_separator,
+          g:sequence_new (
+              S_lhs, S_item, S_separator,
               adverbs["quantifier"] == "+" and 1 or adverbs["quantifier"] == "*" and 0 or -1,
-              C.MARPA_PROPER_SEPARATION
-            ), "marpa_g_sequence_new", g
-          )
+              2
+            )
         else
           -- other rule types based on adverbs
           -- ...
         end
       else -- normal rule
         -- d.pt("# normal rule")
-        local rhs = ffi.new("int[" .. #rhs_alternative .. "]")
-        for ix = 1, #rhs_alternative do
-          rhs[ix-1] = S_rhs_symbol[ix]
+        if     #rhs_alternative == 1 then g:rule_new(S_lhs, S_rhs_symbol[1])
+        elseif #rhs_alternative == 2 then g:rule_new(S_lhs, S_rhs_symbol[1], S_rhs_symbol[2])
+        elseif #rhs_alternative == 3 then g:rule_new(S_lhs, S_rhs_symbol[1], S_rhs_symbol[2], S_rhs_symbol[3])
+        elseif #rhs_alternative == 4 then g:rule_new(S_lhs, S_rhs_symbol[1], S_rhs_symbol[2], S_rhs_symbol[3], S_rhs_symbol[4])
         end
-        lib.assert( C.marpa_g_rule_new (g, S_lhs, rhs, #rhs_alternative), "marpa_g_rule_new", g )
       end
     end
   end
@@ -219,35 +210,10 @@ end
 
 -- d.pt(d.i(token_spec))
 
-lib.assert( C.marpa_g_precompute(g), "marpa_g_precompute", g )
+g:precompute()
 
---[[
-todo: more specific error handling/sanity check
-  MARPA_ERR_NO_RULES: The grammar has no rules.
-  MARPA_ERR_NO_START_SYMBOL: No start symbol was specified.
-  MARPA_ERR_INVALID_START_SYMBOL: A start symbol ID was specified, but it is not the ID of a valid symbol.
-  MARPA_ERR_START_NOT_LHS: The start symbol is not on the LHS of any rule.
-  MARPA_ERR_UNPRODUCTIVE_START: The start symbol is not productive.
-  MARPA_ERR_COUNTED_NULLABLE: A symbol on the RHS of a sequence rule is nullable. Libmarpa does not allow this.
-  MARPA_ERR_NULLING_TERMINAL: A terminal is also a nulling symbol. Libmarpa does not allow this.
-  MARPA_ERR_GRAMMAR_HAS_CYCLE
-    marpa_g_has_cycle()
-    marpa_g_rule_is_loop()
-11.4 Symbols
-  unproductive and inaccessible symbols
-    marpa_g_symbol_is_accessible()
-    marpa_g_symbol_is_productive()
-  marpa_g_symbol_is_nullable()
-  marpa_g_symbol_is_nulling()
-
-marpa_g_is_precomputed()
-
---]]
-
-local r = ffi.gc( C.marpa_r_new(g), C.marpa_r_unref )
-lib.assert( r, "marpa_r_new", g )
-
-lib.assert( C.marpa_r_start_input(r), "marpa_r_start_input", g )
+local r = _klol.recce(g)
+r:start_input()
 
 -- read input from file, if specified on the command line, or set to default value
 local input = ''
@@ -265,23 +231,18 @@ end
 -- lexing
 
 -- return terminals expected at current earleme
-local expected = ffi.new("Marpa_Symbol_ID[" .. #token_spec .. "]")
 local function expected_terminals(r)
-  local count_of_expected = C.marpa_r_terminals_expected (r, expected)
-  lib.assert( count_of_expected, "marpa_r_terminals_expected", g )
-  -- these terminals must always be matched
-  -- once the grammar is represented as BNF + regexes text
-  -- these terminals will be added as symbols to Marpa grammar
-  -- and this initialization must become {}
-  local result = { WHITESPACE = 1, NEWLINE = 1, MISMATCH = 1 }
-  for i = 0, count_of_expected do
-    result[symbols[tostring(expected[i])]] = 1
-  end
-  return result
+  -- until kollos has _terminals_expected, return all terminals
+  return {
+    WHITESPACE = 1, NEWLINE = 1, MISMATCH = 1,
+    lcurly = 1, rcurly = 1, lsquare = 1, rsquare = 1, comma = 1, colon = 1,
+    string = 1, number = 1,
+    ["true"] = 1, ["false"] = 1, null = 1
+  }
 end
 
 require 'lexer'
-local lex = lexer.new{tokens = token_spec, input = input }
+local lex = lexer.new{tokens = token_spec, input = input, patterns = 'lua' }
 local token_values = {}
 
 while true do
@@ -294,43 +255,25 @@ while true do
     print(string.format("Invalid symbol '%s' at %d:%d", input:sub(token_start, token_length - 1), line, column ));
   elseif token_symbol_id >= 0 then
     -- todo: events. if handlers are specified in the grammar
-    local status = C.marpa_r_alternative (r, token_symbol_id, token_start, 1)
-    if status ~= C.MARPA_ERR_NONE then
-      lib.assert( status, 'marpa_r_alternative', g )
-    else
-      --[[
-      todo:
-      recovery
-        Several error codes leave the recognizer in a fully recoverable state, allowing the
-        application to retry the marpa_r_alternative() method. Retry is efficient, and quite useable
-        as a parsing technique. The error code of primary interest from this point of view is
-        MARPA_ERR_UNEXPECTED_TOKEN_ID, which indicates that the token was not accepted because
-        of its token ID. Retry after this condition is used in several applications, and is called
-        “the Ruby Slippers technique”.
-
-        The error codes MARPA_ERR_DUPLICATE_TOKEN, MARPA_ERR_NO_TOKEN_EXPECTED_HERE and
-        MARPA_ERR_INACCESSIBLE_TOKEN also leave the recognizer in a fully recoverable state, and may
-        also be useable for the Ruby Slippers or similar techniques. At this writing, the author
-        knows of no applications which attempt to recover from these errors.
-      --]]
+    local status = r:alternative ( token_symbol_id, token_start, 1 )
+    if (not status) then
+      error( 'result of alternative = ' .. status)
+      break
     end
-    status = C.marpa_r_earleme_complete (r)
-    lib.assert( status, 'marpa_r_earleme_complete', g )
+    status = r:earleme_complete()
+    if (status < 0) then
+      error("result of earleme_complete = " .. status)
+    end
     token_values[token_start .. ""] = token_length
   end
 end
 
--- pi(token_values)
+--[[ work without error up to here --]]
 
--- valuation
---[[
-  bocage order (next_)tree value steps
-  valuator
-    init
-    tree
-      value
-        steps(value)
---]]
+os.exit()
+
+--[[ todo: add missing libmarpa functions to kollos --]]
+
 local bocage = ffi.gc( C.marpa_b_new (r, -1), C.marpa_b_unref )
 lib.assert( bocage, "marpa_b_new", g )
 
@@ -345,11 +288,6 @@ lib.assert( tree_status, "marpa_t_next", g )
 
 local value = ffi.gc( C.marpa_v_new (tree), marpa_v_unref )
 lib.assert( value, "marpa_v_new", g )
-
---[[
-  todo:
-    build the json tree
---]]
 
 local stack = {}
 local got_json = ''
