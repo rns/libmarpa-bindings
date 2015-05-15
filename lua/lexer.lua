@@ -24,7 +24,7 @@ todo:
     warn
     allow
 
-]]--
+--]]
 
 function lexer.new (options)
 
@@ -108,7 +108,7 @@ end
     preserving comments
 
     try marpa_r_terminal_is_expected() -- http://irclog.perlgeek.de/marpa/2015-01-11#i_9918855
-]]--
+--]]
 
 function lexer.lua_pattern_first_acceptable_token_match(token_spec, expected_terminals, input, token_start)
   local pattern
