@@ -1,5 +1,6 @@
 -- return iterator
-local rex = require 'rex_pcre'
+
+local _, rex = pcall (require,"rex_pcre")
 
 lexer = { }
 --[[
