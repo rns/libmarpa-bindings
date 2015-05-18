@@ -28,6 +28,14 @@ function luif.G (grammar)
   local l = location()
   for lhs, rhs in pairs(grammar) do
     p(lhs, d(rhs))
+    -- wrap single-alternative RHS's
+    if not ( type(rhs[1]) == "table" ) then
+      rhs = { rhs }
+    end
+    -- iterate over RHS alternatives
+    for i, rhs_alternative in ipairs(rhs) do
+      p("Alternative: ", i, d(rhs_alternative))
+    end
   end
   return grammar
 end
@@ -49,11 +57,11 @@ function luif.Q (quantifier)
 end
 
 function luif.hide (...)
-  return { "hidden", ..., location():location() }
+  return { "hidden", {...}, location():location() }
 end
 
 function luif.group (...)
-  return { "group", ..., location():location() }
+  return { "group", {...}, location():location() }
 end
 
 return luif
