@@ -26,17 +26,25 @@ location() -- the current location, including the blob name.
 -- namespace
 location_class = {}
 
--- prototype with default values
-location_class.prototype = { _type = "location", _blob = "", text = "", line = "" }
+-- methods to go to prototype
+function location_class.location (location_object)
+  return location_object.blob .. ': ' .. location_object.line
+end
 
--- metatable
-location_class.mt = {}
+-- prototype with default values and methods
+location_class.prototype = {
+  _type = "location", blob = "", text = "", line = "",
+  location = location_class.location,
+}
 
 -- constructor
 function location_class.new (location_object)
   setmetatable(location_object, location_class.mt)
   return location_object
 end
+
+-- metatable
+location_class.mt = {}
 
 -- the __index metamethod points to prototype
 location_class.mt.__index = location_class.prototype

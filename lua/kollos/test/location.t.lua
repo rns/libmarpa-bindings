@@ -21,3 +21,4 @@ is(l.blob, info.source, "source")
 
 is(l.line, info.currentline, "current line")
 
+is(l:location(), info.source .. ': ' .. info.currentline, "location()")
