@@ -1,16 +1,8 @@
 local dumper = require 'dumper'
 local d = dumper.dumper
+local p = print
 
--- LUIF D2L calls mockup
-local luif = {
-  G = function(grammar) return grammar end,
-  S = function(name) return "S:'" .. name .. "'" end,
-  L = function(literal) return "L:'" .. literal .. "'" end,
-  C = function(charclass) return "C:'" .. charclass .. "'" end,
-  Q = function(quantifier) return "Q:'" .. quantifier .. "'" end,
-  hide = function(...) return "hidden[ '" .. table.concat({...}, ' ') .. " ]" end,
-  group = function(...) return "hidden[ '" .. table.concat({...}, ' ') .. " ]" end,
-}
+local luif = require 'luif'
 
 local S = luif.S
 local L = luif.L
@@ -90,4 +82,5 @@ local json = luif.G{
 
 }
 
-print(d(json))
+p(d(json))
+
