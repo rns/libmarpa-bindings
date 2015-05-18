@@ -35,8 +35,6 @@ local div = function (e1, e2) return e1 / e2 end
 local add = function (e1, e2) return e1 + e2 end
 local sub = function (e1, e2) return e1 - e2 end
 
-print(d(calc))
-
 -- json
 -- todo: add l0 rules from manual.md
 

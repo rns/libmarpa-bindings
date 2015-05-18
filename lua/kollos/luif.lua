@@ -49,11 +49,11 @@ function luif.Q (quantifier)
 end
 
 function luif.hide (...)
-  return { "hidden", {...}, location():location() }
+  return { "hidden", ..., location():location() }
 end
 
 function luif.group (...)
-  return { "group", {...}, location():location() }
+  return { "group", ..., location():location() }
 end
 
 return luif
