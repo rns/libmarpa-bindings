@@ -21,6 +21,8 @@ local function location()
   }
 end
 
+-- bare literals other than '|', '||', '%', '%%', must produce errors
+
 function luif.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
   local l = location()

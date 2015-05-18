@@ -15,7 +15,10 @@ local calc = luif.G{
   Script = { S'Expression', Q'+', '%', L',' },
   Expression = {
     { S'Number' },
-    { '|' , '(', S'Expression', ')' },
+-- todo: this line { '|' , '(', S'Expression', ')' },
+--       must produce "invalid bare literal" error in luif.G()
+
+    { '|' , L'(', S'Expression', L')' },
     { '||', S'Expression', L'**', S'Expression', { action = pow } },
     { '||', S'Expression', L'*', S'Expression', { action = mul } },
     { '|' , S'Expression', L'/', S'Expression', { action = div } },
