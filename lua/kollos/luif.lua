@@ -6,6 +6,8 @@
 
 -- dumping helpers
 local dumper = require 'dumper'
+local inspect = require 'inspect'
+local i = inspect
 local d = dumper.dumper
 local p = print
 
@@ -27,14 +29,16 @@ function luif.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
   local l = location()
   for lhs, rhs in pairs(grammar) do
-    p(lhs, d(rhs))
+    p("\nLHS: ", lhs)
+    p(type(rhs[1]), #rhs)
+    p(i(rhs))
     -- wrap single-alternative RHS's
-    if not ( type(rhs[1]) == "table" ) then
+    if type(rhs[1]) ~= "table" and #rhs ~= 1 then
       rhs = { rhs }
     end
     -- iterate over RHS alternatives
-    for i, rhs_alternative in ipairs(rhs) do
-      p("Alternative: ", i, d(rhs_alternative))
+    for rhs_i, rhs_alternative in ipairs(rhs) do
+      p("RHS alternative: ", rhs_i, i(rhs_alternative))
     end
   end
   return grammar

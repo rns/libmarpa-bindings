@@ -50,7 +50,7 @@ local json = luif.G{
     { luif.hide( L'{' ), S'members', luif.hide( L'}' ) }
   },
 
-  members = { S'pair', Q'+', '%', S'comma' },
+  members = { S'pair', Q'+', '%', S'comma' }, -- single alternative
 
   pair = {
     { S'string', luif.hide( L':' ), S'value' }
@@ -82,5 +82,4 @@ local json = luif.G{
   null  = L'null',
 
 }
-
 

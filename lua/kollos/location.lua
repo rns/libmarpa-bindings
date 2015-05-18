@@ -47,6 +47,7 @@ end
 location_class.mt = {}
 
 -- the __index metamethod points to prototype
+location_class.mt.__tostring = location_class.location
 location_class.mt.__index = location_class.prototype
 
 return location_class
