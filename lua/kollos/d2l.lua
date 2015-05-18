@@ -82,5 +82,4 @@ local json = luif.G{
 
 }
 
-p(d(json))
 

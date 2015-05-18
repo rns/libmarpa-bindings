@@ -4,6 +4,11 @@
   https://github.com/rns/kollos-luif-doc/blob/master/d2l/spec.md
 --]]
 
+-- dumping helpers
+local dumper = require 'dumper'
+local d = dumper.dumper
+local p = print
+
 local luif = {}
 
 local l = require 'location'
@@ -17,33 +22,36 @@ local function location()
 end
 
 function luif.G (grammar)
+  assert( type(grammar) == "table", "grammar must be a table" )
   local l = location()
-  io.stderr:write(string.format("%s: %d\n", l.blob, l.line))
+  for lhs, rhs in pairs(grammar) do
+    p(lhs, d(rhs))
+  end
   return grammar
 end
 
 function luif.S (name)
-  return "S:'" .. name .. "'"
+  return { "symbol", name, location():location() }
 end
 
 function luif.L (literal)
-  return "L:'" .. literal .. "'"
+  return { "literal", literal, location():location() }
 end
 
 function luif.C (charclass)
-  return "C:'" .. charclass .. "'"
+  return { "character class", charclass, location():location() }
 end
 
 function luif.Q (quantifier)
-  return "Q:'" .. quantifier .. "'"
+  return { "quantifier", quantifier, location():location() }
 end
 
 function luif.hide (...)
-  return "hidden[ '" .. table.concat({...}, ' ') .. " ]"
+  return { "hidden", {...}, location():location() }
 end
 
 function luif.group (...)
-  return "hidden[ '" .. table.concat({...}, ' ') .. " ]"
+  return { "group", {...}, location():location() }
 end
 
 return luif
