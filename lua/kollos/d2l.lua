@@ -11,6 +11,13 @@ local Q = luif.Q
 
 -- calculator
 
+-- semantic actions
+local pow = function (...) local arg={...} return arg[1] ^ arg[2] end
+local mul = function (e1, e2) return e1 * e2 end
+local div = function (e1, e2) return e1 / e2 end
+local add = function (e1, e2) return e1 + e2 end
+local sub = function (e1, e2) return e1 - e2 end
+
 local calc = luif.G{
   Script = { S'Expression', Q'+', '%', L',' },
   Expression = {
@@ -27,13 +34,6 @@ local calc = luif.G{
   },
   Number = C'[0-9]+'
 }
-
--- semantic actions
-local pow = function (...) local arg={...} return arg[1] ^ arg[2] end
-local mul = function (e1, e2) return e1 * e2 end
-local div = function (e1, e2) return e1 / e2 end
-local add = function (e1, e2) return e1 + e2 end
-local sub = function (e1, e2) return e1 - e2 end
 
 -- json
 -- todo: add l0 rules from manual.md
