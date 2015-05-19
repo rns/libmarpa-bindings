@@ -42,6 +42,8 @@ local function xrule_type(rhs)
   end
 end
 
+-- possible todo: iterators over LUIF grammar rules, RHS alternatives and symbols
+
 function luif.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
   -- get grammar location
@@ -49,7 +51,7 @@ function luif.G (grammar)
   -- KHIL default grammars
   local g1 = { xrule = {}, xsym = {}, structural = true }
   local l0 = { xrule = {}, xsym = {} }
-  -- iterate over rules
+  -- iterate over rules (D2L tables)
   for lhs, rhs in pairs(grammar) do
     local xrule_type = xrule_type (rhs)
     -- wrap single-alternative RHS's and counted rules for
@@ -66,7 +68,7 @@ function luif.G (grammar)
       if xrule_type == 'counted' then
         p("counted")
       else
-        -- iterate over RHS alternative symbols
+        -- iterate over RHS alternative’s symbols
         for rhs_alt_i = 1, #rhs_alternative do
           rhs_alt_symbol = rhs_alternative[rhs_alt_i]
           p("RHSA symbol", rhs_alt_i, ": ", i(rhs_alt_symbol))
