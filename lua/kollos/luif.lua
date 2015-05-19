@@ -28,6 +28,7 @@ end
 
 function luif.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
+  -- get grammar location
   local l = location()
   -- KHIL default grammars
   local g1 = { xrule = {}, xsym = {}, structural = true }
