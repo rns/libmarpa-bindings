@@ -56,7 +56,16 @@ function luif.G (grammar)
     p(type(rhs[1]), #rhs)
     p(i(rhs))
     for rhs_i, rhs_alternative in ipairs(rhs) do
-      p("RHS ", rhs_i, ": ", i(rhs_alternative))
+      p("RHSA", rhs_i, ": ", i(rhs_alternative))
+      if xrule_type == 'counted' then
+        p("counted")
+      else
+        -- iterate over RHS alternative symbols
+        for rhs_alt_i = 1, #rhs_alternative do
+          rhs_alt_symbol = rhs_alternative[rhs_alt_i]
+          p("RHSA symbol", rhs_alt_i, ": ", i(rhs_alt_symbol))
+        end
+      end
     end
   end
   return { g1 = g1, l0 = l0 }
