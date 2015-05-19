@@ -1,7 +1,8 @@
 --[[
-  location object prototype for the Kollos project
-  according to
-  https://github.com/rns/kollos-luif-doc/blob/master/d2l/spec.md
+  Direct-to-Lua (D2L) prototype for the Kollos project’s KHIL
+  Spec:
+    D2L -- https://github.com/rns/kollos-luif-doc/blob/master/d2l/spec.md
+    KIR -- https://github.com/rns/kollos-luif-doc/blob/master/etc/kir.md
 --]]
 
 -- dumping helpers
