@@ -4,12 +4,12 @@ local p = print
 
 local luif = require 'luif'
 
-local S = luif.S
-local L = luif.L
-local C = luif.C
-local Q = luif.Q
+local S = luif.S -- symbol
+local L = luif.L -- literal
+local C = luif.C -- character class
+local Q = luif.Q -- sequence quantifier
 
--- calculator
+--[[ Calculator --]]
 
 -- semantic actions
 local pow = function (...) local arg={...} return arg[1] ^ arg[2] end
@@ -35,7 +35,9 @@ local calc = luif.G{
   Number = C'[0-9]+'
 }
 
--- json
+p(d(calc))
+
+--[[ JSON --]]
 -- todo: add l0 rules from manual.md
 
 local json = luif.G{
