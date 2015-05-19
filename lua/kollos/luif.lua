@@ -30,22 +30,27 @@ function luif.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
   local l = location()
   for lhs, rhs in pairs(grammar) do
-    p("\nLHS: ", lhs)
-    p(type(rhs[1]), #rhs)
-    p(i(rhs))
+    local xrule_type = '' -- counted, precedenced, or BNF
     -- infer type: counted, precedenced, BNF (single-alternative)
-    -- wrap single-alternative RHS's
+    -- wrap single-alternative RHS's and counted rules for
+    -- the iteration over RHS alternatives below
     if type(rhs[1]) ~= "table" then
       rhs = { rhs }
-    end
-    -- wrap sequences
-    if #rhs == 4 and
-      type(rhs[2]) == "table" and rhs[2][1] == 'quantifier' and
-      type(rhs[3]) == "string" and ( rhs[3] == '%' or rhs[3] == '%%' )
+      xrule_type = 'BNF'
+    elseif
+        #rhs == 4 and
+        type(rhs[2]) == "table" and rhs[2][1] == 'quantifier' and
+        type(rhs[3]) == "string" and ( rhs[3] == '%' or rhs[3] == '%%' )
       then
       rhs = { rhs }
+      xrule_type = 'counted'
+    else
+      xrule_type = 'precedenced'
     end
     -- iterate over RHS alternatives
+    p("\nRule type: ", xrule_type,", LHS: ", lhs)
+    p(type(rhs[1]), #rhs)
+    p(i(rhs))
     for rhs_i, rhs_alternative in ipairs(rhs) do
       p("RHS ", rhs_i, ": ", i(rhs_alternative))
     end
