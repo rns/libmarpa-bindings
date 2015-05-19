@@ -26,6 +26,22 @@ end
 
 -- bare literals other than '|', '||', '%', '%%', must produce errors
 
+-- infer the external rule type (counted, precedenced, or BNF)
+-- from the D2L table holding the rule's RHS
+local function xrule_type(rhs)
+  if type(rhs[1]) ~= "table" then
+    return 'BNF'
+  elseif
+      #rhs == 4 and
+      type(rhs[2]) == "table" and rhs[2][1] == 'quantifier' and
+      type(rhs[3]) == "string" and ( rhs[3] == '%' or rhs[3] == '%%' )
+    then
+    return 'counted'
+  else
+    return 'precedenced'
+  end
+end
+
 function luif.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
   -- get grammar location
@@ -35,22 +51,11 @@ function luif.G (grammar)
   local l0 = { xrule = {}, xsym = {} }
   -- iterate over rules
   for lhs, rhs in pairs(grammar) do
-    local xrule_type = '' -- counted, precedenced, or BNF
-    -- infer type: counted, precedenced, BNF (single-alternative)
+    local xrule_type = xrule_type (rhs)
     -- wrap single-alternative RHS's and counted rules for
     -- the iteration over RHS alternatives below
-    if type(rhs[1]) ~= "table" then
+    if xrule_type == 'BNF' or xrule_type == 'counted' then
       rhs = { rhs }
-      xrule_type = 'BNF'
-    elseif
-        #rhs == 4 and
-        type(rhs[2]) == "table" and rhs[2][1] == 'quantifier' and
-        type(rhs[3]) == "string" and ( rhs[3] == '%' or rhs[3] == '%%' )
-      then
-      rhs = { rhs }
-      xrule_type = 'counted'
-    else
-      xrule_type = 'precedenced'
     end
     -- iterate over RHS alternatives
     p("\nRule type: ", xrule_type,", LHS: ", lhs)
