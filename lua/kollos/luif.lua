@@ -29,6 +29,10 @@ end
 function luif.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
   local l = location()
+  -- KHIL default grammars
+  local g1 = { xrule = {}, xsym = {}, structural = true }
+  local l0 = { xrule = {}, xsym = {} }
+  -- iterate over rules
   for lhs, rhs in pairs(grammar) do
     local xrule_type = '' -- counted, precedenced, or BNF
     -- infer type: counted, precedenced, BNF (single-alternative)
@@ -55,7 +59,7 @@ function luif.G (grammar)
       p("RHS ", rhs_i, ": ", i(rhs_alternative))
     end
   end
-  return grammar
+  return { g1 = g1, l0 = l0 }
 end
 
 function luif.S (name)
