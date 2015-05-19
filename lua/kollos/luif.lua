@@ -32,13 +32,21 @@ function luif.G (grammar)
     p("\nLHS: ", lhs)
     p(type(rhs[1]), #rhs)
     p(i(rhs))
+    -- infer type: counted, precedenced, BNF (single-alternative)
     -- wrap single-alternative RHS's
-    if type(rhs[1]) ~= "table" and #rhs ~= 1 then
+    if type(rhs[1]) ~= "table" then
+      rhs = { rhs }
+    end
+    -- wrap sequences
+    if #rhs == 4 and
+      type(rhs[2]) == "table" and rhs[2][1] == 'quantifier' and
+      type(rhs[3]) == "string" and ( rhs[3] == '%' or rhs[3] == '%%' )
+      then
       rhs = { rhs }
     end
     -- iterate over RHS alternatives
     for rhs_i, rhs_alternative in ipairs(rhs) do
-      p("RHS alternative: ", rhs_i, i(rhs_alternative))
+      p("RHS ", rhs_i, ": ", i(rhs_alternative))
     end
   end
   return grammar
