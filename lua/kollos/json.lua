@@ -1,21 +1,18 @@
 require 'os'
 
--- kollos paths
-package.path =
-  ';?.lua;../?.lua;../lua/?.lua;' ..
-  '../../build/main/?.lua;' ..
-  '../../../kollos/build/main/?.lua;' ..
-  package.path
-
-package.cpath =
-  ';../../build/main/lib?.so;../../build/main/cyg?.dll;' ..
-  ';../../../kollos/build/main/lib?.so;../../../kollos/build/main/cyg?.dll;' ..
-  package.cpath
-
-local kollos_external = require "kollos"
-local _klol = kollos_external._klol
-
 local dumper = require 'dumper'
+
+package.path = '../?.lua;' .. package.path
+
+-- libmarpa binding
+local lib   = require 'libmarpa'
+local C     = lib.C
+local ffi   = lib.ffi
+
+-- components
+local grammar = require 'grammar'
+local recognizer = require 'recognizer'
+local valuator = require 'valuator'
 
 -- JSON grammar specification
 -- only symbols in quotes: no literals or regexes
@@ -116,7 +113,7 @@ local function symbol_new(s, g)
   assert(type(g) == "table", "grammar must be table")
   local s_id = symbols[s]
   if s_id == nil then
-    s_id = g:symbol_new (g)
+    s_id = g:symbol_new()
     assert(s_id >= 0, "symbol_new failed: " .. s)
     symbols[tostring(s_id)] = s
     symbols[s]    = s_id
@@ -126,7 +123,7 @@ local function symbol_new(s, g)
   return s_id
 end
 
-g = _klol.grammar()
+local g = grammar.new()
 
 -- parser rules
 assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "lexer" key]])
@@ -181,11 +178,7 @@ for lhs, rhs in pairs(jg["parser"]) do
         end
       else -- normal rule
         -- d.pt("# normal rule")
-        if     #rhs_alternative == 1 then g:rule_new(S_lhs, S_rhs_symbol[1])
-        elseif #rhs_alternative == 2 then g:rule_new(S_lhs, S_rhs_symbol[1], S_rhs_symbol[2])
-        elseif #rhs_alternative == 3 then g:rule_new(S_lhs, S_rhs_symbol[1], S_rhs_symbol[2], S_rhs_symbol[3])
-        elseif #rhs_alternative == 4 then g:rule_new(S_lhs, S_rhs_symbol[1], S_rhs_symbol[2], S_rhs_symbol[3], S_rhs_symbol[4])
-        end
+        g:rule_new(S_lhs, S_rhs_symbol)
       end
     end
   end
@@ -212,7 +205,8 @@ end
 
 g:precompute()
 
-local r = _klol.recce(g)
+local r = recognizer.new(g)
+
 r:start_input()
 
 -- read input from file, if specified on the command line, or set to default value
@@ -268,34 +262,16 @@ while true do
   end
 end
 
---[[ work without error up to here --]]
-
-os.exit()
-
 --[[ todo: add missing libmarpa functions to kollos --]]
 
-local bocage = ffi.gc( C.marpa_b_new (r, -1), C.marpa_b_unref )
-lib.assert( bocage, "marpa_b_new", g )
-
-local order  = ffi.gc( C.marpa_o_new (bocage), C.marpa_o_unref )
-lib.assert( order, "marpa_o_new", g )
-
-local tree   = ffi.gc( C.marpa_t_new (order), C.marpa_t_unref )
-lib.assert( tree, "marpa_t_new", g )
-
-local tree_status = C.marpa_t_next (tree)
-lib.assert( tree_status, "marpa_t_next", g )
-
-local value = ffi.gc( C.marpa_v_new (tree), marpa_v_unref )
-lib.assert( value, "marpa_v_new", g )
+local v = valuator.new(r)
 
 local stack = {}
 local got_json = ''
 -- stepping
 column = 0
 while true do
-  local step_type = C.marpa_v_step (value)
-  lib.assert( step_type, "marpa_v_step", g )
+  local step_type = C.marpa_v_step (v.value)
   if step_type == C.MARPA_STEP_INACTIVE then
     -- d.pt( "The valuator has gone through all of its steps" )
     break
@@ -308,11 +284,11 @@ while true do
 --    io.stderr:write( sf( "R%-2d: %-10s stack[%2d:%2d] -> [%d]", rule_id, symbols[tostring(rule_lhs_id)], first_child_ix, last_child_ix, rule_value_ix ), "\n" )
   elseif step_type == C.MARPA_STEP_TOKEN then
 
-    local token_id = value.t_token_id
+    local token_id = v.value.t_token_id
     -- we called _alternative with token_start as the value,
     -- hence the value is the start position of the token
-    local token_value = value.t_token_value
-    local token_value_ix = value.t_result
+    local token_value = v.value.t_token_value
+    local token_value_ix = v.value.t_result
 --    io.stderr:write( sf( "T%-2d: %-10s %d -> stack[%d]", token_id, symbols[tostring(token_id)], token_value, token_value_ix), "\n")
 
     local token_start = token_value
@@ -320,14 +296,11 @@ while true do
     local token = input:sub(token_start, token_end)
     -- got_json = got_json .. token
     column = column + string.len(token)
-    if column > 60 then column = 0 io.write("\n") end
-    io.write(token)
+    if column > 60 then column = 0 got_json = got_json .. "\n" end
+    got_json = got_json .. token
 
   end
 end
-
-io.write("\n")
-os.exit()
 
 -- test
 local expected_json = string.gsub(input, ' ', '')
