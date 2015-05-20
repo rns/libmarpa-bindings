@@ -28,8 +28,7 @@ C.marpa_c_init(config) -- always succeeds
 
 -- grammar
 local g = ffi.gc(C.marpa_g_new(config), C.marpa_g_unref)
-local msg = ffi.new("const char **")
-assert( C.marpa_c_error(config, msg) == C.MARPA_ERR_NONE, msg )
+assert( C.marpa_c_error(config, ffi.NULL) == C.MARPA_ERR_NONE, "Grammar creation failed" )
 
 --[[
 

@@ -82,11 +82,11 @@ rc = C.marpa_g_sequence_separator(g, R_new)
 _, ret_or_err = pcall(lib.assert, rc, "marpa_g_sequence_separator", g)
 like(
   ret_or_err,
-  "marpa_g_sequence_separator returned 201: MARPA_ERR_RULE_IS_NOT_SEQUENCE: Rule is not a sequence rule",
+  "marpa_g_sequence_separator returned 99: MARPA_ERR_NOT_A_SEQUENCE: Rule is not a sequence",
   "marpa_g_sequence_separator"
 )
 
--- grammar to test sequance rules errors
+-- grammar to test sequence rules errors
 local g_seq = ffi.gc(C.marpa_g_new(config), C.marpa_g_unref)
 
 local S_seq = lib.assert( C.marpa_g_symbol_new(g_seq), "marpa_g_symbol_new", g_seq )
