@@ -39,7 +39,7 @@ local grammar_class = {
   rule_is_loop = C.marpa_g_rule_is_loop,
   rule_is_productive = C.marpa_g_rule_is_productive,
   rule_length = C.marpa_g_rule_length,
-  rule_new = C.marpa_g_rule_new,
+--  rule_new = C.marpa_g_rule_new,
   rule_lhs = C.marpa_g_rule_lhs,
   rule_rhs = C.marpa_g_rule_rhs,
 
@@ -83,7 +83,12 @@ function grammar_class.new()
 
   setmetatable( grammar_object, { __index =
     function (grammar_object, method)
-      -- p("grammar wrapper for ", method)
+      -- if class provides a wrapper, return it
+      local class_method = grammar_class.method
+      if class_method ~= nil then
+        return class_method
+      end
+      -- p ("grammar wrapper for ", method)
       return function (grammar_object, ...)
 
         local c_function = grammar_class[method]
@@ -93,6 +98,8 @@ function grammar_class.new()
 
         if method == 'rule_new' then
 
+          return grammar_class.rule_new(grammar_object, ...)
+--[[
           local args = {...}
           local lhs = table.remove(args, 1)
           args = args[1]
@@ -105,7 +112,7 @@ function grammar_class.new()
           end
 
           result = c_function(grammar_object.g, lhs, rhs, #args)
-
+--]]
         else
           -- p("calling", method)
           result = c_function(grammar_object.g, ...)
@@ -120,6 +127,22 @@ function grammar_class.new()
 
   return grammar_object
 
+end
+
+function grammar_class.rule_new(grammar_object, lhs, RHS)
+
+  assert( type(RHS) == 'table', "arg 2 to rule_new must be a table of RHS symbols")
+
+
+  local rhs = ffi.new("int[" .. #RHS .. "]")
+  for ix, symbol in ipairs(RHS) do
+    -- p(i(symbol))
+    rhs[ix-1] = symbol
+  end
+
+  result = C.marpa_g_rule_new(grammar_object.g, lhs, rhs, #RHS)
+  lib.assert (result, "marpa_g_rule_new", grammar_object.g)
+  return result
 end
 
 return grammar_class
