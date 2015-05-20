@@ -105,10 +105,9 @@ function grammar_class.new()
       end
       -- otherwise return generic wrapper -- C function call + error checking
       return function (grammar_object, ...)
-
+        -- get and call C function
         local c_function = grammar_class['_' .. method]
         assert (c_function ~= nil, "No such method: " .. '_' .. method)
-
         local result = c_function(grammar_object.g, ...)
         -- throw exception on error
         lib.assert (result, "marpa_g_" .. method, grammar_object.g)
