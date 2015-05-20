@@ -4,30 +4,8 @@ local dumper = require 'dumper'
 
 package.path = '../?.lua;' .. package.path
 
--- libmarpa binding
-local lib   = require 'libmarpa'
-local C     = lib.C
-local ffi   = lib.ffi
-
--- components
-local grammar = require 'grammar'
-local recognizer = require 'recognizer'
-local valuator = require 'valuator'
-
--- JSON grammar specification
--- only symbols in quotes: no literals or regexes
---[[
-  lhs = 'rhs' -- lexical rules, rhs can be a string or a Lua pattern or (in future) a regex
-  lhs = {
-    { 'rhs1', ... }
-    { 'rhs2', ... { adverb = value, ... } }
-  }
-   events
-    predicted
-    completed
-    expected
-    nulled
---]]
+-- Lua THIF
+local marpa = require 'marpa'
 
 --[[
   JSON LUIF grammar for Kollos,
@@ -123,7 +101,7 @@ local function symbol_new(s, g)
   return s_id
 end
 
-local g = grammar.new()
+local g = marpa.grammar.new()
 
 -- parser rules
 assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "lexer" key]])
@@ -170,7 +148,7 @@ for lhs, rhs in pairs(jg["parser"]) do
           g:sequence_new (
               S_lhs, S_item, S_separator,
               adverbs["quantifier"] == "+" and 1 or adverbs["quantifier"] == "*" and 0 or -1,
-              2
+              C.MARPA_PROPER_SEPARATION
             )
         else
           -- other rule types based on adverbs
@@ -205,7 +183,7 @@ end
 
 g:precompute()
 
-local r = recognizer.new(g)
+local r = marpa.recognizer.new(g)
 
 r:start_input()
 
@@ -264,7 +242,7 @@ end
 
 --[[ todo: add missing libmarpa functions to kollos --]]
 
-local v = valuator.new(r)
+local v = marpa.valuator.new(r)
 
 local stack = {}
 local got_json = ''
