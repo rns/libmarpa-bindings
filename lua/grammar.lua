@@ -83,7 +83,7 @@ function grammar_class.new()
 
   setmetatable( grammar_object, { __index =
     function (grammar_object, method)
-      -- p("wrapper caller for ", method)
+      -- p("grammar wrapper for ", method)
       return function (grammar_object, ...)
 
         local c_function = grammar_class[method]

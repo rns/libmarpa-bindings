@@ -271,16 +271,16 @@ local got_json = ''
 -- stepping
 column = 0
 while true do
-  local step_type = C.marpa_v_step (v.value)
+  local step_type = v:step (v.value)
   if step_type == C.MARPA_STEP_INACTIVE then
-    -- d.pt( "The valuator has gone through all of its steps" )
+    -- print( "The valuator has gone through all of its steps" )
     break
   elseif step_type == C.MARPA_STEP_RULE then
-    local first_child_ix = value.t_arg_0
-    local last_child_ix  = value.t_arg_n
-    local rule_value_ix  = value.t_result -- rule value must go to that ix
-    local rule_id = value.t_rule_id
-    local rule_lhs_id = C.marpa_g_rule_lhs(g, rule_id)
+    local first_child_ix = v.value.t_arg_0
+    local last_child_ix  = v.value.t_arg_n
+    local rule_value_ix  = v.value.t_result -- rule value must go to that ix
+    local rule_id = v.value.t_rule_id
+    local rule_lhs_id = g:marpa_g_rule_lhs(rule_id)
 --    io.stderr:write( sf( "R%-2d: %-10s stack[%2d:%2d] -> [%d]", rule_id, symbols[tostring(rule_lhs_id)], first_child_ix, last_child_ix, rule_value_ix ), "\n" )
   elseif step_type == C.MARPA_STEP_TOKEN then
 

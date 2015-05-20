@@ -28,7 +28,7 @@ local valuator_class = {
   t_parse_count = C.marpa_t_parse_count,
 
   v_new = C.marpa_v_new,
-  v_step = C.marpa_v_step,
+  step = C.marpa_v_step,
 
   v_symbol_is_valued = C.marpa_v_symbol_is_valued,
   v_symbol_is_valued_set = C.marpa_v_symbol_is_valued_set,
@@ -81,7 +81,7 @@ function valuator_class.new(recognizer)
 
   setmetatable( valuator_object, { __index =
     function (valuator_object, method)
-      p("wrapper for ", method)
+      -- p("valuator wrapper for ", method)
       return function (valuator_object, ...)
 
         local c_function = valuator_class[method]
@@ -97,10 +97,10 @@ function valuator_class.new(recognizer)
 
         else
           -- p("calling", method)
-          result = c_function(valuator_object.value, ...)
+          result = c_function(valuator_object.value)
         end
         -- throw exception on error
-        lib.assert (result, "marpa_r_" .. method, valuator_object.g)
+        lib.assert (result, "marpa_v_" .. method, valuator_object.g)
         -- return call result otherwise
         return result
       end
