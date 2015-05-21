@@ -96,7 +96,6 @@ for lhs, rhs in pairs(jg["parser"]) do
     local S_start = g:symbol_new(rhs)
     g:start_symbol_set(S_start)
   else
-    -- d.pt(lhs, ':=', d.s(rhs))
     -- add lhs symbol to the grammar
     local S_lhs = g:symbol_new(lhs)
     -- add rhs symbol to grammar
@@ -108,19 +107,12 @@ for lhs, rhs in pairs(jg["parser"]) do
       if type(rhs_alternative[#rhs_alternative]) == "table" then
         adverbs = table.remove(rhs_alternative) -- pop off the table
       end
-      -- add rule's rhs symbols to the grammar
-      local S_rhs_symbol = {}
-      for ix, rhs_symbol in pairs(rhs_alternative) do
-        S_rhs_symbol[ix] = g:symbol_new(rhs_symbol)
-      end
-      -- add rule to the grammar
-      -- d.pt(lhs, ':=', d.s(rhs_alternative))
-      if next(adverbs) ~= nil then
-        -- based on adverbs
-        if adverbs["quantifier"] == "+" or adverbs["quantifier"] == "*" then
 
-          -- d.pt("# sequence rule")
-          -- d.pt(d.i(adverbs))
+      -- add rule to the grammar
+      -- adverbial rule
+      if next(adverbs) ~= nil then
+
+        if adverbs["quantifier"] == "+" or adverbs["quantifier"] == "*" then
 
           -- todo: implement keep (separator) adverb, off by default
 
@@ -128,8 +120,8 @@ for lhs, rhs in pairs(jg["parser"]) do
           local S_separator = g:symbol_new(adverbs["separator"])
           -- add item symbol
           assert( #rhs_alternative == 1, "sequence rule must have only 1 symbol on its RHS" )
-          local S_item = S_rhs_symbol[1]
-          -- d.pt(d.i(S_separator, S_item))
+          local S_item = g:symbol_new(rhs_alternative[1])
+          -- add sequence rule
           g:sequence_new (
               S_lhs, S_item, S_separator, adverbs["quantifier"],
               marpa.PROPER_SEPARATION
@@ -138,8 +130,14 @@ for lhs, rhs in pairs(jg["parser"]) do
           -- other rule types based on adverbs
           -- ...
         end
-      else -- normal rule
-        -- d.pt("# normal rule")
+      -- adverbless rule
+      else
+        -- add rule's rhs symbols to the grammar
+        local S_rhs_symbol = {}
+        for ix, rhs_symbol in pairs(rhs_alternative) do
+          S_rhs_symbol[ix] = g:symbol_new(rhs_symbol)
+        end
+        -- add adverbless rule
         g:rule_new(S_lhs, S_rhs_symbol)
       end
     end
@@ -150,7 +148,7 @@ end
 -- todo:
 -- sanity check: all parser's terminals must exist as lexer rule's token_symbol's
 
--- lexer rules
+-- lexer rules -- add terminal symbols to grammar
 local token_spec = {}
 assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "lexer" key]])
 for _, rule in ipairs(jg["lexer"]) do
@@ -187,6 +185,7 @@ end
 -- lexing
 
 -- return terminals expected at current earleme
+-- todo: expected_terminals must be recognizer method
 local function expected_terminals(r)
   -- until kollos has _terminals_expected, return all terminals
   return {
@@ -197,6 +196,7 @@ local function expected_terminals(r)
   }
 end
 
+-- todo: the below reading loop must go to recognizer's read() method
 require 'lexer'
 local lex = lexer.new{tokens = token_spec, input = input, patterns = 'lua' }
 local token_values = {}
@@ -210,7 +210,6 @@ while true do
   if token_symbol == 'MISMATCH' then
     print(string.format("Invalid symbol '%s' at %d:%d", input:sub(token_start, token_length - 1), line, column ));
   elseif token_symbol_id >= 0 then
-    -- todo: events. if handlers are specified in the grammar
     local status = r:alternative ( token_symbol_id, token_start, 1 )
     if (not status) then
       error( 'result of alternative = ' .. status)
@@ -222,11 +221,15 @@ while true do
     end
     token_values[token_start .. ""] = token_length
   end
-end
+end -- reading loop
 
---[[ todo: add missing libmarpa functions to kollos --]]
-
+-- valuation
 local v = marpa.valuator.new(r)
+
+-- todo: valuator must have values iterator, like Marpa::R2
+
+-- todo: the valuation loop must go to walk(value) valuator method
+--       is the valuaton loop actually the AST walking (pre-order?)?
 
 local stack = {}
 local got_json = ''
@@ -267,3 +270,5 @@ end
 -- test
 local expected_json = string.gsub(input, ' ', '')
 is ( got_json, expected_json, 'json' )
+
+done_testing()

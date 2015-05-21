@@ -24,3 +24,5 @@ is(l.line, info.currentline, "current line")
 is(l:location(), info.source .. ': ' .. info.currentline, "location()")
 
 is(string.format("%s", l), info.source .. ': ' .. info.currentline, "__tostring")
+
+done_testing()
