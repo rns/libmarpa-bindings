@@ -66,22 +66,24 @@ local grammar_class = {
 
 }
 
--- add symbol s to grammar g avoiding duplication via symbols table
--- if symbol exists, return its id
-function grammar_class.symbol_new(grammar_object, s)
+-- check if symbol s_str exists in the symbol table
+-- call libmarpa method to add the symbol to the grammar if it doesn't
+-- throw exception on error
+-- return symbol id for s_str on success
+function grammar_class.symbol_new(grammar_object, s_str)
 
-  assert(type(s) == "string", "symbol must be a string")
+  assert(type(s_str) == "string", "symbol must be a string")
 
   symbols = grammar_object.symbols
 
-  local s_id = symbols[s]
+  local s_id = symbols[s_str]
   if s_id == nil then
     s_id = C.marpa_g_symbol_new(grammar_object.g)
     lib.assert (s_id, "marpa_g_symbol_new", grammar_object.g)
-    symbols[tostring(s_id)] = s
-    symbols[s]    = s_id
+    symbols[tostring(s_id)] = s_str
+    symbols[s_str]    = s_id
   else
-    s_id = symbols[s]
+    s_id = symbols[s_str]
   end
 
   return s_id
