@@ -89,17 +89,20 @@ function grammar_class.symbol_new(grammar_object, s_str)
   return s_id
 end
 
-function grammar_class.rule_new(grammar_object, lhs, RHS)
+-- create a C array of rhs symbol id’s from Lua table of RHS_IDs
+-- call libmarpa method, throw exception on error
+-- return new rule id on success
+function grammar_class.rule_new(grammar_object, lhs_id, RHS_IDs)
 
-  assert( type(RHS) == 'table', "arg 2 to rule_new must be a table of RHS symbols")
+  assert( type(RHS_IDs) == 'table', "arg 2 to rule_new must be a table of RHS symbols")
 
-  local rhs = ffi.new("int[" .. #RHS .. "]")
-  for ix, symbol in ipairs(RHS) do
+  local rhs_ids = ffi.new("int[" .. #RHS_IDs .. "]")
+  for ix, symbol in ipairs(RHS_IDs) do
     -- p(i(symbol))
-    rhs[ix-1] = symbol
+    rhs_ids[ix-1] = symbol
   end
 
-  result = C.marpa_g_rule_new(grammar_object.g, lhs, rhs, #RHS)
+  result = C.marpa_g_rule_new(grammar_object.g, lhs_id, rhs_ids, #RHS_IDs)
   lib.assert (result, "marpa_g_rule_new", grammar_object.g)
   return result
 
