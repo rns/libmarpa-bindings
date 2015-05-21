@@ -157,6 +157,8 @@ end
 
 g:precompute()
 
+ok (g:is_precomputed() >= 0, "json grammar precomputed")
+
 local r = marpa.recognizer.new(g)
 
 r:start_input()
