@@ -130,7 +130,7 @@ for lhs, rhs in pairs(jg["parser"]) do
           g:sequence_new (
               S_lhs, S_item, S_separator,
               adverbs["quantifier"] == "+" and 1 or adverbs["quantifier"] == "*" and 0 or -1,
-              C.MARPA_PROPER_SEPARATION
+              marpa.PROPER_SEPARATION
             )
         else
           -- other rule types based on adverbs
@@ -232,17 +232,17 @@ local got_json = ''
 column = 0
 while true do
   local step_type = v:step (v.value)
-  if step_type == C.MARPA_STEP_INACTIVE then
+  if step_type == marpa.STEP_INACTIVE then
     -- print( "The valuator has gone through all of its steps" )
     break
-  elseif step_type == C.MARPA_STEP_RULE then
+  elseif step_type == marpa.STEP_RULE then
     local first_child_ix = v.value.t_arg_0
     local last_child_ix  = v.value.t_arg_n
     local rule_value_ix  = v.value.t_result -- rule value must go to that ix
     local rule_id = v.value.t_rule_id
     local rule_lhs_id = g:marpa_g_rule_lhs(rule_id)
 --    io.stderr:write( sf( "R%-2d: %-10s stack[%2d:%2d] -> [%d]", rule_id, symbols[tostring(rule_lhs_id)], first_child_ix, last_child_ix, rule_value_ix ), "\n" )
-  elseif step_type == C.MARPA_STEP_TOKEN then
+  elseif step_type == marpa.STEP_TOKEN then
 
     local token_id = v.value.t_token_id
     -- we called _alternative with token_start as the value,
