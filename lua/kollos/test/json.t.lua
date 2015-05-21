@@ -10,28 +10,14 @@ local dumper = require 'dumper'
 -- Lua THIF
 local marpa = require 'marpa'
 
---[[
-  JSON LUIF grammar for Kollos,
-  https://github.com/jeffreykegler/kollos/blob/master/working/json.luif
+--
+-- grammar spec
+--
 
-    json         ::= object
-                   | array
-    object       ::= [lcurly rcurly]
-                   | [lcurly] members [rcurly]
-    members      ::= pair+ % comma
-    pair         ::= string [colon] value
-    value        ::= string
-                   | object
-                   | number
-                   | array
-                   | json_true
-                   | json_false
-                   | null
-    array        ::= [lsquare rsquare]
-                   | [lsquare] elements [rsquare]
-    elements     ::= value+ % comma
-    string       ::= lstring
---]]
+-- JSON LUIF grammar for Kollos,
+--   https://github.com/jeffreykegler/kollos/blob/master/working/json.luif
+
+-- todo: convert to D2L
 
 local jg = {
   parser = {
@@ -86,6 +72,10 @@ local jg = {
   },
 }
 
+--
+-- grammar construction
+--
+
 local g = marpa.grammar.new()
 
 -- parser rules
@@ -114,7 +104,8 @@ for lhs, rhs in pairs(jg["parser"]) do
 
         if adverbs["quantifier"] == "+" or adverbs["quantifier"] == "*" then
 
-          -- todo: implement keep (separator) adverb, off by default
+          -- todo: separator = [ 'discard' [ 'keep' ] ] adverb,
+          --    'discard' being the default value
 
           -- add separator symbol
           local S_separator = g:symbol_new(adverbs["separator"])
@@ -145,8 +136,9 @@ for lhs, rhs in pairs(jg["parser"]) do
 end
 -- d.pt(d.i(token_spec))
 
--- todo:
--- sanity check: all parser's terminals must exist as lexer rule's token_symbol's
+-- todo: sanity check: all parser's terminals must exist as lexer rule's token_symbol's
+
+-- todo: build a lexical grammar
 
 -- lexer rules -- add terminal symbols to grammar
 local token_spec = {}
@@ -169,7 +161,10 @@ local r = marpa.recognizer.new(g)
 
 r:start_input()
 
+--
 -- read input from file, if specified on the command line, or set to default value
+--
+
 local input = ''
 if table.getn(arg) > 0 then
   local f = io.open( arg[1], "r")
@@ -182,10 +177,13 @@ if input == '' then
   input = '[1,"abc\ndef",-2.3,null,[],[1,2,3],{},{"a":1,"b":2}]'
 end
 
--- lexing
+--
+-- recognition
+--
 
--- return terminals expected at current earleme
 -- todo: expected_terminals must be recognizer method
+
+-- lexer creation
 local function expected_terminals(r)
   -- until kollos has _terminals_expected, return all terminals
   return {
@@ -196,11 +194,12 @@ local function expected_terminals(r)
   }
 end
 
--- todo: the below reading loop must go to recognizer's read() method
 require 'lexer'
 local lex = lexer.new{tokens = token_spec, input = input, patterns = 'lua' }
 local token_values = {}
 
+-- todo: the below lexeme reading loop must go to recognizer's read(input, lexer) method
+-- return terminals expected at current earleme
 while true do
 
   local et = expected_terminals(r)
@@ -221,15 +220,18 @@ while true do
     end
     token_values[token_start .. ""] = token_length
   end
-end -- reading loop
+end -- lexeme reading loop
 
+--
 -- valuation
+--
+
 local v = marpa.valuator.new(r)
 
--- todo: valuator must have values iterator, like Marpa::R2
+-- todo: valuator must have value() iterator to use in for, like Marpa::R2
 
 -- todo: the valuation loop must go to walk(value) valuator method
---       is the valuaton loop actually the AST walking (pre-order?)?
+--       does the valuation loop walk the parse tree nodes (in pre-order?) building the AST/ASF
 
 local stack = {}
 local got_json = ''
@@ -267,7 +269,10 @@ while true do
   end
 end
 
--- test
+-- test if we echoed the input
+
+-- whitespaces are discarded in parsing,
+-- so we remove them from the input
 local expected_json = string.gsub(input, ' ', '')
 is ( got_json, expected_json, 'json' )
 
