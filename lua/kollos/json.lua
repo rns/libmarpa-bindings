@@ -103,7 +103,7 @@ for lhs, rhs in pairs(jg["parser"]) do
       -- extract rule's adverbs, if any
       local adverbs = {}
       if type(rhs_alternative[#rhs_alternative]) == "table" then
-        adverbs = table.remove(rhs_alternative)
+        adverbs = table.remove(rhs_alternative) -- pop off the table
       end
       -- add rule's rhs symbols to the grammar
       local S_rhs_symbol = {}
