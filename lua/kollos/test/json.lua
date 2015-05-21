@@ -1,8 +1,11 @@
+#!/usr/bin/lua
+require 'Test.More'
+
 require 'os'
 
-local dumper = require 'dumper'
+package.path = '../?.lua;../../?.lua;' .. package.path
 
-package.path = '../?.lua;' .. package.path
+local dumper = require 'dumper'
 
 -- Lua THIF
 local marpa = require 'marpa'
@@ -263,10 +266,4 @@ end
 
 -- test
 local expected_json = string.gsub(input, ' ', '')
-if expected_json == got_json then
-  print("json parsed ok")
-else
-  print("json parsed not ok:")
-  print("expected: ", expected_json)
-  print("got     : ", got_json)
-end
+is ( got_json, expected_json, 'json' )
