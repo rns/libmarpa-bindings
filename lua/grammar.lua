@@ -74,7 +74,7 @@ function grammar_class.symbol_new(grammar_object, s_str)
 
   assert(type(s_str) == "string", "symbol must be a string")
 
-  symbols = grammar_object.symbols
+  local symbols = grammar_object.symbols
 
   local s_id = symbols[s_str]
   if s_id == nil then

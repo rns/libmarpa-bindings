@@ -148,7 +148,7 @@ for _, rule in ipairs(jg["lexer"]) do
     local token_pattern = rule[1]
     local token_symbol  = rule[2]
     -- token lhs must exist in the grammar after adding parser rules
-    local S_token = symbols[token_symbol] or -1
+    local S_token = g.symbols[token_symbol] or -1
     -- add to token_spec
     table.insert( token_spec, { token_pattern, token_symbol, S_token } )
 end
