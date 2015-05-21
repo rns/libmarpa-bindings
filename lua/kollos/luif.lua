@@ -42,21 +42,56 @@ local function xrule_type(rhs)
   end
 end
 
--- todo: iterators for RHS alternatives and symbols
+-- possible todo: export rules(grammar), alternatives(rhs) and symbols(alternative) iterators
+
+--[[
+for lhs, rhs, xrule_type in rules(grammar) do
+  ...
+  for alternative_ix, alternative in alternatives(rhs) do
+    ...
+    for symbol_ix, symbol in symbols(alternative) do
+      ...
+    end
+  end
+end
+--]]
+
+-- for symbol_ix, symbol in symbols(alternative)
 
 -- grammar rules iterator based on next()
 -- returns type of xrule after lhs and rhs
+-- usage: for lhs, rhs, xrule_type in rules(grammar) do ... end
+--        for lhs, rhs in rules(grammar) do ... end
+
 local function rule_next(grammar, lhs)
   local rhs
   lhs, rhs = next(grammar, lhs)
-  if lhs == nil then return nil else
-    return lhs, rhs, xrule_type(rhs)
-  end
+  if lhs then return lhs, rhs, xrule_type(rhs) end
 end
 
-local function rules(grammar)
-  return rule_next, grammar, nil
+local function rules(grammar) return rule_next, grammar, nil end
+
+-- iterator over alternatives in rhs
+-- usage: for alternative_ix, alternative in alternatives(rhs) do ... end
+
+local function alternative_next(rhs, i)
+  i = i + 1
+  local alternative = rhs[i]
+  if alternative then return i, alternative end
 end
+
+local function alternatives(rhs) return alternative_next, rhs, 0 end
+
+-- iterator over symbols in rhs alternative
+-- usage: for symbol_ix, symbol in symbols(alternative) do ... end
+
+local function symbol_next(rhs_alternative, i)
+  i = i + 1
+  local symbol = rhs_alternative[i]
+  if symbol then return i, symbol end
+end
+
+local function symbols(rhs_alternative) return symbol_next, rhs_alternative, 0 end
 
 -- produce xrule and xsym databases for the KIR g1 and l0 grammars
 function luif.G (grammar)
@@ -77,15 +112,14 @@ function luif.G (grammar)
     p("\nRule type: ", xrule_type,", LHS: ", lhs)
     p(type(rhs[1]), #rhs)
     p(i(rhs))
-    for rhs_i, rhs_alternative in ipairs(rhs) do
-      p("RHSA", rhs_i, ": ", i(rhs_alternative))
+    for alternative_ix, alternative in alternatives(rhs) do
+      p("RHSA", alternative_ix, ": ", i(alternative))
       if xrule_type == 'counted' then
         p("counted")
       else
         -- iterate over RHS alternative’s symbols
-        for rhs_alt_i = 1, #rhs_alternative do
-          local rhs_alt_symbol = rhs_alternative[rhs_alt_i]
-          p("RHSA symbol", rhs_alt_i, ": ", i(rhs_alt_symbol))
+        for symbol_ix, symbol in symbols(alternative) do
+          p("RHSA symbol", symbol_ix, ": ", i(symbol))
         end
       end
     end
