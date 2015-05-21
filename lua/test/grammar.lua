@@ -7,8 +7,10 @@ local grammar = require 'grammar'
 
 local g = grammar.new()
 
-local S1 = g:symbol_new()
-local S2 = g:symbol_new()
+local S1 = g:symbol_new('S1')
+local S2 = g:symbol_new('S2')
+diag (S1)
+diag (S2)
 
 local R = g:rule_new(S1, { S2 })
 

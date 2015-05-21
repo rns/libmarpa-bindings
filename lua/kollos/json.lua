@@ -83,24 +83,6 @@ local jg = {
   },
 }
 
-local symbols = {} -- symbol table
--- add symbol s to grammar g avoiding duplication via symbols table
--- if symbol exists, return its id
-local function symbol_new(s, g)
-  assert(type(s) == "string", "symbol must be a string")
-  assert(type(g) == "table", "grammar must be table")
-  local s_id = symbols[s]
-  if s_id == nil then
-    s_id = g:symbol_new()
-    assert(s_id >= 0, "symbol_new failed: " .. s)
-    symbols[tostring(s_id)] = s
-    symbols[s]    = s_id
-  else
-    s_id = symbols[s]
-  end
-  return s_id
-end
-
 local g = marpa.grammar.new()
 
 -- parser rules
@@ -108,12 +90,12 @@ assert( type(jg["lexer"]) == "table", [[Grammar spec must have a table under "le
 for lhs, rhs in pairs(jg["parser"]) do
   -- handle start symbol
   if lhs == '_start_symbol' then
-    local S_start = symbol_new(rhs, g)
+    local S_start = g:symbol_new(rhs)
     g:start_symbol_set(S_start)
   else
     -- d.pt(lhs, ':=', d.s(rhs))
     -- add lhs symbol to the grammar
-    local S_lhs = symbol_new(lhs, g)
+    local S_lhs = g:symbol_new(lhs)
     -- add rhs symbol to grammar
     assert( type(rhs) == "table", "rhs must be a table of strings representing symbols")
     for _, rhs_alternative in ipairs(rhs) do
@@ -126,7 +108,7 @@ for lhs, rhs in pairs(jg["parser"]) do
       -- add rule's rhs symbols to the grammar
       local S_rhs_symbol = {}
       for ix, rhs_symbol in pairs(rhs_alternative) do
-        S_rhs_symbol[ix] = symbol_new(rhs_symbol, g)
+        S_rhs_symbol[ix] = g:symbol_new(rhs_symbol)
       end
       -- add rule to the grammar
       -- d.pt(lhs, ':=', d.s(rhs_alternative))
@@ -140,7 +122,7 @@ for lhs, rhs in pairs(jg["parser"]) do
           -- todo: implement keep (separator) adverb, off by default
 
           -- add separator symbol
-          local S_separator = symbol_new(adverbs["separator"], g)
+          local S_separator = g:symbol_new(adverbs["separator"])
           -- add item symbol
           assert( #rhs_alternative == 1, "sequence rule must have only 1 symbol on its RHS" )
           local S_item = S_rhs_symbol[1]

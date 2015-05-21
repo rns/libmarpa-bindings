@@ -30,7 +30,6 @@ local grammar_class = {
   _symbol_is_start = C.marpa_g_symbol_is_start,
   _symbol_is_terminal = C.marpa_g_symbol_is_terminal,
   _symbol_is_terminal_set = C.marpa_g_symbol_is_terminal_set,
-  _symbol_new = C.marpa_g_symbol_new,
 
   _highest_rule_id = C.marpa_g_highest_rule_id,
   _rule_is_accessible = C.marpa_g_rule_is_accessible,
@@ -67,6 +66,27 @@ local grammar_class = {
 
 }
 
+-- add symbol s to grammar g avoiding duplication via symbols table
+-- if symbol exists, return its id
+function grammar_class.symbol_new(grammar_object, s)
+
+  assert(type(s) == "string", "symbol must be a string")
+
+  symbols = grammar_object.symbols
+
+  local s_id = symbols[s]
+  if s_id == nil then
+    s_id = C.marpa_g_symbol_new(grammar_object.g)
+    lib.assert (s_id, "marpa_g_symbol_new", grammar_object.g)
+    symbols[tostring(s_id)] = s
+    symbols[s]    = s_id
+  else
+    s_id = symbols[s]
+  end
+
+  return s_id
+end
+
 function grammar_class.rule_new(grammar_object, lhs, RHS)
 
   assert( type(RHS) == 'table', "arg 2 to rule_new must be a table of RHS symbols")
@@ -94,20 +114,22 @@ function grammar_class.new()
   local rc = C.marpa_c_error(config, ffi.NULL)
   assert( rc == C.MARPA_ERR_NONE, "grammar creation failed, error code " .. rc)
 
-  local grammar_object = { g = g }
+  local symbols = {} -- symbol table
+
+  local grammar_object = { g = g, symbols = symbols }
 
   setmetatable( grammar_object, { __index =
     function (grammar_object, method)
       -- if class provides a wrapper, return it
       local class_method = grammar_class[method]
       if class_method ~= nil then
-        return function (grammar_object, ...) class_method(grammar_object, ...) end
+        return function (grammar_object, ...) return class_method(grammar_object, ...) end
       end
       -- otherwise return generic wrapper -- C function call + error checking
       return function (grammar_object, ...)
         -- get and call C function
         local c_function = grammar_class['_' .. method]
-        assert (c_function ~= nil, "No such method: " .. '_' .. method)
+        assert (c_function ~= nil, "No C function for: " .. '_' .. method)
         local result = c_function(grammar_object.g, ...)
         -- throw exception on error
         lib.assert (result, "marpa_g_" .. method, grammar_object.g)
