@@ -45,24 +45,24 @@ function recognizer_class.new(grammar)
 
   setmetatable( recognizer_object, { __index =
     function (recognizer_object, method)
-      -- p("wrapper caller for ", method)
+      -- check for the wrapper in the class table
+      -- p("checking for wrapper in the recognizer class table:", method)
+      -- otherwise create the wrapper
       return function (recognizer_object, ...)
 
         local c_function = recognizer_class[method]
-        assert (c_function ~= nil, "No such method: " .. method)
+        assert (c_function ~= nil, "No C function for: " .. method)
 
         local result
 
         if method == 'alternative' then
-
-          local args = {...}
-
+          -- return code analyzed by the caller
           return c_function(recognizer_object.r, ...)
-
         else
           -- p("calling", method)
           result = c_function(recognizer_object.r, ...)
         end
+
         -- throw exception on error
         lib.assert (result, "marpa_r_" .. method, recognizer_object.g)
         -- return call result otherwise

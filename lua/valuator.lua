@@ -81,11 +81,14 @@ function valuator_class.new(recognizer)
 
   setmetatable( valuator_object, { __index =
     function (valuator_object, method)
-      -- p("valuator wrapper for ", method)
+      -- check for the wrapper in the class table
+      -- p("checking for wrapper in valuator class table:", method)
+      -- ...
+      -- otherwise create the wrapper
       return function (valuator_object, ...)
 
         local c_function = valuator_class[method]
-        assert (c_function ~= nil, "No such method: " .. method)
+        assert (c_function ~= nil, "No C function for: " .. method)
 
         local result
 
