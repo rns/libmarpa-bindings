@@ -20,8 +20,9 @@ local sub = function (e1, e2) return e1 - e2 end
 
 local calc = luif.G{
   Script = { S'Expression', Q'+', '%', L',' },
-  -- todo: S{ 'Expression', '+', '%', L',' },
-  -- bare literals, except for '|', '||', '%', '%%', define symbols, S{ } for sequences
+  -- todo: bare literals for symbols, S{ item, quant, '%', sep } for sequences
+  -- e.g. S{ 'Expression', '+', '%', L',' },
+  -- bare literals except for '|', '||', '%', '%%',
   -- https://github.com/rns/kollos-luif-doc/issues/33
   Expression = {
     { S'Number' },

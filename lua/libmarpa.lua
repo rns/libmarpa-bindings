@@ -750,8 +750,8 @@ local c_function_error_info = {
   marpa_r_current_earleme = { nil, -1, nil },
 
 -- On success, a non-negative integer. On failure, a negative integer.
--- todo: can that "negative integer" be -1? file a github issue
--- if this error handling approach works
+-- todo: can -2 on failure be documented for marpa_g_force_valued()?
+-- file a github issue?
   marpa_g_force_valued = { nil, -1, 0 },
 
 -- A non-negative number on success, -2 on failure.

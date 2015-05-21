@@ -115,10 +115,7 @@ end
 
 -- flags are as defined libmarpa documentation
 
---[[ todo:
-  currently, quantifier_char can be either '+' or '*',
-  support for '?' and {n,m} can be needed
---]]
+-- todo: support for '?' and {n,m} quantifiers in addition to '+' or '*',
 
 local numeric_quantifiers = { ['+'] = 1, ['*'] = 0 }
 
