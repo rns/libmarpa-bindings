@@ -93,6 +93,21 @@ end
 
 local function symbols(rhs_alternative) return symbol_next, rhs_alternative, 0 end
 
+-- get adverbs from the rule
+-- return nil if no adverb is defined
+local function adverbs(rhs_alternative)
+  local len = #rhs_alternative
+  if type( rhs_alternative[len] ) == 'table' and
+     rhs_alternative[len][1] ~= 'symbol' and
+     rhs_alternative[len][1] ~= 'literal' and
+     rhs_alternative[len][1] ~= 'hidden' and
+     rhs_alternative[len][1] ~= 'character class' and
+     rhs_alternative[len][1] ~= 'quantifier'
+     then
+    return table.remove (rhs_alternative, len)
+  end
+end
+
 -- produce xrule and xsym databases for the KIR g1 and l0 grammars
 function luif.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
@@ -113,7 +128,9 @@ function luif.G (grammar)
     p(type(rhs[1]), #rhs)
     p(i(rhs))
     for alternative_ix, alternative in alternatives(rhs) do
-      p("RHSA", alternative_ix, ": ", i(alternative))
+      local adverbs = adverbs(alternative)
+      p("  Alternative", alternative_ix, ":", i(alternative))
+      if adverbs then p("  adverbs = ", i(adverbs)) end
       if xrule_type == 'counted' then
         p("counted")
       else
