@@ -118,28 +118,28 @@ function luif.G (grammar)
   local l0 = { xrule = {}, xsym = {} }
   -- iterate over rules (D2L tables)
   for lhs, rhs, xrule_type in rules(grammar) do
-    -- wrap single-alternative RHS's and counted rules for
-    -- the iteration over RHS alternatives below
-    if xrule_type == 'BNF' or xrule_type == 'counted' then
-      rhs = { rhs }
-    end
+    p(xrule_type, "rule:", lhs, "::=", i(rhs))
+    -- single-alternative RHS
+    if xrule_type == 'counted' then
+      -- ...
+    elseif xrule_type == 'BNF' then
+      -- ...
+    else
     -- iterate over RHS alternatives
-    p("\nRule type: ", xrule_type,", LHS: ", lhs)
-    p(type(rhs[1]), #rhs)
-    p(i(rhs))
-    for alternative_ix, alternative in alternatives(rhs) do
-      local adverbs = adverbs(alternative)
-      p("  Alternative", alternative_ix, ":", i(alternative))
-      if adverbs then p("  adverbs = ", i(adverbs)) end
-      if xrule_type == 'counted' then
-        p("counted")
-      else
+      for alternative_ix, alternative in alternatives(rhs) do
+        local adverbs = adverbs(alternative)
+        p("  Alternative", alternative_ix, ":", i(alternative))
+        if adverbs then
+          p("  adverbs = ", i(adverbs))
+          -- ...
+        end
         -- iterate over RHS alternative’s symbols
         for symbol_ix, symbol in symbols(alternative) do
-          p("RHSA symbol", symbol_ix, ": ", i(symbol))
+          p("    Symbol", symbol_ix, ":", i(symbol))
+          -- ...
         end
       end
-    end
+    end -- xrule_type
   end
   return { g1 = g1, l0 = l0 }
 end
