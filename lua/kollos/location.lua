@@ -24,7 +24,7 @@ location() -- the current location, including the blob name.
 --]]
 
 -- namespace
-location_class = {}
+local location_class = {}
 
 -- methods to go to prototype
 function location_class.location (location_object)

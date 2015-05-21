@@ -70,7 +70,7 @@ function luif.G (grammar)
       else
         -- iterate over RHS alternative’s symbols
         for rhs_alt_i = 1, #rhs_alternative do
-          rhs_alt_symbol = rhs_alternative[rhs_alt_i]
+          local rhs_alt_symbol = rhs_alternative[rhs_alt_i]
           p("RHSA symbol", rhs_alt_i, ": ", i(rhs_alt_symbol))
         end
       end

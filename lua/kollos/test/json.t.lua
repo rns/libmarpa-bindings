@@ -238,7 +238,7 @@ local v = marpa.valuator.new(r)
 local stack = {}
 local got_json = ''
 -- stepping
-column = 0
+local column = 0
 while true do
   local step_type = v:step (v.value)
   if step_type == marpa.STEP_INACTIVE then
