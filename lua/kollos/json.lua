@@ -128,8 +128,7 @@ for lhs, rhs in pairs(jg["parser"]) do
           local S_item = S_rhs_symbol[1]
           -- d.pt(d.i(S_separator, S_item))
           g:sequence_new (
-              S_lhs, S_item, S_separator,
-              adverbs["quantifier"] == "+" and 1 or adverbs["quantifier"] == "*" and 0 or -1,
+              S_lhs, S_item, S_separator, adverbs["quantifier"],
               marpa.PROPER_SEPARATION
             )
         else

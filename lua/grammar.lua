@@ -108,6 +108,33 @@ function grammar_class.rule_new(grammar_object, lhs_id, RHS_IDs)
 
 end
 
+-- create a sequence rule translating the quantifier_char to
+-- the numeric value required by libmarpa
+-- call libmarpa method, throw exception on error
+-- return new sequence rule id on success
+
+-- flags are as defined libmarpa documentation
+
+--[[ todo:
+  currently, quantifier_char can be either '+' or '*',
+  support for '?' and {n,m} can be needed
+--]]
+
+local numeric_quantifiers = { ['+'] = 1, ['*'] = 0 }
+
+function grammar_class.sequence_new
+  (grammar_object, lhs_id, item_id, separator_id, quantifier_char, flags)
+
+  local nq = numeric_quantifiers[quantifier_char]
+  assert ( nq ~= nil, "quantifier_char can be either '+' or '*', not <" .. quantifier_char .. ">" )
+
+  result = C.marpa_g_sequence_new(grammar_object.g,
+    lhs_id, item_id, separator_id, nq, flags)
+  lib.assert (result, "marpa_g_sequence_new", grammar_object.g)
+  return result
+
+end
+
 function grammar_class.new()
 
   -- Marpa configurarion
