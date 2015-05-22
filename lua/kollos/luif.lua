@@ -110,11 +110,14 @@ end
 -- xrule and xsym databases
 -- for the KIR g1 and l0 grammars
 function luif.grammar_new(key, grammar)
-  -- get grammar location
+  -- extract grammar location
   local l = table.remove(grammar, #grammar)
-  -- KHIL default grammars
-  local g1 = { xrule = {}, xsym = {}, structural = true }
+  -- extract lexical grammar
+  local lexer = grammar["lexer"]
+  grammar["lexer"] = nil
   local l0 = { xrule = {}, xsym = {} }
+  -- assume KHIL default grammars g1 and l0
+  local g1 = { xrule = {}, xsym = {}, structural = true }
   -- iterate over rules (D2L tables)
   for lhs, rhs, xrule_type in rules(grammar) do
     p(xrule_type, "rule:", lhs, "::=", i(rhs))

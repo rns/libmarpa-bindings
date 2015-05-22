@@ -68,7 +68,10 @@ local calc = luif.G{
     {  '|', 'Expression', L'-', 'Expression', { action = sub } },
   },
 
-  Number = C'[0-9]+'
+  lexer = luif.G{
+    Number = C'[0-9]+'
+  }
+
 }
 
 local calc_g = luif.grammar_new('calc', calc)
