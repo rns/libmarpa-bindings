@@ -1,3 +1,7 @@
+local t = require 'Test.More'
+
+package.path = "../?.lua;../../?.lua;" .. package.path
+
 local dumper = require 'dumper'
 local d = dumper.dumper
 local p = print
@@ -67,7 +71,7 @@ local calc = luif.G{
   Number = C'[0-9]+'
 }
 
-luif.grammar_new('calc', calc)
+local calc_g = luif.grammar_new('calc', calc)
 
 --[[ JSON --]]
 -- todo: add l0 rules from manual.md
@@ -117,4 +121,4 @@ local json = luif.G{
 
 }
 
-luif.grammar_new('json', json)
+local json_g = luif.grammar_new('json', json)
