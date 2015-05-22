@@ -18,24 +18,39 @@ local div = function (e1, e2) return e1 / e2 end
 local add = function (e1, e2) return e1 + e2 end
 local sub = function (e1, e2) return e1 - e2 end
 
+-- todo: this line '|' , { '(', 'Expression', ')' },
+--       must produce "invalid bare literal" error in luif.G()
+
 local calc = luif.G{
   Script = S{ 'Expression', '+', '%', L',' },
   -- todo: bare literals for symbols, S{ item, quant, '%', sep } for sequences
   -- e.g. S{ 'Expression', '+', '%', L',' },
   -- bare literals except for '|', '||', '%', '%%',
   -- https://github.com/rns/kollos-luif-doc/issues/33
+
+--[[ todo: discuss '||', { ... }, '|', { ... } syntax for precedenced rules
+
+  Expression = {
+          { 'Number' },
+     '|', { L'(', 'Expression', L')' },
+    '||', { 'Expression', L'**', 'Expression', { action = pow } },
+    '||', { 'Expression', L'*', 'Expression', { action = mul } },
+    '|' , { 'Expression', L'/', 'Expression', { action = div } },
+    '||', { 'Expression', L'+', 'Expression', { action = add } },
+     '|', { 'Expression', L'-', 'Expression', { action = sub } },
+  },
+--]]
+
   Expression = {
     { 'Number' },
--- todo: this line { '|' , '(', 'Expression', ')' },
---       must produce "invalid bare literal" error in luif.G()
-
-    { '|' , L'(', 'Expression', L')' },
+    {  '|', L'(', 'Expression', L')' },
     { '||', 'Expression', L'**', 'Expression', { action = pow } },
     { '||', 'Expression', L'*', 'Expression', { action = mul } },
     { '|' , 'Expression', L'/', 'Expression', { action = div } },
     { '||', 'Expression', L'+', 'Expression', { action = add } },
-    { '|' , 'Expression', L'-', 'Expression', { action = sub } },
+    {  '|', 'Expression', L'-', 'Expression', { action = sub } },
   },
+
   Number = C'[0-9]+'
 }
 
