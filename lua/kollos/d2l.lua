@@ -50,6 +50,7 @@ local calc = luif.G{
     what is a good name for '||'?
     http://www.fileformat.info/info/unicode/block/mathematical_operators/utf8test.htm
     unicode char? http://lua-users.org/wiki/UnicodeIdentifers
+    lua can support utf8 identifiers and we embed lua so perhaps ...
   },
 --]]
 
