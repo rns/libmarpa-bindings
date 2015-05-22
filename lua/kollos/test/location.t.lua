@@ -1,11 +1,11 @@
 #!env lua
 
-require 'Test.More'
+local t = require 'Test.More'
 
 package.path = "../?.lua;" .. package.path
 
-if not require_ok 'location' then
-    BAIL_OUT "can't require location"
+if not t.require_ok 'location' then
+    t.BAIL_OUT "can't require location"
 end
 
 local location = require 'location'
@@ -17,12 +17,12 @@ local l = location.new{
   line = info.currentline
 }
 
-is(l.blob, info.source, "source")
+t.is(l.blob, info.source, "source")
 
-is(l.line, info.currentline, "current line")
+t.is(l.line, info.currentline, "current line")
 
-is(l:location(), info.source .. ': ' .. info.currentline, "location()")
+t.is(l:location(), info.source .. ': ' .. info.currentline, "location()")
 
-is(string.format("%s", l), info.source .. ': ' .. info.currentline, "__tostring")
+t.is(string.format("%s", l), info.source .. ': ' .. info.currentline, "__tostring")
 
-done_testing()
+t.done_testing()
