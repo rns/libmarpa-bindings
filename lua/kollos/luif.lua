@@ -106,7 +106,9 @@ local function adverbs(rhs_alternative)
   end
 end
 
--- for now, produce xrule and xsym databases for the KIR g1 and l0 grammars
+-- for now, produce a table with
+-- xrule and xsym databases
+-- for the KIR g1 and l0 grammars
 function luif.grammar_new(key, grammar)
   -- get grammar location
   local l = table.remove(grammar, #grammar)
