@@ -8,10 +8,10 @@ local p = print
 
 local luif = require 'luif'
 
-local S = luif.S -- symbol
+local R = luif.R -- rule (location marker)
+local S = luif.S -- sequence
 local L = luif.L -- literal
 local C = luif.C -- character class
-local R = luif.R -- rule (location marker)
 
 --[[ Calculator --]]
 
@@ -114,7 +114,7 @@ local json = luif.G{
 
   elements = S{ 'value', '+', '%', 'comma' },
 
-  string = R{ 'lstring' },
+  string = R{ 'lstring' }, -- optional, adds source file/line to the rule
 
   lexer = luif.G{
 
