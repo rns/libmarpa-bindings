@@ -38,6 +38,18 @@ local calc = luif.G{
     '|' , { 'Expression', L'/', 'Expression', { action = div } },
     '||', { 'Expression', L'+', 'Expression', { action = add } },
      '|', { 'Expression', L'-', 'Expression', { action = sub } },
+
+  Expression = {
+          { 'Number' },
+          { L'(', 'Expression', L')' },
+          { 'Expression', L'**', 'Expression', { action = pow } },
+    '||', { 'Expression', L'*', 'Expression', { action = mul } },
+          { 'Expression', L'/', 'Expression', { action = div } },
+    '||', { 'Expression', L'+', 'Expression', { action = add } },
+          { 'Expression', L'-', 'Expression', { action = sub } },
+    what is a good name for '||'?
+    http://www.fileformat.info/info/unicode/block/mathematical_operators/utf8test.htm
+    unicode char? http://lua-users.org/wiki/UnicodeIdentifers
   },
 --]]
 
