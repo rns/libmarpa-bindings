@@ -30,13 +30,11 @@ end
 -- from the D2L table holding the rule's RHS
 local function xrule_type(rhs)
   if type(rhs[1]) ~= "table" then
-    return 'BNF'
-  elseif
-      #rhs == 4 and
-      type(rhs[2]) == "table" and rhs[2][1] == 'quantifier' and
-      type(rhs[3]) == "string" and ( rhs[3] == '%' or rhs[3] == '%%' )
-    then
-    return 'counted'
+    if rhs[1] == 'sequence' then
+      return 'counted'
+    else
+      return 'BNF'
+    end
   else
     return 'precedenced'
   end
@@ -144,8 +142,8 @@ function luif.G (grammar)
   return { g1 = g1, l0 = l0 }
 end
 
-function luif.S (name)
-  return { "symbol", name, location():location() }
+function luif.S (S_item, quantifier, operator, S_separator)
+  return { "sequence", S_item, quantifier, operator, S_separator, location():location() }
 end
 
 function luif.L (literal)
@@ -156,16 +154,12 @@ function luif.C (charclass)
   return { "character class", charclass, location():location() }
 end
 
-function luif.Q (quantifier)
-  return { "quantifier", quantifier, location():location() }
-end
-
 function luif.hide (...)
-  return { "hidden", {...}, location():location() }
+  return { "hidden", ..., location():location() }
 end
 
 function luif.group (...)
-  return { "group", {...}, location():location() }
+  return { "group", ..., location():location() }
 end
 
 return luif

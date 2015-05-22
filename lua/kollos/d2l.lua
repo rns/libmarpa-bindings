@@ -19,22 +19,22 @@ local add = function (e1, e2) return e1 + e2 end
 local sub = function (e1, e2) return e1 - e2 end
 
 local calc = luif.G{
-  Script = { S'Expression', Q'+', '%', L',' },
+  Script = S{ 'Expression', '+', '%', L',' },
   -- todo: bare literals for symbols, S{ item, quant, '%', sep } for sequences
   -- e.g. S{ 'Expression', '+', '%', L',' },
   -- bare literals except for '|', '||', '%', '%%',
   -- https://github.com/rns/kollos-luif-doc/issues/33
   Expression = {
-    { S'Number' },
--- todo: this line { '|' , '(', S'Expression', ')' },
+    { 'Number' },
+-- todo: this line { '|' , '(', 'Expression', ')' },
 --       must produce "invalid bare literal" error in luif.G()
 
-    { '|' , L'(', S'Expression', L')' },
-    { '||', S'Expression', L'**', S'Expression', { action = pow } },
-    { '||', S'Expression', L'*', S'Expression', { action = mul } },
-    { '|' , S'Expression', L'/', S'Expression', { action = div } },
-    { '||', S'Expression', L'+', S'Expression', { action = add } },
-    { '|' , S'Expression', L'-', S'Expression', { action = sub } },
+    { '|' , L'(', 'Expression', L')' },
+    { '||', 'Expression', L'**', 'Expression', { action = pow } },
+    { '||', 'Expression', L'*', 'Expression', { action = mul } },
+    { '|' , 'Expression', L'/', 'Expression', { action = div } },
+    { '||', 'Expression', L'+', 'Expression', { action = add } },
+    { '|' , 'Expression', L'-', 'Expression', { action = sub } },
   },
   Number = C'[0-9]+'
 }
@@ -47,37 +47,37 @@ p(d(calc))
 local json = luif.G{
 
   json = {
-    { S'object' },
-    { S'array' }
+    { 'object' },
+    { 'array' }
   },
 
   object = {
     { luif.hide( L'{', L'}' ) },
-    { luif.hide( L'{' ), S'members', luif.hide( L'}' ) }
+    { luif.hide( L'{' ), 'member', luif.hide( L'}' ) }
   },
 
-  members = { S'pair', Q'+', '%', S'comma' }, -- single alternative
+  members = S{ 'pair', '+', '%', 'comma' }, -- single alternative
 
   pair = {
-    { S'string', luif.hide( L':' ), S'value' }
+    { 'string', luif.hide( L':' ), 'value' }
   },
 
   value = {
-    { S'string' },
-    { S'object' },
-    { S'number' },
-    { S'array' },
-    { S'S_true' },
-    { S'S_false' },
-    { S'null' },
+    { 'string' },
+    { 'object' },
+    { 'number' },
+    { 'array' },
+    { 'S_true' },
+    { 'S_false' },
+    { 'null' },
   },
 
   array = {
     { luif.hide( L'[', L']' ) },
-    { luif.hide( L'[' ), S'elements', luif.hide( L']' ) },
+    { luif.hide( L'[' ), 'element', luif.hide( L']' ) },
   },
 
-  elements = { S'value', Q'+', '%', S'comma' },
+  elements = S{ 'value', '+', '%', 'comma' },
 
   string = { '[todo]' },
 
