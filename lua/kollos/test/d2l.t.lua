@@ -114,14 +114,50 @@ local json = luif.G{
 
   elements = S{ 'value', '+', '%', 'comma' },
 
-  string = R{ '[todo]' },
+  string = R{ 'lstring' },
 
-  comma = L',',
+  lexer = luif.G{
 
-  S_true  = L'true', -- true and false are Lua keywords
-  S_false = L'false',
-  null  = L'null',
+    comma = { L',' },
 
-}
+    ["true"]  = { L'true' }, -- true and false are Lua keywords
+    ["false"] = { L'false' },
+    null  = { L'null' },
+
+    number = {
+      { 'int' },
+      { 'int', 'frac' },
+      { 'int', 'exp' },
+      { 'int', 'frac', 'exp' }
+    },
+
+    int = {
+      { 'digits' },
+      { L'-', 'digits' }
+    },
+
+    -- Lua sequence pattern -- digits = { C'[%d]+' } -- can be used
+    digits = S{ C'[%s]', '+', '%' }, -- no sequence separator? todo: check if it is allowed
+
+    frac = { L'.', 'digits' },
+
+    exp = { 'e', 'digits' },
+
+    e = { { L'e' }, { L'e+' }, { L'e-' }, { L'E' }, { L'E+' }, { L'E-' } },
+
+    lstring = { 'quote', 'in_string', 'quote' },
+
+    quote = { C'["]' }, -- can also be L'"'
+
+    in_string = S{ 'in_string_char', '*', '%'  },  -- the above sequence todo applies
+
+    in_string_char = { { C'[^"]' }, { L'"' } },
+
+    -- Lua sequence pattern -- whitespace = { C'[%s]+' } -- can be used
+    whitespace = S{ C'[%s]', '+', '%' }, -- the above sequence todo applies
+
+  } -- lexer
+
+} -- json grammar
 
 local json_g = luif.grammar_new('json', json)
