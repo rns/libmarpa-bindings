@@ -106,11 +106,10 @@ local function adverbs(rhs_alternative)
   end
 end
 
--- produce xrule and xsym databases for the KIR g1 and l0 grammars
-function luif.G (grammar)
-  assert( type(grammar) == "table", "grammar must be a table" )
+-- for now, produce xrule and xsym databases for the KIR g1 and l0 grammars
+function luif.grammar_new(key, grammar)
   -- get grammar location
-  local l = location()
+  local l = table.remove(grammar, #grammar)
   -- KHIL default grammars
   local g1 = { xrule = {}, xsym = {}, structural = true }
   local l0 = { xrule = {}, xsym = {} }
@@ -145,6 +144,16 @@ end
 -- location():location() stringifies the location object
 -- location() will be the location object proper
 -- todo: remove stringified location()'s
+
+-- produce xrule and xsym databases for the KIR g1 and l0 grammars
+function luif.G (grammar)
+  assert( type(grammar) == "table", "grammar must be a table" )
+  -- get grammar location
+  local l = location()
+  -- append location
+  grammar[#grammar + 1] = l
+  return grammar
+end
 
 function luif.R (rule)
   rule[#rule + 1] = location():location()

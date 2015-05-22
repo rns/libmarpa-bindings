@@ -67,6 +67,8 @@ local calc = luif.G{
   Number = C'[0-9]+'
 }
 
+luif.grammar_new('calc', calc)
+
 --[[ JSON --]]
 -- todo: add l0 rules from manual.md
 
@@ -115,3 +117,4 @@ local json = luif.G{
 
 }
 
+luif.grammar_new('json', json)
