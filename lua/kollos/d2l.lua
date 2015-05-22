@@ -7,7 +7,7 @@ local luif = require 'luif'
 local S = luif.S -- symbol
 local L = luif.L -- literal
 local C = luif.C -- character class
-local Q = luif.Q -- sequence quantifier
+local R = luif.R -- rule (location marker)
 
 --[[ Calculator --]]
 
@@ -67,8 +67,6 @@ local calc = luif.G{
   Number = C'[0-9]+'
 }
 
-p(d(calc))
-
 --[[ JSON --]]
 -- todo: add l0 rules from manual.md
 
@@ -107,7 +105,7 @@ local json = luif.G{
 
   elements = S{ 'value', '+', '%', 'comma' },
 
-  string = { '[todo]' },
+  string = R{ '[todo]' },
 
   comma = L',',
 

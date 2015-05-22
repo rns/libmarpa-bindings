@@ -142,6 +142,15 @@ function luif.G (grammar)
   return { g1 = g1, l0 = l0 }
 end
 
+-- location():location() stringifies the location object
+-- location() will be the location object proper
+-- todo: remove stringified location()'s
+
+function luif.R (rule)
+  rule[#rule + 1] = location():location()
+  return rule
+end
+
 function luif.S (S_item, quantifier, operator, S_separator)
   return { "sequence", S_item, quantifier, operator, S_separator, location():location() }
 end
