@@ -1023,15 +1023,28 @@ function call(grammar, method, ...)
   local c_function = method_info[C_FUNCTION]
   assert( c_function ~= nil, "No C function for method: " .. method)
 
-  local result = method_info[C_FUNCTION](...)
+  local result = c_function(...)
   assert_result(result, method, grammar)
   return result
 
+end
+
+function __index (class, object, method, prefix, marpa_object)
+  -- if class provides a wrapper, return it
+  local class_method = class[method]
+  if class_method ~= nil then
+    return function (object, ...) return class_method(object, ...) end
+  end
+  -- otherwise use generic wrapper -- C function call + error checking
+  return function (object, ...)
+    return call(object.g, prefix .. method, marpa_object, ...)
+  end
 end
 
 return {
   C = C,
   ffi = ffi,
   assert = assert_result,
-  call = call
+  call = call,
+  __index = __index
 }

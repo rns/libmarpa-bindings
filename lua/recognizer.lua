@@ -19,15 +19,7 @@ function recognizer_class.new(grammar)
 
   setmetatable( recognizer_object, { __index =
     function (recognizer_object, method)
-      -- if class provides a wrapper, return it
-      local class_method = recognizer_class[method]
-      if class_method ~= nil then
-        return function (recognizer_object, ...) return class_method(recognizer_object, ...) end
-      end
-      -- otherwise use generic wrapper -- C function call + error checking
-      return function (recognizer_object, ...)
-        return lib.call(recognizer_object.g, "marpa_r_" .. method, recognizer_object.r, ...)
-      end
+      return lib.__index(recognizer_class, recognizer_object, method, "marpa_r_", recognizer_object.r)
     end
   })
 

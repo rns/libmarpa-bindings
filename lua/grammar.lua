@@ -28,15 +28,7 @@ function grammar_class.new()
 
   setmetatable( grammar_object, { __index =
     function (grammar_object, method)
-      -- if class provides a wrapper, return it
-      local class_method = grammar_class[method]
-      if class_method ~= nil then
-        return function (grammar_object, ...) return class_method(grammar_object, ...) end
-      end
-      -- otherwise use generic wrapper -- C function call + error checking
-      return function (grammar_object, ...)
-        return lib.call(grammar_object.g, "marpa_g_" .. method, grammar_object.g, ...)
-      end
+      return lib.__index(grammar_class, grammar_object, method, "marpa_g_", grammar_object.g)
     end
   })
 
