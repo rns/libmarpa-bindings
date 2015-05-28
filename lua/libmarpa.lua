@@ -718,7 +718,7 @@ end
 local codes = { errors = errors, events = events, steps = steps }
 
 -- Libmarpa C function error information:
--- failure, informational, and success codes by c function name
+-- failure, informational, and success codes by C function name
 -- Ref:
 --    https://gist.github.com/pczarn/50edb39b432f974fb6b4
 --    http://irclog.perlgeek.de/marpa/2014-12-07#i_9772028
@@ -927,7 +927,7 @@ local c_function_info = {
 -- so they need to be treated separately in this table we assign an error code
 -- if there is suitable one, e.g. MARPA_ERR_NO_START_SYMBOL
 -- for marpa_g_start_symbol() == -1
--- or a custom error message is there is suitable marpa error code
+-- or a custom error message if there is suitable marpa error code
 local soft_errors = {
 
   marpa_g_start_symbol = C.MARPA_ERR_NO_START_SYMBOL,
@@ -975,7 +975,7 @@ local function error_string(result, func, object) -- object can be grammar or co
     and soft_errors[func] ~= nil then
     error_code = soft_errors[func]
   end
-  -- clear error
+  -- clear error -- todo: should we leave it to the application?
   if not initialization then
     C.marpa_g_error_clear(object)
   end
@@ -988,8 +988,7 @@ end
 -- failure code, informational code, success code
 local function assert_result(result, func, object)
   assert( c_function_info[func] ~= nil,
-    "No error code info for libmarpa function: " .. func)
---  pti("assert_result: ", result, func, object, c_function_info[func])
+    "No info for libmarpa function: " .. func)
   -- check func for failure code
   if c_function_info[func][FAILURE] ~= nil then
     -- ffi.NULL is nil, so we represent it as a string
@@ -1014,6 +1013,8 @@ local function assert_result(result, func, object)
   return result
 end
 
+-- generic libmarpa method wrapper:
+-- call C function, check errors, return result on success
 function call(grammar, method, ...)
 
   local method_info = c_function_info[method]
@@ -1025,6 +1026,7 @@ function call(grammar, method, ...)
   local result = method_info[C_FUNCTION](...)
   assert_result(result, method, grammar)
   return result
+
 end
 
 return {
