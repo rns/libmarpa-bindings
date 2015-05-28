@@ -11,6 +11,39 @@ local p = print
 -- marpa_g_* methods
 local grammar_class = { }
 
+function grammar_class.new()
+
+  -- Marpa configurarion
+  local config = ffi.new("Marpa_Config")
+  C.marpa_c_init(config) -- always succeeds
+
+  -- Marpa grammar
+  local g = ffi.gc(C.marpa_g_new(config), C.marpa_g_unref)
+  local rc = C.marpa_c_error(config, ffi.NULL)
+  assert( rc == C.MARPA_ERR_NONE, "grammar creation failed, error code " .. rc)
+
+  local symbols = {} -- symbol table
+
+  local grammar_object = { g = g, symbols = symbols }
+
+  setmetatable( grammar_object, { __index =
+    function (grammar_object, method)
+      -- if class provides a wrapper, return it
+      local class_method = grammar_class[method]
+      if class_method ~= nil then
+        return function (grammar_object, ...) return class_method(grammar_object, ...) end
+      end
+      -- otherwise use generic wrapper -- C function call + error checking
+      return function (grammar_object, ...)
+        return lib.call(grammar_object.g, "marpa_g_" .. method, grammar_object.g, ...)
+      end
+    end
+  })
+
+  return grammar_object
+
+end
+
 -- check if symbol s_str exists in the symbol table
 -- call libmarpa method to add the symbol to the grammar if it doesn't
 -- throw exception on error
@@ -70,39 +103,6 @@ function grammar_class.sequence_new
 
   return lib.call(grammar_object.g,
     "marpa_g_sequence_new", grammar_object.g, lhs_id, item_id, separator_id, nq, flags)
-
-end
-
-function grammar_class.new()
-
-  -- Marpa configurarion
-  local config = ffi.new("Marpa_Config")
-  C.marpa_c_init(config) -- always succeeds
-
-  -- Marpa grammar
-  local g = ffi.gc(C.marpa_g_new(config), C.marpa_g_unref)
-  local rc = C.marpa_c_error(config, ffi.NULL)
-  assert( rc == C.MARPA_ERR_NONE, "grammar creation failed, error code " .. rc)
-
-  local symbols = {} -- symbol table
-
-  local grammar_object = { g = g, symbols = symbols }
-
-  setmetatable( grammar_object, { __index =
-    function (grammar_object, method)
-      -- if class provides a wrapper, return it
-      local class_method = grammar_class[method]
-      if class_method ~= nil then
-        return function (grammar_object, ...) return class_method(grammar_object, ...) end
-      end
-      -- otherwise use generic wrapper -- C function call + error checking
-      return function (grammar_object, ...)
-        return lib.call(grammar_object.g, "marpa_g_" .. method, grammar_object.g, ...)
-      end
-    end
-  })
-
-  return grammar_object
 
 end
 

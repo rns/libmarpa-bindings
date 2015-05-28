@@ -8,8 +8,7 @@ local inspect = require 'inspect'
 local i = inspect
 local p = print
 
-local valuator_class = {
-}
+local valuator_class = { }
 
 function valuator_class.new(recognizer)
 
