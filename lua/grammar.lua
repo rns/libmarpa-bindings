@@ -125,10 +125,8 @@ function grammar_class.sequence_new
   local nq = numeric_quantifiers[quantifier_char]
   assert ( nq ~= nil, "quantifier_char can be either '+' or '*', not <" .. quantifier_char .. ">" )
 
-  result = C.marpa_g_sequence_new(grammar_object.g,
-    lhs_id, item_id, separator_id, nq, flags)
-  lib.assert (result, "marpa_g_sequence_new", grammar_object.g)
-  return result
+  return lib.call(grammar_object.g,
+    "marpa_g_sequence_new", grammar_object.g, lhs_id, item_id, separator_id, nq, flags)
 
 end
 
@@ -156,14 +154,7 @@ function grammar_class.new()
       end
       -- otherwise return generic wrapper -- C function call + error checking
       return function (grammar_object, ...)
-        -- get and call C function
-        local c_function = grammar_class['_' .. method]
-        assert (c_function ~= nil, "No C function for: " .. '_' .. method)
-        local result = c_function(grammar_object.g, ...)
-        -- throw exception on error
-        lib.assert (result, "marpa_g_" .. method, grammar_object.g)
-        -- return call result otherwise
-        return result
+        return lib.call(grammar_object.g, "marpa_g_" .. method, grammar_object.g, ...)
       end
     end
   })

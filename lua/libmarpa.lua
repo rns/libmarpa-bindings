@@ -725,142 +725,143 @@ local codes = { errors = errors, events = events, steps = steps }
 local FAILURE       = 1
 local INFORMATION   = 2
 local SUCCESS       = 3
-local c_function_error_info = {
+local C_FUNCTION    = 4
+local c_function_info = {
 
 -- Always succeed.
-  marpa_check_version = { nil, nil, 0 },
-  marpa_c_init = { nil, nil, 0 },
-  marpa_c_error = { nil, nil, 0 },
-  marpa_r_earley_item_warning_threshold = { nil, nil, 0 },
-  marpa_r_earley_item_warning_threshold_set = { nil, nil, 0 },
-  marpa_r_furthest_earleme = { nil, nil, 0 },
-  marpa_r_latest_earley_set = { nil, nil, 0 },
-  marpa_r_is_exhausted = { nil, nil, 0 },
-  marpa_t_parse_count = { nil, nil, 0 },
-  marpa_g_error = { nil, nil, 0 },
-  marpa_g_error_clear = { nil, nil, 0 },
+  marpa_check_version = { nil, nil, 0, C.marpa_check_version },
+  marpa_c_init = { nil, nil, 0, C.marpa_c_init },
+  marpa_c_error = { nil, nil, 0, C.marpa_c_error },
+  marpa_r_earley_item_warning_threshold = { nil, nil, 0, C.marpa_r_earley_item_warning_threshold },
+  marpa_r_earley_item_warning_threshold_set = { nil, nil, 0, C.marpa_r_earley_item_warning_threshold_set },
+  marpa_r_furthest_earleme = { nil, nil, 0, C.marpa_r_furthest_earleme },
+  marpa_r_latest_earley_set = { nil, nil, 0, C.marpa_r_latest_earley_set },
+  marpa_r_is_exhausted = { nil, nil, 0, C.marpa_r_is_exhausted },
+  marpa_t_parse_count = { nil, nil, 0, C.marpa_t_parse_count },
+  marpa_g_error = { nil, nil, 0, C.marpa_g_error },
+  marpa_g_error_clear = { nil, nil, 0, C.marpa_g_error_clear },
 
-  marpa_r_unref = { nil, nil, 0 },
-  marpa_b_unref = { nil, nil, 0 },
-  marpa_o_unref = { nil, nil, 0 },
-  marpa_t_unref = { nil, nil, 0 },
-  marpa_v_unref = { nil, nil, 0 },
+  marpa_r_unref = { nil, nil, 0, C.marpa_r_unref },
+  marpa_b_unref = { nil, nil, 0, C.marpa_b_unref },
+  marpa_o_unref = { nil, nil, 0, C.marpa_o_unref },
+  marpa_t_unref = { nil, nil, 0, C.marpa_t_unref },
+  marpa_v_unref = { nil, nil, 0, C.marpa_v_unref },
 
 -- Always succeeds. Returns -1 on undefined value.
-  marpa_r_current_earleme = { nil, -1, nil },
+  marpa_r_current_earleme = { nil, -1, nil, C.marpa_r_current_earleme },
 
 -- On success, a non-negative integer. On failure, a negative integer.
 -- todo: can -2 on failure be documented for marpa_g_force_valued()?
 -- file a github issue?
-  marpa_g_force_valued = { nil, -1, 0 },
+  marpa_g_force_valued = { nil, -1, 0, C.marpa_g_force_valued },
 
 -- A non-negative number on success, -2 on failure.
-  marpa_version = { -2, nil, 0 },
-  marpa_g_symbol_new = { -2, nil, 0 },
-  marpa_g_highest_symbol_id = { -2, nil, 0 },
+  marpa_version = { -2, nil, 0, C.marpa_version },
+  marpa_g_symbol_new = { -2, nil, 0, C.marpa_g_symbol_new },
+  marpa_g_highest_symbol_id = { -2, nil, 0, C.marpa_g_highest_symbol_id },
 
-  marpa_g_highest_rule_id = { -2, nil, 0 },
-  marpa_g_rule_new = { -2, nil, 0 },
-  marpa_g_rule_length = { -2, nil, 0 },
+  marpa_g_highest_rule_id = { -2, nil, 0, C.marpa_g_highest_rule_id },
+  marpa_g_rule_new = { -2, nil, 0, C.marpa_g_rule_new },
+  marpa_g_rule_length = { -2, nil, 0, C.marpa_g_rule_length },
 
-  marpa_g_sequence_new = { -2, nil, 0 },
-  marpa_g_symbol_is_counted = { -2, nil, 0 },
-  marpa_g_rule_null_high = { -2, nil, 0 },
-  marpa_g_rule_null_high_set = { -2, nil, 0 },
-  marpa_g_precompute = { -2, nil, 0 },
+  marpa_g_sequence_new = { -2, nil, 0, C.marpa_g_sequence_new },
+  marpa_g_symbol_is_counted = { -2, nil, 0, C.marpa_g_symbol_is_counted },
+  marpa_g_rule_null_high = { -2, nil, 0, C.marpa_g_rule_null_high },
+  marpa_g_rule_null_high_set = { -2, nil, 0, C.marpa_g_rule_null_high_set },
+  marpa_g_precompute = { -2, nil, 0, C.marpa_g_precompute },
     -- an error code of MARPA_ERR_GRAMMAR_HAS_CYCLE
     -- leaves the grammar in a functional state
-  marpa_g_is_precomputed = { -2, nil, 0 },
-  marpa_g_has_cycle = { -2, nil, 0 },
+  marpa_g_is_precomputed = { -2, nil, 0, C.marpa_g_is_precomputed },
+  marpa_g_has_cycle = { -2, nil, 0, C.marpa_g_has_cycle },
 
-  marpa_r_start_input = { -2, nil, 0 },
+  marpa_r_start_input = { -2, nil, 0, C.marpa_r_start_input },
   marpa_r_earleme_complete  = { -2, nil, 0 },
     -- an exhausted parse may cause a failure
 
-  marpa_r_earleme = { -2, nil, 0 },
-  marpa_r_earley_set_value = { -2, nil, 0 },
-  marpa_r_earley_set_values = { -2, nil, 0 },
-  marpa_r_latest_earley_set_value_set = { -2, nil, 0 },
-  marpa_r_latest_earley_set_values_set = { -2, nil, 0 },
+  marpa_r_earleme = { -2, nil, 0, C.marpa_r_earleme },
+  marpa_r_earley_set_value = { -2, nil, 0, C.marpa_r_earley_set_value },
+  marpa_r_earley_set_values = { -2, nil, 0, C.marpa_r_earley_set_values },
+  marpa_r_latest_earley_set_value_set = { -2, nil, 0, C.marpa_r_latest_earley_set_value_set },
+  marpa_r_latest_earley_set_values_set = { -2, nil, 0, C.marpa_r_latest_earley_set_values_set },
 
-  marpa_r_expected_symbol_event_set = { -2, nil, 0 },
-  marpa_r_terminals_expected = { -2, nil, 0 },
-  marpa_r_terminal_is_expected = { -2, nil, 0 },
+  marpa_r_expected_symbol_event_set = { -2, nil, 0, C.marpa_r_expected_symbol_event_set },
+  marpa_r_terminals_expected = { -2, nil, 0, C.marpa_r_terminals_expected },
+  marpa_r_terminal_is_expected = { -2, nil, 0, C.marpa_r_terminal_is_expected },
 
-  marpa_r_completion_symbol_activate = { -2, nil, 0 },
-  marpa_r_nulled_symbol_activate = { -2, nil, 0 },
-  marpa_r_prediction_symbol_activate = { -2, nil, 0 },
+  marpa_r_completion_symbol_activate = { -2, nil, 0, C.marpa_r_completion_symbol_activate },
+  marpa_r_nulled_symbol_activate = { -2, nil, 0, C.marpa_r_nulled_symbol_activate },
+  marpa_r_prediction_symbol_activate = { -2, nil, 0, C.marpa_r_prediction_symbol_activate },
 
-  marpa_r_progress_report_reset = { -2, nil, 0 },
-  marpa_r_progress_report_start = { -2, nil, 0 },
-  marpa_r_progress_report_finish = { -2, nil, 0 },
+  marpa_r_progress_report_reset = { -2, nil, 0, C.marpa_r_progress_report_reset },
+  marpa_r_progress_report_start = { -2, nil, 0, C.marpa_r_progress_report_start },
+  marpa_r_progress_report_finish = { -2, nil, 0, C.marpa_r_progress_report_finish },
 
-  marpa_b_ambiguity_metric = { -2, nil, 0 },
-  marpa_b_is_null = { -2, nil, 0 },
+  marpa_b_ambiguity_metric = { -2, nil, 0, C.marpa_b_ambiguity_metric },
+  marpa_b_is_null = { -2, nil, 0, C.marpa_b_is_null },
 
-  marpa_o_ambiguity_metric = { -2, nil, 0 },
-  marpa_o_is_null = { -2, nil, 0 },
+  marpa_o_ambiguity_metric = { -2, nil, 0, C.marpa_o_ambiguity_metric },
+  marpa_o_is_null = { -2, nil, 0, C.marpa_o_is_null },
 
-  marpa_o_high_rank_only_set = { -2, nil, 0 },
-  marpa_o_high_rank_only = { -2, nil, 0 },
-  marpa_o_rank = { -2, nil, 0 },
+  marpa_o_high_rank_only_set = { -2, nil, 0, C.marpa_o_high_rank_only_set },
+  marpa_o_high_rank_only = { -2, nil, 0, C.marpa_o_high_rank_only },
+  marpa_o_rank = { -2, nil, 0, C.marpa_o_rank },
 
-  marpa_v_step = { -2, nil, 0 },
+  marpa_v_step = { -2, nil, 0, C.marpa_v_step },
 
-  marpa_g_event = { -2, nil, 0 },
-  marpa_g_event_count = { -2, nil, 0 },
+  marpa_g_event = { -2, nil, 0, C.marpa_g_event },
+  marpa_g_event_count = { -2, nil, 0, C.marpa_g_event_count },
 
-  marpa_g_symbol_is_valued = { -2, nil, 0 },
-  marpa_g_symbol_is_valued_set = { -2, nil, 0 },
+  marpa_g_symbol_is_valued = { -2, nil, 0, C.marpa_g_symbol_is_valued },
+  marpa_g_symbol_is_valued_set = { -2, nil, 0, C.marpa_g_symbol_is_valued_set },
 
-  marpa_v_symbol_is_valued = { -2, nil, 0 },
-  marpa_v_symbol_is_valued_set = { -2, nil, 0 },
+  marpa_v_symbol_is_valued = { -2, nil, 0, C.marpa_v_symbol_is_valued },
+  marpa_v_symbol_is_valued_set = { -2, nil, 0, C.marpa_v_symbol_is_valued_set },
 
-  marpa_v_rule_is_valued = { -2, nil, 0 },
-  marpa_v_rule_is_valued_set = { -2, nil, 0 },
+  marpa_v_rule_is_valued = { -2, nil, 0, C.marpa_v_rule_is_valued },
+  marpa_v_rule_is_valued_set = { -2, nil, 0, C.marpa_v_rule_is_valued_set },
 
   marpa_v_valued_force  = { -2, nil, 0 },
     -- sets the error code to an appropriate value, which will never be MARPA_ERR_NONE)
 
 -- A non-negative number on success, -1 on undefined value, -2 on failure.
 
-  marpa_g_start_symbol = { -2, -1, 0 },
-  marpa_g_start_symbol_set = { -2, -1, 0 },
-  marpa_g_symbol_is_accessible = { -2, -1, 0 },
-  marpa_g_symbol_is_completion_event = { -2, -1, 0 },
-  marpa_g_symbol_is_completion_event_set = { -2, -1, 0 },
-  marpa_g_symbol_is_nulled_event = { -2, -1, 0 },
-  marpa_g_symbol_is_nulled_event_set = { -2, -1, 0 },
-  marpa_g_symbol_is_nullable = { -2, -1, 0 },
-  marpa_g_symbol_is_nulling = { -2, -1, 0 },
-  marpa_g_symbol_is_productive = { -2, -1, 0 },
-  marpa_g_symbol_is_prediction_event = { -2, -1, 0 },
-  marpa_g_symbol_is_prediction_event_set = { -2, -1, 0 },
-  marpa_g_symbol_is_start = { -2, -1, 0 },
-  marpa_g_symbol_is_terminal = { -2, -1, 0 },
-  marpa_g_symbol_is_terminal_set = { -2, -1, 0 },
+  marpa_g_start_symbol = { -2, -1, 0, C.marpa_g_start_symbol },
+  marpa_g_start_symbol_set = { -2, -1, 0, C.marpa_g_start_symbol_set },
+  marpa_g_symbol_is_accessible = { -2, -1, 0, C.marpa_g_symbol_is_accessible },
+  marpa_g_symbol_is_completion_event = { -2, -1, 0, C.marpa_g_symbol_is_completion_event },
+  marpa_g_symbol_is_completion_event_set = { -2, -1, 0, C.marpa_g_symbol_is_completion_event_set },
+  marpa_g_symbol_is_nulled_event = { -2, -1, 0, C.marpa_g_symbol_is_nulled_event },
+  marpa_g_symbol_is_nulled_event_set = { -2, -1, 0, C.marpa_g_symbol_is_nulled_event_set },
+  marpa_g_symbol_is_nullable = { -2, -1, 0, C.marpa_g_symbol_is_nullable },
+  marpa_g_symbol_is_nulling = { -2, -1, 0, C.marpa_g_symbol_is_nulling },
+  marpa_g_symbol_is_productive = { -2, -1, 0, C.marpa_g_symbol_is_productive },
+  marpa_g_symbol_is_prediction_event = { -2, -1, 0, C.marpa_g_symbol_is_prediction_event },
+  marpa_g_symbol_is_prediction_event_set = { -2, -1, 0, C.marpa_g_symbol_is_prediction_event_set },
+  marpa_g_symbol_is_start = { -2, -1, 0, C.marpa_g_symbol_is_start },
+  marpa_g_symbol_is_terminal = { -2, -1, 0, C.marpa_g_symbol_is_terminal },
+  marpa_g_symbol_is_terminal_set = { -2, -1, 0, C.marpa_g_symbol_is_terminal_set },
 
-  marpa_g_rule_is_accessible = { -2, -1, 0 },
-  marpa_g_rule_is_nullable = { -2, -1, 0 },
-  marpa_g_rule_is_nulling = { -2, -1, 0 },
-  marpa_g_rule_is_loop = { -2, -1, 0 },
-  marpa_g_rule_is_productive = { -2, -1, 0 },
-  marpa_g_rule_lhs = { -2, -1, 0 },
-  marpa_g_rule_rhs = { -2, -1, 0 },
+  marpa_g_rule_is_accessible = { -2, -1, 0, C.marpa_g_rule_is_accessible },
+  marpa_g_rule_is_nullable = { -2, -1, 0, C.marpa_g_rule_is_nullable },
+  marpa_g_rule_is_nulling = { -2, -1, 0, C.marpa_g_rule_is_nulling },
+  marpa_g_rule_is_loop = { -2, -1, 0, C.marpa_g_rule_is_loop },
+  marpa_g_rule_is_productive = { -2, -1, 0, C.marpa_g_rule_is_productive },
+  marpa_g_rule_lhs = { -2, -1, 0, C.marpa_g_rule_lhs },
+  marpa_g_rule_rhs = { -2, -1, 0, C.marpa_g_rule_rhs },
 
-  marpa_g_sequence_min = { -2, -1, 0 },
-  marpa_g_rule_is_proper_separation = { -2, -1, 0 },
-  marpa_g_sequence_separator = { -2, -1, 0 },
+  marpa_g_sequence_min = { -2, -1, 0, C.marpa_g_sequence_min },
+  marpa_g_rule_is_proper_separation = { -2, -1, 0, C.marpa_g_rule_is_proper_separation },
+  marpa_g_sequence_separator = { -2, -1, 0, C.marpa_g_sequence_separator },
 
-  marpa_r_progress_item = { -2, -1, 0 },
+  marpa_r_progress_item = { -2, -1, 0, C.marpa_r_progress_item },
 
-  marpa_t_next = { -2, -1, 0 },
+  marpa_t_next = { -2, -1, 0, C.marpa_t_next },
 
 -- A non-negative number on success. Return -2 and set the error code to an
 -- appropriate value on failure.
 
-  marpa_g_rule_rank = { -2, nil, 0 },
-  marpa_g_rule_rank_set = { -2, nil, 0 },
+  marpa_g_rule_rank = { -2, nil, 0, C.marpa_g_rule_rank },
+  marpa_g_rule_rank_set = { -2, nil, 0, C.marpa_g_rule_rank_set },
     -- -2, and sets the error code to an appropriate value, which will never be
     -- MARPA_ERR_NONE. Note that when the rank is -2, the error code is the only way
     -- to distinguish success from failure. The error code can be determined by using
@@ -868,30 +869,30 @@ local c_function_error_info = {
 
 -- NULL on failure.
 
-  marpa_g_new = { "ffi.NULL", nil, nil },
-  marpa_g_ref = { "ffi.NULL", nil, nil },
+  marpa_g_new = { "ffi.NULL", nil, nil, C.marpa_g_new },
+  marpa_g_ref = { "ffi.NULL", nil, nil, C.marpa_g_ref },
 
-  marpa_b_new = { "ffi.NULL", nil, nil },
+  marpa_b_new = { "ffi.NULL", nil, nil, C.marpa_b_new },
       -- If there is no parse ending at Earley set earley_set_ID, marpa_b_new fails
       -- and the error code is set to MARPA_ERR_NO_PARSE.
-  marpa_b_ref = { "ffi.NULL", nil, nil },
+  marpa_b_ref = { "ffi.NULL", nil, nil, C.marpa_b_ref },
 
-  marpa_r_new = { "ffi.NULL", nil, nil },
-  marpa_r_ref = { "ffi.NULL", nil, nil },
+  marpa_r_new = { "ffi.NULL", nil, nil, C.marpa_r_new },
+  marpa_r_ref = { "ffi.NULL", nil, nil, C.marpa_r_ref },
 
-  marpa_o_new = { "ffi.NULL", nil, nil },
-  marpa_o_ref = { "ffi.NULL", nil, nil },
+  marpa_o_new = { "ffi.NULL", nil, nil, C.marpa_o_new },
+  marpa_o_ref = { "ffi.NULL", nil, nil, C.marpa_o_ref },
 
-  marpa_t_new = { "ffi.NULL", nil, nil },
-  marpa_t_ref = { "ffi.NULL", nil, nil },
+  marpa_t_new = { "ffi.NULL", nil, nil, C.marpa_t_new },
+  marpa_t_ref = { "ffi.NULL", nil, nil, C.marpa_t_ref },
 
-  marpa_v_new = { "ffi.NULL", nil, nil },
-  marpa_v_ref = { "ffi.NULL", nil, nil },
+  marpa_v_new = { "ffi.NULL", nil, nil, C.marpa_v_new },
+  marpa_v_ref = { "ffi.NULL", nil, nil, C.marpa_v_ref },
 
 -- Other.
   -- this function returns error code to we set success code to a value
   -- larger than the highest error code to force a call to error_string
-  marpa_r_alternative = { nil, nil, 100 },
+  marpa_r_alternative = { nil, nil, 100, C.marpa_r_alternative },
     -- Returns MARPA_ERR_NONE on success. On failure, some other error code.
     -- Several error codes leave the recognizer in a fully recoverable state.
 
@@ -900,26 +901,26 @@ local c_function_error_info = {
   -- because they have not been adequately tested. Their fate is uncertain.
   -- Users should regard these methods as unsupported.
 
-  marpa_g_default_rank = { -2, nil, 0 },
-  marpa_g_default_rank_set = { -2, nil, 0 },
-  marpa_g_symbol_rank = { -2, nil, 0 },
-  marpa_g_symbol_rank_set = { -2, nil, 0 },
+  marpa_g_default_rank = { -2, nil, 0, C.marpa_g_default_rank },
+  marpa_g_default_rank_set = { -2, nil, 0, C.marpa_g_default_rank_set },
+  marpa_g_symbol_rank = { -2, nil, 0, C.marpa_g_symbol_rank },
+  marpa_g_symbol_rank_set = { -2, nil, 0, C.marpa_g_symbol_rank_set },
     -- -2, and sets the error code to an appropriate value, which will never be
     -- MARPA_ERR_NONE. Note that when the rank is -2, the error code is the only way
     -- to distinguish success from failure. The error code can be determined by using
     -- the marpa_g_error() call.
 
-  marpa_g_zwa_new = { nil, nil, nil },
-  marpa_g_zwa_place = { nil, nil, nil },
+  marpa_g_zwa_new = { nil, nil, nil, C.marpa_g_zwa_new },
+  marpa_g_zwa_place = { nil, nil, nil, C.marpa_g_zwa_place },
 
-  marpa_r_zwa_default = { nil, nil, nil },
-  marpa_r_zwa_default_set = { nil, nil, nil },
+  marpa_r_zwa_default = { nil, nil, nil, C.marpa_r_zwa_default },
+  marpa_r_zwa_default_set = { nil, nil, nil, C.marpa_r_zwa_default_set },
       -- On success, returns previous default value of the assertion.
-  marpa_g_highest_zwa_id = { nil, nil, nil },
+  marpa_g_highest_zwa_id = { nil, nil, nil, C.marpa_g_highest_zwa_id },
 
-  marpa_r_clean = { nil, nil, nil },
+  marpa_r_clean = { nil, nil, nil, C.marpa_r_clean },
 
-} -- local c_function_error_info = {
+} -- local c_function_info = {
 
 -- libmarpa returns -1 for these methods and marpa_g_error returns 0, because
 -- they are "soft errors" (http://irclog.perlgeek.de/marpa/2015-01-15#i_9947368),
@@ -986,30 +987,38 @@ end
 -- assert function call result by checking for
 -- failure code, informational code, success code
 local function assert_result(result, func, object)
-  assert( c_function_error_info[func] ~= nil,
+  assert( c_function_info[func] ~= nil,
     "No error code info for libmarpa function: " .. func)
---  pti("assert_result: ", result, func, object, c_function_error_info[func])
+--  pti("assert_result: ", result, func, object, c_function_info[func])
   -- check func for failure code
-  if c_function_error_info[func][FAILURE] ~= nil then
+  if c_function_info[func][FAILURE] ~= nil then
     -- ffi.NULL is nil, so we represent it as a string
-    if c_function_error_info[func][FAILURE] == "ffi.NULL" then
+    if c_function_info[func][FAILURE] == "ffi.NULL" then
       assert( result ~= ffi.NULL, error_string(result, func, object) )
     else
-      assert( result ~= c_function_error_info[func][FAILURE],
+      assert( result ~= c_function_info[func][FAILURE],
         error_string(result, func, object) )
     end
   end
   -- check func for information code
-  if c_function_error_info[func][INFORMATION] ~= nil then
-    assert( result ~= c_function_error_info[func][INFORMATION],
+  if c_function_info[func][INFORMATION] ~= nil then
+    assert( result ~= c_function_info[func][INFORMATION],
       error_string(result, func, object))
   end
   -- check for success code
-  if c_function_error_info[func][SUCCESS] ~= nil then
-    assert( result >= c_function_error_info[func][SUCCESS],
+  if c_function_info[func][SUCCESS] ~= nil then
+    assert( result >= c_function_info[func][SUCCESS],
       error_string(result, func, object))
   end
   -- on no error, just return result
+  return result
+end
+
+function call(grammar, method, ...)
+  local args = {...}
+  local object = args[1]
+  local result = c_function_info[method][C_FUNCTION](...)
+  assert_result(result, method, object)
   return result
 end
 
@@ -1017,4 +1026,5 @@ return {
   C = C,
   ffi = ffi,
   assert = assert_result,
+  call = call
 }
