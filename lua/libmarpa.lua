@@ -648,7 +648,7 @@ local _errors = {
   { C.MARPA_ERR_TOKEN_TOO_LONG, "MARPA_ERR_TOKEN_TOO_LONG", "Token is too long" },
   { C.MARPA_ERR_TREE_EXHAUSTED, "MARPA_ERR_TREE_EXHAUSTED", "Tree iterator is exhausted" },
   { C.MARPA_ERR_TREE_PAUSED, "MARPA_ERR_TREE_PAUSED", "Tree iterator is paused" },
-  { C.MARPA_ERR_UNEXPECTED_TOKEN_ID, "MARPA_ERR_UNEXPECTED_TOKEN_ID", "Unexpected token" },
+  { C.MARPA_ERR_UNEXPECTED_TOKEN_ID, "MARPA_ERR_UNEXPECTED_TOKEN_ID", "Unexpected token ID" },
   { C.MARPA_ERR_UNPRODUCTIVE_START, "MARPA_ERR_UNPRODUCTIVE_START", "Unproductive start symbol" },
   { C.MARPA_ERR_VALUATOR_INACTIVE, "MARPA_ERR_VALUATOR_INACTIVE", "Valuator inactive" },
   { C.MARPA_ERR_VALUED_IS_LOCKED, "MARPA_ERR_VALUED_IS_LOCKED", "The valued status of the symbol is locked" },
@@ -775,7 +775,7 @@ local c_function_info = {
   marpa_g_has_cycle = { -2, nil, 0, C.marpa_g_has_cycle },
 
   marpa_r_start_input = { -2, nil, 0, C.marpa_r_start_input },
-  marpa_r_earleme_complete  = { -2, nil, 0 },
+  marpa_r_earleme_complete  = { -2, nil, 0, C.marpa_r_earleme_complete },
     -- an exhausted parse may cause a failure
 
   marpa_r_earleme = { -2, nil, 0, C.marpa_r_earleme },
@@ -1015,10 +1015,15 @@ local function assert_result(result, func, object)
 end
 
 function call(grammar, method, ...)
-  local args = {...}
-  local object = args[1]
-  local result = c_function_info[method][C_FUNCTION](...)
-  assert_result(result, method, object)
+
+  local method_info = c_function_info[method]
+  assert( method_info ~= nil, "No info for method: " .. method)
+
+  local c_function = method_info[C_FUNCTION]
+  assert( c_function ~= nil, "No C function for method: " .. method)
+
+  local result = method_info[C_FUNCTION](...)
+  assert_result(result, method, grammar)
   return result
 end
 

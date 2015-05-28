@@ -8,33 +8,7 @@ local inspect = require 'inspect'
 local i = inspect
 local p = print
 
--- marpa_r_* methods
-local recognizer_class = {
-  start_input = C.marpa_r_start_input,
-  alternative = C.marpa_r_alternative,
-  earleme_complete = C.marpa_r_earleme_complete,
-  current_earleme = C.marpa_r_current_earleme,
-  earleme = C.marpa_r_earleme,
-  earley_set_value = C.marpa_r_earley_set_value,
-  earley_set_values = C.marpa_r_earley_set_values,
-  furthest_earleme = C.marpa_r_furthest_earleme,
-  latest_earley_set = C.marpa_r_latest_earley_set,
-  latest_earley_set_value_set = C.marpa_r_latest_earley_set_value_set,
-  latest_earley_set_values_set = C.marpa_r_latest_earley_set_values_set,
-  earley_item_warning_threshold = C.marpa_r_earley_item_warning_threshold,
-  earley_item_warning_threshold_set = C.marpa_r_earley_item_warning_threshold_set,
-  expected_symbol_event_set = C.marpa_r_expected_symbol_event_set,
-  is_exhausted = C.marpa_r_is_exhausted,
-  terminals_expected = C.marpa_r_terminals_expected,
-  terminal_is_expected = C.marpa_r_terminal_is_expected,
-  completion_symbol_activate = C.marpa_r_completion_symbol_activate,
-  nulled_symbol_activate = C.marpa_r_nulled_symbol_activate,
-  prediction_symbol_activate = C.marpa_r_prediction_symbol_activate,
-  progress_report_reset = C.marpa_r_progress_report_reset,
-  progress_report_start = C.marpa_r_progress_report_start,
-  progress_report_finish = C.marpa_r_progress_report_finish,
-  progress_item = C.marpa_r_progress_item,
-}
+local recognizer_class = { }
 
 function recognizer_class.new(grammar)
 
@@ -45,34 +19,27 @@ function recognizer_class.new(grammar)
 
   setmetatable( recognizer_object, { __index =
     function (recognizer_object, method)
-      -- check for the wrapper in the class table
-      -- p("checking for wrapper in the recognizer class table:", method)
-      -- otherwise create the wrapper
+      -- if class provides a wrapper, return it
+      local class_method = recognizer_class[method]
+      if class_method ~= nil then
+        return function (recognizer_object, ...) return class_method(recognizer_object, ...) end
+      end
+      -- otherwise use generic wrapper -- C function call + error checking
       return function (recognizer_object, ...)
-
-        local c_function = recognizer_class[method]
-        assert (c_function ~= nil, "No C function for: " .. method)
-
-        local result
-
-        if method == 'alternative' then
-          -- return code analyzed by the caller
-          return c_function(recognizer_object.r, ...)
-        else
-          -- p("calling", method)
-          result = c_function(recognizer_object.r, ...)
-        end
-
-        -- throw exception on error
-        lib.assert (result, "marpa_r_" .. method, recognizer_object.g)
-        -- return call result otherwise
-        return result
+        return lib.call(recognizer_object.g, "marpa_r_" .. method, recognizer_object.r, ...)
       end
     end
   })
 
   return recognizer_object
 
+end
+
+function recognizer_class.alternative(recognizer_object, token_symbol, token_start)
+  local result = C.marpa_r_alternative(recognizer_object.r, token_symbol, token_start, 1)
+  if (result == C.MARPA_ERR_UNEXPECTED_TOKEN_ID) then return nil end
+  if (result == C.MARPA_ERR_NONE) then return 1 end
+  lib.assert(result, "marpa_r_alternative", recognizer_object.g);
 end
 
 return recognizer_class

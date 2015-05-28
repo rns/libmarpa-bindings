@@ -240,7 +240,7 @@ local got_json = ''
 -- stepping
 local column = 0
 while true do
-  local step_type = v:step (v.value)
+  local step_type = v:step()
   if step_type == marpa.STEP_INACTIVE then
     -- print( "The valuator has gone through all of its steps" )
     break
