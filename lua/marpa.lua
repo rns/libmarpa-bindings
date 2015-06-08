@@ -148,8 +148,13 @@ function marpa.grammar_new(key, grammar)
       -- ...
       local _, seq = unpack(rhs)
       local item, quantifier, separator, flags = unpack(seq)
-      p("  Item: ", item)
-      p("  Quantifier: ", quantifier)
+      local item_type = 'symbol'
+      if type(item) == 'table' then
+        item_type = item[1]
+        item = item[2]
+      end
+      p("  Item("..item_type.."):", item) -- item can be symbol or, if table, literal or character class
+      p("  Quantifier:", quantifier)
     elseif rule_type == 'BNF' then
     -- iterate over RHS alternatives
       for alternative_ix, alternative in alternatives(rhs) do
