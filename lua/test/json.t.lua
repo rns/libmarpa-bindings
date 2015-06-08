@@ -5,8 +5,6 @@ require 'os'
 
 package.path = '../?.lua;../../?.lua;' .. package.path
 
-local dumper = require 'dumper'
-
 -- Lua THIF
 local marpa = require 'marpa'
 
@@ -183,7 +181,7 @@ end
 -- recognition
 --
 
--- todo: expected_terminals must be recognizer method
+-- todo: use r:expected_terminals() -- set up the recognizer method
 
 -- lexer creation
 local function expected_terminals(r)
