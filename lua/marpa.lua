@@ -88,6 +88,9 @@ end
 local function rule_next(grammar, lhs)
   local rhs
   lhs, rhs = next(grammar, lhs)
+  if rhs ~= nil and #rhs == 1 and type(rhs[1]) == 'table' and rhs[1][1] == 'sequence' then
+    rhs = rhs[1]
+  end
   if lhs then return lhs, rhs, rule_type(rhs) end
 end
 
@@ -129,6 +132,16 @@ local function adverbs(rhs_alternative)
   end
 end
 
+-- strip quantifier (last + or *, if any and return stripped string and quantifier
+-- or nil and source string
+local function quantifier(s)
+  local last_char = string.sub(s, string.len(s))
+  if last_char == '+' or last_char == '*' then
+    return last_char, string.sub( s, 1, string.len(s) - 1 )
+  end
+  return nil, s
+end
+
 -- for now, produce a table with
 -- rule and sym databases
 function marpa.grammar_new(key, grammar)
@@ -168,6 +181,14 @@ function marpa.grammar_new(key, grammar)
         for symbol_ix, symbol in symbols(alternative) do
           p("    Symbol", symbol_ix, ":", i(symbol))
           -- ...
+          -- add sequence rules for implicit symbol sequences
+          if type(symbol) == 'string' then
+            local quantifier = quantifier(symbol)
+            if quantifier then
+              --
+              p("#sequence: ", symbol)
+            end
+          end
         end
       end
     end -- rule_type
@@ -206,7 +227,13 @@ function marpa.L (literal)
 end
 
 function marpa.C (charclass)
-  for char in charclass:gmatch('.') do print (char) end
+  -- todo: check square parens
+  -- todo: parse charclass
+  -- for char in charclass:gmatch('.') do print (char) end
+  local quantifier, class = quantifier(charclass)
+  if quantifier then
+    return marpa.S( marpa.C(class), quantifier, nil, nil )
+  end
   return { "character class", charclass, location():location() }
 end
 

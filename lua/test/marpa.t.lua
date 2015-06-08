@@ -13,10 +13,11 @@ local C = marpa.C -- character class
 
 -- todo: this line '|' , { '(', 'Expression', ')' },
 --       must produce "invalid bare literal" error in marpa.G()
+-- symbol names without alphanumeric characters must at least produce a warning
 
 local calc = marpa.G{
 
-  Script = S{ 'Expression', '+', L',' },
+  Script = S{ 'Expression', '+', L',' }, -- explicit sequence
 
   Expression = {
     { 'Number' },
@@ -28,7 +29,7 @@ local calc = marpa.G{
     { 'Expression', L'-', 'Expression' },
   },
 
-  Number = C'[0-9]+'
+  Number = { C'[0-9]+' } -- implicit sequences; todo:
 
 }
 
@@ -48,11 +49,9 @@ local json = marpa.G{
     { L'{', 'member', L'}' }
   },
 
-  members = S{ 'pair', '+', 'comma' }, -- single alternative
+  members = S{ 'pair', '+', 'comma' },
 
-  pair = {
-    { 'string', L':', 'value' }
-  },
+  pair = { 'string', L':', 'value' },  -- single alternative
 
   value = {
     { 'string' },
@@ -71,11 +70,13 @@ local json = marpa.G{
 
   elements = S{ 'value', '+', 'comma' },
 
+  -- todo: handle this single-alternative, single-symbol rules
   string = R{ 'lstring' }, -- optional, adds source file/line to the rule
 
   -- lexical
   comma = { L',' },
 
+  -- todo: handle this single-alternative, single-symbol rules
   ["true"]  = { L'true' }, -- true and false are Lua keywords
   ["false"] = { L'false' },
   null  = { L'null' },
@@ -92,8 +93,7 @@ local json = marpa.G{
     { L'-', 'digits' }
   },
 
-  -- Lua sequence pattern -- digits = { C'[%d]+' } -- can be used
-  digits = S{ C'[%d]', '+' }, -- no sequence separator? todo: check if it is allowed
+  digits = { C'[0-9]+' }, -- implicit sequence, no separator
 
   frac = { L'.', 'digits' },
 
@@ -105,12 +105,12 @@ local json = marpa.G{
 
   quote = { C'["]' }, -- can also be L'"'
 
-  in_string = S{ 'in_string_char', '*'  },  -- the above sequence todo applies
+  -- todo: handle this single-alternative, single-symbol rules
+  in_string = { 'in_string_char*'  },
 
-  in_string_char = { { C'[^"]' }, { L'"' } },
+  in_string_char = { { C'[^"]' }, { L'\\"' } },
 
-  -- Lua sequence pattern -- whitespace = { C'[%s]+' } -- can be used
-  whitespace = S{ C'[%s]', '+' }, -- the above sequence todo applies
+  whitespace = { C'[\009\010\013\032]+' },
 
 } -- json grammar
 
