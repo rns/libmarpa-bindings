@@ -149,9 +149,9 @@ function marpa.grammar_new(key, grammar)
       local _, seq = unpack(rhs)
       local item, quantifier, separator, flags = unpack(seq)
       local item_type = 'symbol'
+      local location
       if type(item) == 'table' then
-        item_type = item[1]
-        item = item[2]
+        item_type, item, location = unpack(item)
       end
       p("  Item("..item_type.."):", item) -- item can be symbol or, if table, literal or character class
       p("  Quantifier:", quantifier)
