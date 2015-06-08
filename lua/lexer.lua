@@ -43,6 +43,7 @@ function lexer.new (options)
   if patterns == 'lua' then
     matcher = lexer.lua_pattern_first_acceptable_token_match
   elseif patterns == 'pcre' then
+    if rex ~= nil then return nil end
     local token_id = {}
     local token_regex = {}
     for _, triple in ipairs(token_spec) do
