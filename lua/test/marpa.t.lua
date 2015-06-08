@@ -93,7 +93,7 @@ local json = marpa.G{
   },
 
   -- Lua sequence pattern -- digits = { C'[%d]+' } -- can be used
-  digits = S{ C'[%s]', '+' }, -- no sequence separator? todo: check if it is allowed
+  digits = S{ C'[%d]', '+' }, -- no sequence separator? todo: check if it is allowed
 
   frac = { L'.', 'digits' },
 

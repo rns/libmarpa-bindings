@@ -55,10 +55,10 @@ end
 
 -- bare literals other than '|', '||', '%', '%%', must produce errors
 
--- infer the rule type (counted or BNF)
+-- infer the rule type (sequence or BNF)
 local function rule_type(rhs)
   if rhs[1] == 'sequence' then
-    return 'counted'
+    return 'sequence'
   else
     return 'BNF'
   end
@@ -122,7 +122,6 @@ local function adverbs(rhs_alternative)
   if type( rhs_alternative[len] ) == 'table' and
      rhs_alternative[len][1] ~= 'symbol' and
      rhs_alternative[len][1] ~= 'literal' and
-     rhs_alternative[len][1] ~= 'hidden' and
      rhs_alternative[len][1] ~= 'character class' and
      rhs_alternative[len][1] ~= 'quantifier'
      then
@@ -143,10 +142,14 @@ function marpa.grammar_new(key, grammar)
   local g = { rule = {}, sym = {} }
   -- iterate over rules
   for lhs, rhs, rule_type in rules(grammar) do
-    p(rule_type, "rule:", lhs, "::=", i(rhs))
+    p(rule_type .. " rule:", lhs, "::=", i(rhs))
     -- single-alternative RHS
-    if rule_type == 'counted' then
+    if rule_type == 'sequence' then
       -- ...
+      local _, seq = unpack(rhs)
+      local item, quantifier, separator, flags = unpack(seq)
+      p("  Item: ", item)
+      p("  Quantifier: ", quantifier)
     elseif rule_type == 'BNF' then
     -- iterate over RHS alternatives
       for alternative_ix, alternative in alternatives(rhs) do
@@ -189,8 +192,8 @@ function marpa.R (rule)
   return rule
 end
 
-function marpa.S (S_item, quantifier, operator, S_separator)
-  return { "sequence", S_item, quantifier, operator, S_separator, location():location() }
+function marpa.S (S_item, quantifier, S_separator, flags)
+  return { "sequence", S_item, quantifier, S_separator, flags, location():location() }
 end
 
 function marpa.L (literal)
