@@ -214,12 +214,4 @@ function marpa.C (charclass)
   return { "character class", charclass, location():location() }
 end
 
-function marpa.hide (...)
-  return { "hidden", ..., location():location() }
-end
-
-function marpa.group (...)
-  return { "group", ..., location():location() }
-end
-
 return marpa

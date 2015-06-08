@@ -44,14 +44,14 @@ local json = marpa.G{
   },
 
   object = {
-    { marpa.hide( L'{', L'}' ) },
-    { marpa.hide( L'{' ), 'member', marpa.hide( L'}' ) }
+    { L'{', L'}' },
+    { L'{', 'member', L'}' }
   },
 
   members = S{ 'pair', '+', '%', 'comma' }, -- single alternative
 
   pair = {
-    { 'string', marpa.hide( L':' ), 'value' }
+    { 'string', L':', 'value' }
   },
 
   value = {
@@ -65,8 +65,8 @@ local json = marpa.G{
   },
 
   array = {
-    { marpa.hide( L'[', L']' ) },
-    { marpa.hide( L'[' ), 'element', marpa.hide( L']' ) },
+    { L'[', L']' },
+    { L'[', 'element', L']' },
   },
 
   elements = S{ 'value', '+', '%', 'comma' },
