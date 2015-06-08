@@ -55,24 +55,19 @@ end
 
 -- bare literals other than '|', '||', '%', '%%', must produce errors
 
--- infer the external rule type (counted, precedenced, or BNF)
--- from the D2L table holding the rule's RHS
-local function xrule_type(rhs)
-  if type(rhs[1]) ~= "table" then
-    if rhs[1] == 'sequence' then
-      return 'counted'
-    else
-      return 'BNF'
-    end
+-- infer the rule type (counted or BNF)
+local function rule_type(rhs)
+  if rhs[1] == 'sequence' then
+    return 'counted'
   else
-    return 'precedenced'
+    return 'BNF'
   end
 end
 
 -- possible todo: export rules(grammar), alternatives(rhs) and symbols(alternative) iterators
 
 --[[
-for lhs, rhs, xrule_type in rules(grammar) do
+for lhs, rhs, rule_type in rules(grammar) do
   ...
   for alternative_ix, alternative in alternatives(rhs) do
     ...
@@ -86,14 +81,14 @@ end
 -- for symbol_ix, symbol in symbols(alternative)
 
 -- grammar rules iterator based on next()
--- returns type of xrule after lhs and rhs
--- usage: for lhs, rhs, xrule_type in rules(grammar) do ... end
+-- returns type of rule after lhs and rhs
+-- usage: for lhs, rhs, rule_type in rules(grammar) do ... end
 --        for lhs, rhs in rules(grammar) do ... end
 
 local function rule_next(grammar, lhs)
   local rhs
   lhs, rhs = next(grammar, lhs)
-  if lhs then return lhs, rhs, xrule_type(rhs) end
+  if lhs then return lhs, rhs, rule_type(rhs) end
 end
 
 local function rules(grammar) return rule_next, grammar, nil end
@@ -136,30 +131,23 @@ local function adverbs(rhs_alternative)
 end
 
 -- for now, produce a table with
--- xrule and xsym databases
--- for the KIR g1 and l0 grammars
+-- rule and sym databases
 function marpa.grammar_new(key, grammar)
 
-  -- marpa.L, marpa.C, marpa. R must have added rules to marpa.xrules table,
+  -- marpa.L, marpa.C, marpa.R must have added rules to marpa.rules table,
   -- so start with it
 
   -- extract grammar location
   local l = table.remove(grammar, #grammar)
-  -- extract lexical grammar
-  local lexer = grammar["lexer"]
-  grammar["lexer"] = nil
-  local l0 = { xrule = {}, xsym = {} }
-  -- assume KHIL default grammars g1 and l0
-  local g1 = { xrule = {}, xsym = {}, structural = true }
-  -- iterate over rules (D2L tables)
-  for lhs, rhs, xrule_type in rules(grammar) do
-    p(xrule_type, "rule:", lhs, "::=", i(rhs))
+
+  local g = { rule = {}, sym = {} }
+  -- iterate over rules
+  for lhs, rhs, rule_type in rules(grammar) do
+    p(rule_type, "rule:", lhs, "::=", i(rhs))
     -- single-alternative RHS
-    if xrule_type == 'counted' then
+    if rule_type == 'counted' then
       -- ...
-    elseif xrule_type == 'BNF' then
-      -- ...
-    else
+    elseif rule_type == 'BNF' then
     -- iterate over RHS alternatives
       for alternative_ix, alternative in alternatives(rhs) do
         local adverbs = adverbs(alternative)
@@ -174,19 +162,19 @@ function marpa.grammar_new(key, grammar)
           -- ...
         end
       end
-    end -- xrule_type
+    end -- rule_type
   end
 
-  marpa.xrules = {}
+  marpa.rules = {}
 
-  return { g1 = g1, l0 = l0 }
+  return { }
 end
 
 -- location():location() stringifies the location object
 -- location() will be the location object proper
 -- todo: remove stringified location()'s
 
--- produce xrule and xsym databases for the KIR g1 and l0 grammars
+-- produce rule and sym databases for the KIR g1 and l0 grammars
 function marpa.G (grammar)
   assert( type(grammar) == "table", "grammar must be a table" )
   -- get grammar location

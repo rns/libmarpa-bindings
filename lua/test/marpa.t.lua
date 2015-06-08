@@ -16,7 +16,7 @@ local C = marpa.C -- character class
 
 local calc = marpa.G{
 
-  Script = S{ 'Expression', '+', '%', L',' },
+  Script = S{ 'Expression', '+', L',' },
 
   Expression = {
     { 'Number' },
@@ -48,7 +48,7 @@ local json = marpa.G{
     { L'{', 'member', L'}' }
   },
 
-  members = S{ 'pair', '+', '%', 'comma' }, -- single alternative
+  members = S{ 'pair', '+', 'comma' }, -- single alternative
 
   pair = {
     { 'string', L':', 'value' }
@@ -69,51 +69,48 @@ local json = marpa.G{
     { L'[', 'element', L']' },
   },
 
-  elements = S{ 'value', '+', '%', 'comma' },
+  elements = S{ 'value', '+', 'comma' },
 
   string = R{ 'lstring' }, -- optional, adds source file/line to the rule
 
-  lexer = marpa.G{
+  -- lexical
+  comma = { L',' },
 
-    comma = { L',' },
+  ["true"]  = { L'true' }, -- true and false are Lua keywords
+  ["false"] = { L'false' },
+  null  = { L'null' },
 
-    ["true"]  = { L'true' }, -- true and false are Lua keywords
-    ["false"] = { L'false' },
-    null  = { L'null' },
+  number = {
+    { 'int' },
+    { 'int', 'frac' },
+    { 'int', 'exp' },
+    { 'int', 'frac', 'exp' }
+  },
 
-    number = {
-      { 'int' },
-      { 'int', 'frac' },
-      { 'int', 'exp' },
-      { 'int', 'frac', 'exp' }
-    },
+  int = {
+    { 'digits' },
+    { L'-', 'digits' }
+  },
 
-    int = {
-      { 'digits' },
-      { L'-', 'digits' }
-    },
+  -- Lua sequence pattern -- digits = { C'[%d]+' } -- can be used
+  digits = S{ C'[%s]', '+' }, -- no sequence separator? todo: check if it is allowed
 
-    -- Lua sequence pattern -- digits = { C'[%d]+' } -- can be used
-    digits = S{ C'[%s]', '+', '%' }, -- no sequence separator? todo: check if it is allowed
+  frac = { L'.', 'digits' },
 
-    frac = { L'.', 'digits' },
+  exp = { 'e', 'digits' },
 
-    exp = { 'e', 'digits' },
+  e = { { L'e' }, { L'e+' }, { L'e-' }, { L'E' }, { L'E+' }, { L'E-' } },
 
-    e = { { L'e' }, { L'e+' }, { L'e-' }, { L'E' }, { L'E+' }, { L'E-' } },
+  lstring = { 'quote', 'in_string', 'quote' },
 
-    lstring = { 'quote', 'in_string', 'quote' },
+  quote = { C'["]' }, -- can also be L'"'
 
-    quote = { C'["]' }, -- can also be L'"'
+  in_string = S{ 'in_string_char', '*'  },  -- the above sequence todo applies
 
-    in_string = S{ 'in_string_char', '*', '%'  },  -- the above sequence todo applies
+  in_string_char = { { C'[^"]' }, { L'"' } },
 
-    in_string_char = { { C'[^"]' }, { L'"' } },
-
-    -- Lua sequence pattern -- whitespace = { C'[%s]+' } -- can be used
-    whitespace = S{ C'[%s]', '+', '%' }, -- the above sequence todo applies
-
-  } -- lexer
+  -- Lua sequence pattern -- whitespace = { C'[%s]+' } -- can be used
+  whitespace = S{ C'[%s]', '+' }, -- the above sequence todo applies
 
 } -- json grammar
 
