@@ -58,8 +58,8 @@ local json = marpa.G{
     { 'object' },
     { 'number' },
     { 'array' },
-    { 'S_true' },
-    { 'S_false' },
+    { 'true' },
+    { 'false' },
     { 'null' },
   },
 

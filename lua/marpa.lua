@@ -88,8 +88,16 @@ end
 local function rule_next(grammar, lhs)
   local rhs
   lhs, rhs = next(grammar, lhs)
-  if rhs ~= nil and #rhs == 1 and type(rhs[1]) == 'table' and rhs[1][1] == 'sequence' then
-    rhs = rhs[1]
+  if rhs then
+    -- unwrap sequences
+    if #rhs == 1 and type(rhs[1]) == 'table' and rhs[1][1] == 'sequence' then
+      rhs = rhs[1]
+    -- wrap single-alternative rhs
+    elseif type(rhs[1]) == 'string' or
+      (type(rhs[1]) == 'table' and
+        rhs[1][1] == 'literal' or rhs[1][1] == 'character class') then
+      rhs = { rhs }
+    end
   end
   if lhs then return lhs, rhs, rule_type(rhs) end
 end
@@ -102,7 +110,9 @@ local function rules(grammar) return rule_next, grammar, nil end
 local function alternative_next(rhs, i)
   i = i + 1
   local alternative = rhs[i]
-  if alternative then return i, alternative end
+  if alternative then
+    return i, alternative
+  end
 end
 
 local function alternatives(rhs) return alternative_next, rhs, 0 end
@@ -113,24 +123,16 @@ local function alternatives(rhs) return alternative_next, rhs, 0 end
 local function symbol_next(rhs_alternative, i)
   i = i + 1
   local symbol = rhs_alternative[i]
-  if symbol then return i, symbol end
+  if symbol then
+    -- wrap symbols
+    if type(symbol) == 'string' then
+      symbol = { 'symbol', symbol }
+    end
+    return i, symbol
+  end
 end
 
 local function symbols(rhs_alternative) return symbol_next, rhs_alternative, 0 end
-
--- get adverbs from the rule
--- return nil if no adverb is defined
-local function adverbs(rhs_alternative)
-  local len = #rhs_alternative
-  if type( rhs_alternative[len] ) == 'table' and
-     rhs_alternative[len][1] ~= 'symbol' and
-     rhs_alternative[len][1] ~= 'literal' and
-     rhs_alternative[len][1] ~= 'character class' and
-     rhs_alternative[len][1] ~= 'quantifier'
-     then
-    return table.remove (rhs_alternative, len)
-  end
-end
 
 -- strip quantifier (last + or *, if any and return stripped string and quantifier
 -- or nil and source string
@@ -171,18 +173,14 @@ function marpa.grammar_new(key, grammar)
     elseif rule_type == 'BNF' then
     -- iterate over RHS alternatives
       for alternative_ix, alternative in alternatives(rhs) do
-        local adverbs = adverbs(alternative)
         p("  Alternative", alternative_ix, ":", i(alternative))
-        if adverbs then
-          p("  adverbs = ", i(adverbs))
-          -- ...
-        end
         -- iterate over RHS alternative’s symbols
-        for symbol_ix, symbol in symbols(alternative) do
-          p("    Symbol", symbol_ix, ":", i(symbol))
+        for symbol_ix, symbol_tbl in symbols(alternative) do
+          p("    Symbol", symbol_ix, ":", i(symbol_tbl))
           -- ...
+          local symbol_type, symbol, location = unpack(symbol_tbl)
           -- add sequence rules for implicit symbol sequences
-          if type(symbol) == 'string' then
+          if symbol_type == 'symbol' then
             local quantifier = quantifier(symbol)
             if quantifier then
               --
