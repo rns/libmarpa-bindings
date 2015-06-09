@@ -107,7 +107,7 @@ local json = marpa.G{
   -- todo: handle this single-alternative, single-symbol rules
   in_string = { 'in_string_char*'  },
 
-  in_string_char = { { C'[^"]' }, { L'\\"' } },
+  in_string_char = { { C'[^"]' }, { L'\"' } },
 
   whitespace = { C'[\009\010\013\032]+' },
 

@@ -144,17 +144,15 @@ local function quantifier(s)
   return nil, s
 end
 
--- for now, produce a table with
--- rule and sym databases
-function marpa.grammar_new(grammar)
-
-  -- marpa.L, marpa.C, marpa.R must have added rules to marpa.rules table,
-  -- so start with it
+-- produce a { lhs => 'lhs_sym', rhs = { rhs_sym1, rhs_sym2 ... } } table
+-- convert external grammar to lhs/rhs + sequences form
+function marpa.intermediate_rules(grammar)
 
   -- extract grammar location
   local l = table.remove(grammar, #grammar)
 
-  local g = { rule = {}, sym = {} }
+  -- rules to be added to marpa grammar
+  local grules = { }
   -- iterate over rules
   for lhs, rhs, rule_type in rules(grammar) do
     p(rule_type .. " rule:", lhs, "::=", i(rhs))
@@ -175,31 +173,43 @@ function marpa.grammar_new(grammar)
       for alternative_ix, alternative in alternatives(rhs) do
         p("  Alternative", alternative_ix, ":", i(alternative))
         -- iterate over RHS alternative’s symbols
-        for symbol_ix, symbol_tbl in symbols(alternative) do
-          p("    Symbol", symbol_ix, ":", i(symbol_tbl))
+        for symbol_ix, symbol_data in symbols(alternative) do
+          p("    Symbol", symbol_ix, ":", i(symbol_data))
           -- ...
-          local symbol_type, symbol, location = unpack(symbol_tbl)
+          local symbol_type, symbol, location = unpack(symbol_data)
           if symbol_type == 'symbol' then
             -- add sequence rules for implicit symbol sequences
             local quantifier = quantifier(symbol)
             if quantifier then
-              p("      Implicity sequence:", symbol)
+              p("      Implicit sequence:", symbol)
             end
           elseif symbol_type == 'literal' then
-            -- todo: parse charclass and add rules
-            for char in symbol:gmatch('.') do p("      Literal character:", char) end
+            -- todo: add symbols and rules for literal chars
+            for char in symbol:gmatch('.') do
+              p("      Literal character:", char)
+            end
           elseif symbol_type == 'character class' then
-            -- todo: parse charclass and add rules
-            for char in symbol:gmatch('.') do p("      Class character:", char) end
+            -- todo: add symbols and rules for charclass chars
+            for char in symbol:gmatch('.') do
+              p("      Class character  :", char)
+            end
           end
         end
       end
     end -- rule_type
   end
 
-  marpa.rules = {}
+  return grules
+end
 
-  return { }
+function marpa.grammar_new(grammar)
+
+  -- extract grammar location
+  local l = table.remove(grammar, #grammar)
+  local grules = marpa.intermediate_rules(grammar)
+  -- todo: add rules
+  local g = marpa.grammar.new()
+  return g
 end
 
 -- location():location() stringifies the location object
