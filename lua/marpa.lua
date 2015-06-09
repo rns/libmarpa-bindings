@@ -179,13 +179,18 @@ function marpa.grammar_new(grammar)
           p("    Symbol", symbol_ix, ":", i(symbol_tbl))
           -- ...
           local symbol_type, symbol, location = unpack(symbol_tbl)
-          -- add sequence rules for implicit symbol sequences
           if symbol_type == 'symbol' then
+            -- add sequence rules for implicit symbol sequences
             local quantifier = quantifier(symbol)
             if quantifier then
-              --
-              p("#sequence: ", symbol)
+              p("      Implicity sequence:", symbol)
             end
+          elseif symbol_type == 'literal' then
+            -- todo: parse charclass and add rules
+            for char in symbol:gmatch('.') do p("      Literal character:", char) end
+          elseif symbol_type == 'character class' then
+            -- todo: parse charclass and add rules
+            for char in symbol:gmatch('.') do p("      Class character:", char) end
           end
         end
       end
@@ -220,14 +225,17 @@ function marpa.L (literal)
 end
 
 function marpa.C (charclass)
-  -- todo: check square parens
-  -- todo: parse charclass
-  -- for char in charclass:gmatch('.') do print (char) end
+  -- check for and remove square parens
+  local l = string.len(charclass)
+  assert(string.sub(charclass, 1, 1) == '[' and
+    (string.sub(charclass, l, l) == ']' or string.sub(charclass, l-1, l-1) == ']'),
+      "character class " .. charclass .. " needs to be wrapped in square brackets")
+  -- check for implicit charclass sequences
   local quantifier, class = quantifier(charclass)
   if quantifier then
     return marpa.S( marpa.C(class), quantifier, nil, nil )
   end
-  return { "character class", charclass, location():location() }
+  return { "character class", string.sub(charclass, 2, -2), location():location() }
 end
 
 return marpa
