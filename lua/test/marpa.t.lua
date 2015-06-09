@@ -4,7 +4,6 @@ package.path = "../?.lua;../../?.lua;" .. package.path
 
 local marpa = require 'marpa'
 
-local R = marpa.R -- rule (location marker)
 local S = marpa.S -- sequence
 local L = marpa.L -- literal
 local C = marpa.C -- character class
@@ -33,7 +32,7 @@ local calc = marpa.G{
 
 }
 
-local calc_g = marpa.grammar_new('calc', calc)
+local calc_g = marpa.grammar_new(calc)
 
 --[[ JSON --]]
 
@@ -71,7 +70,7 @@ local json = marpa.G{
   elements = S{ 'value', '+', 'comma' },
 
   -- todo: handle this single-alternative, single-symbol rules
-  string = R{ 'lstring' }, -- optional, adds source file/line to the rule
+  string = { 'lstring' }, -- optional, adds source file/line to the rule
 
   -- lexical
   comma = { L',' },
@@ -114,6 +113,6 @@ local json = marpa.G{
 
 } -- json grammar
 
-local json_g = marpa.grammar_new('json', json)
+local json_g = marpa.grammar_new(json)
 
 done_testing()

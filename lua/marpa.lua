@@ -146,7 +146,7 @@ end
 
 -- for now, produce a table with
 -- rule and sym databases
-function marpa.grammar_new(key, grammar)
+function marpa.grammar_new(grammar)
 
   -- marpa.L, marpa.C, marpa.R must have added rules to marpa.rules table,
   -- so start with it
@@ -209,11 +209,6 @@ function marpa.G (grammar)
   -- append location
   grammar[#grammar + 1] = l
   return grammar
-end
-
-function marpa.R (rule)
-  rule[#rule + 1] = location():location()
-  return rule
 end
 
 function marpa.S (S_item, quantifier, S_separator, flags)
