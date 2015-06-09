@@ -93,7 +93,7 @@ local function rule_next(grammar, lhs)
     if #rhs == 1 and type(rhs[1]) == 'table' and rhs[1][1] == 'sequence' then
       rhs = rhs[1]
     -- wrap single-alternative rhs
-    elseif type(rhs[1]) == 'string' or
+    elseif (type(rhs[1]) == 'string' and rhs[1] ~= 'sequence' ) or
       (type(rhs[1]) == 'table' and
         rhs[1][1] == 'literal' or rhs[1][1] == 'character class') then
       rhs = { rhs }
